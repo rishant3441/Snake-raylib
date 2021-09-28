@@ -1,0 +1,2891 @@
+        -:    0:Source:C:/Dev/CLionProjects/Snake-raylib/cmake-build-debug-coverage/_deps/raylib-src/src/external/glfw/src/input.c
+        -:    0:Graph:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\external\glfw\src\CMakeFiles\glfw.dir\input.c.gcno
+        -:    0:Data:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\external\glfw\src\CMakeFiles\glfw.dir\input.c.gcda
+        -:    0:Runs:1
+        -:    1://========================================================================
+        -:    2:// GLFW 3.4 - www.glfw.org
+        -:    3://------------------------------------------------------------------------
+        -:    4:// Copyright (c) 2002-2006 Marcus Geelnard
+        -:    5:// Copyright (c) 2006-2019 Camilla Löwy <elmindreda@glfw.org>
+        -:    6://
+        -:    7:// This software is provided 'as-is', without any express or implied
+        -:    8:// warranty. In no event will the authors be held liable for any damages
+        -:    9:// arising from the use of this software.
+        -:   10://
+        -:   11:// Permission is granted to anyone to use this software for any purpose,
+        -:   12:// including commercial applications, and to alter it and redistribute it
+        -:   13:// freely, subject to the following restrictions:
+        -:   14://
+        -:   15:// 1. The origin of this software must not be misrepresented; you must not
+        -:   16://    claim that you wrote the original software. If you use this software
+        -:   17://    in a product, an acknowledgment in the product documentation would
+        -:   18://    be appreciated but is not required.
+        -:   19://
+        -:   20:// 2. Altered source versions must be plainly marked as such, and must not
+        -:   21://    be misrepresented as being the original software.
+        -:   22://
+        -:   23:// 3. This notice may not be removed or altered from any source
+        -:   24://    distribution.
+        -:   25://
+        -:   26://========================================================================
+        -:   27:// Please use C89 style variable declarations in this file because VS 2010
+        -:   28://========================================================================
+        -:   29:
+        -:   30:#include "internal.h"
+        -:   31:
+        -:   32:#include <assert.h>
+        -:   33:#include <float.h>
+        -:   34:#include <math.h>
+        -:   35:#include <stdlib.h>
+        -:   36:#include <string.h>
+        -:   37:
+        -:   38:// Internal key state used for sticky keys
+        -:   39:#define _GLFW_STICK 3
+        -:   40:
+        -:   41:// Internal constants for gamepad mapping source types
+        -:   42:#define _GLFW_JOYSTICK_AXIS     1
+        -:   43:#define _GLFW_JOYSTICK_BUTTON   2
+        -:   44:#define _GLFW_JOYSTICK_HATBIT   3
+        -:   45:
+        -:   46:// Initializes the platform joystick API if it has not been already
+        -:   47://
+function initJoysticks called 417 returned 100% blocks executed 71%
+      417:   48:static GLFWbool initJoysticks(void)
+        -:   49:{
+      417:   50:    if (!_glfw.joysticksInitialized)
+      417:   50-block  0
+branch  0 taken 1 (fallthrough)
+branch  1 taken 416
+        -:   51:    {
+        1:   52:        if (!_glfwPlatformInitJoysticks())
+        1:   52-block  0
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
+        -:   53:        {
+    #####:   54:            _glfwPlatformTerminateJoysticks();
+    %%%%%:   54-block  0
+call    0 never executed
+    #####:   55:            return GLFW_FALSE;
+        -:   56:        }
+        -:   57:    }
+        -:   58:
+      417:   59:    return _glfw.joysticksInitialized = GLFW_TRUE;
+      417:   59-block  0
+        -:   60:}
+        -:   61:
+        -:   62:// Finds a mapping based on joystick GUID
+        -:   63://
+function findMapping called 146 returned 100% blocks executed 100%
+      146:   64:static _GLFWmapping* findMapping(const char* guid)
+        -:   65:{
+        -:   66:    int i;
+        -:   67:
+    10609:   68:    for (i = 0;  i < _glfw.mappingCount;  i++)
+      146:   68-block  0
+    10463:   68-block  1
+    10609:   68-block  2
+branch  0 taken 10464
+branch  1 taken 145 (fallthrough)
+        -:   69:    {
+    10464:   70:        if (strcmp(_glfw.mappings[i].guid, guid) == 0)
+    10464:   70-block  0
+branch  0 taken 1 (fallthrough)
+branch  1 taken 10463
+        1:   71:            return _glfw.mappings + i;
+        1:   71-block  0
+        -:   72:    }
+        -:   73:
+      145:   74:    return NULL;
+      145:   74-block  0
+        -:   75:}
+        -:   76:
+        -:   77:// Checks whether a gamepad mapping element is present in the hardware
+        -:   78://
+function isValidElementForJoystick called 0 returned 0% blocks executed 0%
+    #####:   79:static GLFWbool isValidElementForJoystick(const _GLFWmapelement* e,
+        -:   80:                                          const _GLFWjoystick* js)
+        -:   81:{
+    #####:   82:    if (e->type == _GLFW_JOYSTICK_HATBIT && (e->index >> 4) >= js->hatCount)
+    %%%%%:   82-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:   82-block  1
+branch  2 never executed
+branch  3 never executed
+    #####:   83:        return GLFW_FALSE;
+    %%%%%:   83-block  0
+    #####:   84:    else if (e->type == _GLFW_JOYSTICK_BUTTON && e->index >= js->buttonCount)
+    %%%%%:   84-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:   84-block  1
+branch  2 never executed
+branch  3 never executed
+    #####:   85:        return GLFW_FALSE;
+    %%%%%:   85-block  0
+    #####:   86:    else if (e->type == _GLFW_JOYSTICK_AXIS && e->index >= js->axisCount)
+    %%%%%:   86-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:   86-block  1
+branch  2 never executed
+branch  3 never executed
+    #####:   87:        return GLFW_FALSE;
+    %%%%%:   87-block  0
+        -:   88:
+    #####:   89:    return GLFW_TRUE;
+    %%%%%:   89-block  0
+        -:   90:}
+        -:   91:
+        -:   92:// Finds a mapping based on joystick GUID and verifies element indices
+        -:   93://
+function findValidMapping called 0 returned 0% blocks executed 0%
+    #####:   94:static _GLFWmapping* findValidMapping(const _GLFWjoystick* js)
+        -:   95:{
+    #####:   96:    _GLFWmapping* mapping = findMapping(js->guid);
+    %%%%%:   96-block  0
+call    0 never executed
+    #####:   97:    if (mapping)
+branch  0 never executed
+branch  1 never executed
+        -:   98:    {
+        -:   99:        int i;
+        -:  100:
+    #####:  101:        for (i = 0;  i <= GLFW_GAMEPAD_BUTTON_LAST;  i++)
+    %%%%%:  101-block  0
+    %%%%%:  101-block  1
+    %%%%%:  101-block  2
+branch  0 never executed
+branch  1 never executed
+        -:  102:        {
+    #####:  103:            if (!isValidElementForJoystick(mapping->buttons + i, js))
+    %%%%%:  103-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  104:            {
+    #####:  105:                _glfwInputError(GLFW_INVALID_VALUE,
+        -:  106:                                "Invalid button in gamepad mapping %s (%s)",
+    #####:  107:                                mapping->guid,
+    #####:  108:                                mapping->name);
+    %%%%%:  108-block  0
+call    0 never executed
+    #####:  109:                return NULL;
+        -:  110:            }
+        -:  111:        }
+        -:  112:
+    #####:  113:        for (i = 0;  i <= GLFW_GAMEPAD_AXIS_LAST;  i++)
+    %%%%%:  113-block  0
+    %%%%%:  113-block  1
+    %%%%%:  113-block  2
+branch  0 never executed
+branch  1 never executed
+        -:  114:        {
+    #####:  115:            if (!isValidElementForJoystick(mapping->axes + i, js))
+    %%%%%:  115-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  116:            {
+    #####:  117:                _glfwInputError(GLFW_INVALID_VALUE,
+        -:  118:                                "Invalid axis in gamepad mapping %s (%s)",
+    #####:  119:                                mapping->guid,
+    #####:  120:                                mapping->name);
+    %%%%%:  120-block  0
+call    0 never executed
+    #####:  121:                return NULL;
+        -:  122:            }
+        -:  123:        }
+        -:  124:    }
+        -:  125:
+    #####:  126:    return mapping;
+    %%%%%:  126-block  0
+        -:  127:}
+        -:  128:
+        -:  129:// Parses an SDL_GameControllerDB line and adds it to the mapping list
+        -:  130://
+function parseMapping called 410 returned 100% blocks executed 87%
+      410:  131:static GLFWbool parseMapping(_GLFWmapping* mapping, const char* string)
+        -:  132:{
+      410:  133:    const char* c = string;
+        -:  134:    size_t i, length;
+        -:  135:    struct
+        -:  136:    {
+        -:  137:        const char* name;
+        -:  138:        _GLFWmapelement* element;
+      410:  139:    } fields[] =
+        -:  140:    {
+        -:  141:        { "platform",      NULL },
+      410:  142:        { "a",             mapping->buttons + GLFW_GAMEPAD_BUTTON_A },
+      410:  143:        { "b",             mapping->buttons + GLFW_GAMEPAD_BUTTON_B },
+      410:  144:        { "x",             mapping->buttons + GLFW_GAMEPAD_BUTTON_X },
+      410:  145:        { "y",             mapping->buttons + GLFW_GAMEPAD_BUTTON_Y },
+      410:  146:        { "back",          mapping->buttons + GLFW_GAMEPAD_BUTTON_BACK },
+      410:  147:        { "start",         mapping->buttons + GLFW_GAMEPAD_BUTTON_START },
+      410:  148:        { "guide",         mapping->buttons + GLFW_GAMEPAD_BUTTON_GUIDE },
+      410:  149:        { "leftshoulder",  mapping->buttons + GLFW_GAMEPAD_BUTTON_LEFT_BUMPER },
+      410:  150:        { "rightshoulder", mapping->buttons + GLFW_GAMEPAD_BUTTON_RIGHT_BUMPER },
+      410:  151:        { "leftstick",     mapping->buttons + GLFW_GAMEPAD_BUTTON_LEFT_THUMB },
+      410:  152:        { "rightstick",    mapping->buttons + GLFW_GAMEPAD_BUTTON_RIGHT_THUMB },
+      410:  153:        { "dpup",          mapping->buttons + GLFW_GAMEPAD_BUTTON_DPAD_UP },
+      410:  154:        { "dpright",       mapping->buttons + GLFW_GAMEPAD_BUTTON_DPAD_RIGHT },
+      410:  155:        { "dpdown",        mapping->buttons + GLFW_GAMEPAD_BUTTON_DPAD_DOWN },
+      410:  156:        { "dpleft",        mapping->buttons + GLFW_GAMEPAD_BUTTON_DPAD_LEFT },
+      410:  157:        { "lefttrigger",   mapping->axes + GLFW_GAMEPAD_AXIS_LEFT_TRIGGER },
+      410:  158:        { "righttrigger",  mapping->axes + GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER },
+      410:  159:        { "leftx",         mapping->axes + GLFW_GAMEPAD_AXIS_LEFT_X },
+      410:  160:        { "lefty",         mapping->axes + GLFW_GAMEPAD_AXIS_LEFT_Y },
+      410:  161:        { "rightx",        mapping->axes + GLFW_GAMEPAD_AXIS_RIGHT_X },
+      410:  162:        { "righty",        mapping->axes + GLFW_GAMEPAD_AXIS_RIGHT_Y }
+        -:  163:    };
+        -:  164:
+      410:  165:    length = strcspn(c, ",");
+      410:  166:    if (length != 32 || c[length] != ',')
+      410:  166-block  0
+branch  0 taken 410 (fallthrough)
+branch  1 taken 0
+      410:  166-block  1
+branch  2 taken 0 (fallthrough)
+branch  3 taken 410
+        -:  167:    {
+    #####:  168:        _glfwInputError(GLFW_INVALID_VALUE, NULL);
+    %%%%%:  168-block  0
+call    0 never executed
+    #####:  169:        return GLFW_FALSE;
+        -:  170:    }
+        -:  171:
+      410:  172:    memcpy(mapping->guid, c, length);
+      410:  173:    c += length + 1;
+        -:  174:
+      410:  175:    length = strcspn(c, ",");
+      410:  176:    if (length >= sizeof(mapping->name) || c[length] != ',')
+      410:  176-block  0
+branch  0 taken 410 (fallthrough)
+branch  1 taken 0
+      410:  176-block  1
+branch  2 taken 0 (fallthrough)
+branch  3 taken 410
+        -:  177:    {
+    #####:  178:        _glfwInputError(GLFW_INVALID_VALUE, NULL);
+    %%%%%:  178-block  0
+call    0 never executed
+    #####:  179:        return GLFW_FALSE;
+        -:  180:    }
+        -:  181:
+      410:  182:    memcpy(mapping->name, c, length);
+      410:  183:    c += length + 1;
+        -:  184:
+     8186:  185:    while (*c)
+      410:  185-block  0
+     8186:  185-block  1
+branch  0 taken 8040
+branch  1 taken 146 (fallthrough)
+        -:  186:    {
+        -:  187:        // TODO: Implement output modifiers
+     8040:  188:        if (*c == '+' || *c == '-')
+     8040:  188-block  0
+branch  0 taken 8040 (fallthrough)
+branch  1 taken 0
+     8040:  188-block  1
+branch  2 taken 0 (fallthrough)
+branch  3 taken 8040
+    #####:  189:            return GLFW_FALSE;
+    %%%%%:  189-block  0
+        -:  190:
+    90023:  191:        for (i = 0;  i < sizeof(fields) / sizeof(fields[0]);  i++)
+     8040:  191-block  0
+    90023:  191-block  1
+branch  0 taken 90023
+branch  1 taken 0 (fallthrough)
+        -:  192:        {
+    90023:  193:            length = strlen(fields[i].name);
+    90023:  194:            if (strncmp(c, fields[i].name, length) != 0 || c[length] != ':')
+    90023:  194-block  0
+branch  0 taken 8416 (fallthrough)
+branch  1 taken 81607
+     8416:  194-block  1
+branch  2 taken 376 (fallthrough)
+branch  3 taken 8040
+    81983:  195:                continue;
+    81983:  195-block  0
+        -:  196:
+     8040:  197:            c += length + 1;
+        -:  198:
+     8040:  199:            if (fields[i].element)
+     8040:  199-block  0
+branch  0 taken 7630 (fallthrough)
+branch  1 taken 410
+        -:  200:            {
+     7630:  201:                _GLFWmapelement* e = fields[i].element;
+     7630:  202:                int8_t minimum = -1;
+     7630:  203:                int8_t maximum = 1;
+        -:  204:
+     7630:  205:                if (*c == '+')
+     7630:  205-block  0
+branch  0 taken 39 (fallthrough)
+branch  1 taken 7591
+        -:  206:                {
+       39:  207:                    minimum = 0;
+       39:  208:                    c += 1;
+       39:  208-block  0
+        -:  209:                }
+     7591:  210:                else if (*c == '-')
+     7591:  210-block  0
+branch  0 taken 38 (fallthrough)
+branch  1 taken 7553
+        -:  211:                {
+       38:  212:                    maximum = 0;
+       38:  213:                    c += 1;
+       38:  213-block  0
+        -:  214:                }
+        -:  215:
+     7630:  216:                if (*c == 'a')
+     7630:  216-block  0
+branch  0 taken 1769 (fallthrough)
+branch  1 taken 5861
+     1769:  217:                    e->type = _GLFW_JOYSTICK_AXIS;
+     1769:  217-block  0
+     5861:  218:                else if (*c == 'b')
+     5861:  218-block  0
+branch  0 taken 4646 (fallthrough)
+branch  1 taken 1215
+     4646:  219:                    e->type = _GLFW_JOYSTICK_BUTTON;
+     4646:  219-block  0
+     1215:  220:                else if (*c == 'h')
+     1215:  220-block  0
+branch  0 taken 1215 (fallthrough)
+branch  1 taken 0
+     1215:  221:                    e->type = _GLFW_JOYSTICK_HATBIT;
+     1215:  221-block  0
+        -:  222:                else
+    #####:  223:                    break;
+    %%%%%:  223-block  0
+        -:  224:
+     7630:  225:                if (e->type == _GLFW_JOYSTICK_HATBIT)
+     7630:  225-block  0
+branch  0 taken 1215 (fallthrough)
+branch  1 taken 6415
+        -:  226:                {
+     1215:  227:                    const unsigned long hat = strtoul(c + 1, (char**) &c, 10);
+     1215:  227-block  0
+call    0 returned 1215
+     1215:  228:                    const unsigned long bit = strtoul(c + 1, (char**) &c, 10);
+call    0 returned 1215
+     1215:  229:                    e->index = (uint8_t) ((hat << 4) | bit);
+        -:  230:                }
+        -:  231:                else
+     6415:  232:                    e->index = (uint8_t) strtoul(c + 1, (char**) &c, 10);
+     6415:  232-block  0
+call    0 returned 6415
+        -:  233:
+     7630:  234:                if (e->type == _GLFW_JOYSTICK_AXIS)
+     7630:  234-block  0
+branch  0 taken 1769 (fallthrough)
+branch  1 taken 5861
+        -:  235:                {
+     1769:  236:                    e->axisScale = 2 / (maximum - minimum);
+     1769:  237:                    e->axisOffset = -(maximum + minimum);
+        -:  238:
+     1769:  239:                    if (*c == '~')
+     1769:  239-block  0
+branch  0 taken 11 (fallthrough)
+branch  1 taken 1758
+        -:  240:                    {
+       11:  241:                        e->axisScale = -e->axisScale;
+       11:  242:                        e->axisOffset = -e->axisOffset;
+       11:  242-block  0
+        -:  243:                    }
+        -:  244:                }
+        -:  245:            }
+        -:  246:            else
+        -:  247:            {
+      410:  248:                length = strlen(_GLFW_PLATFORM_MAPPING_NAME);
+      410:  249:                if (strncmp(c, _GLFW_PLATFORM_MAPPING_NAME, length) != 0)
+      410:  249-block  0
+branch  0 taken 264 (fallthrough)
+branch  1 taken 146
+      264:  250:                    return GLFW_FALSE;
+      264:  250-block  0
+        -:  251:            }
+        -:  252:
+     7776:  253:            break;
+     7776:  253-block  0
+        -:  254:        }
+        -:  255:
+     7776:  256:        c += strcspn(c, ",");
+     7776:  257:        c += strspn(c, ",");
+     7776:  257-block  0
+        -:  258:    }
+        -:  259:
+     4818:  260:    for (i = 0;  i < 32;  i++)
+      146:  260-block  0
+     4672:  260-block  1
+     4818:  260-block  2
+branch  0 taken 4672
+branch  1 taken 146 (fallthrough)
+        -:  261:    {
+     4672:  262:        if (mapping->guid[i] >= 'A' && mapping->guid[i] <= 'F')
+     4672:  262-block  0
+branch  0 taken 200 (fallthrough)
+branch  1 taken 4472
+      200:  262-block  1
+branch  2 taken 0 (fallthrough)
+branch  3 taken 200
+    #####:  263:            mapping->guid[i] += 'a' - 'A';
+    %%%%%:  263-block  0
+        -:  264:    }
+        -:  265:
+      146:  266:    _glfwPlatformUpdateGamepadGUID(mapping->guid);
+      146:  266-block  0
+call    0 returned 146
+      146:  267:    return GLFW_TRUE;
+        -:  268:}
+        -:  269:
+        -:  270:
+        -:  271://////////////////////////////////////////////////////////////////////////
+        -:  272://////                         GLFW event API                       //////
+        -:  273://////////////////////////////////////////////////////////////////////////
+        -:  274:
+        -:  275:// Notifies shared code of a physical key event
+        -:  276://
+function _glfwInputKey called 10 returned 100% blocks executed 79%
+       10:  277:void _glfwInputKey(_GLFWwindow* window, int key, int scancode, int action, int mods)
+        -:  278:{
+       10:  279:    if (key >= 0 && key <= GLFW_KEY_LAST)
+       10:  279-block  0
+branch  0 taken 10 (fallthrough)
+branch  1 taken 0
+       10:  279-block  1
+branch  2 taken 10 (fallthrough)
+branch  3 taken 0
+        -:  280:    {
+       10:  281:        GLFWbool repeated = GLFW_FALSE;
+        -:  282:
+       10:  283:        if (action == GLFW_RELEASE && window->keys[key] == GLFW_RELEASE)
+       10:  283-block  0
+branch  0 taken 5 (fallthrough)
+branch  1 taken 5
+        5:  283-block  1
+branch  2 taken 0 (fallthrough)
+branch  3 taken 5
+    #####:  284:            return;
+    %%%%%:  284-block  0
+        -:  285:
+       10:  286:        if (action == GLFW_PRESS && window->keys[key] == GLFW_PRESS)
+       10:  286-block  0
+branch  0 taken 5 (fallthrough)
+branch  1 taken 5
+        5:  286-block  1
+branch  2 taken 0 (fallthrough)
+branch  3 taken 5
+    #####:  287:            repeated = GLFW_TRUE;
+    %%%%%:  287-block  0
+        -:  288:
+       10:  289:        if (action == GLFW_RELEASE && window->stickyKeys)
+       10:  289-block  0
+branch  0 taken 5 (fallthrough)
+branch  1 taken 5
+        5:  289-block  1
+branch  2 taken 0 (fallthrough)
+branch  3 taken 5
+    #####:  290:            window->keys[key] = _GLFW_STICK;
+    %%%%%:  290-block  0
+        -:  291:        else
+       10:  292:            window->keys[key] = (char) action;
+       10:  292-block  0
+        -:  293:
+       10:  294:        if (repeated)
+       10:  294-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 10
+    #####:  295:            action = GLFW_REPEAT;
+    %%%%%:  295-block  0
+        -:  296:    }
+        -:  297:
+       10:  298:    if (!window->lockKeyMods)
+       10:  298-block  0
+branch  0 taken 10 (fallthrough)
+branch  1 taken 0
+       10:  299:        mods &= ~(GLFW_MOD_CAPS_LOCK | GLFW_MOD_NUM_LOCK);
+       10:  299-block  0
+        -:  300:
+       10:  301:    if (window->callbacks.key)
+       10:  301-block  0
+branch  0 taken 10 (fallthrough)
+branch  1 taken 0
+       10:  302:        window->callbacks.key((GLFWwindow*) window, key, scancode, action, mods);
+       10:  302-block  0
+call    0 returned 10
+        -:  303:}
+        -:  304:
+        -:  305:// Notifies shared code of a Unicode codepoint input event
+        -:  306:// The 'plain' parameter determines whether to emit a regular character event
+        -:  307://
+function _glfwInputChar called 5 returned 100% blocks executed 75%
+        5:  308:void _glfwInputChar(_GLFWwindow* window, unsigned int codepoint, int mods, GLFWbool plain)
+        -:  309:{
+       5*:  310:    if (codepoint < 32 || (codepoint > 126 && codepoint < 160))
+        5:  310-block  0
+branch  0 taken 5 (fallthrough)
+branch  1 taken 0
+        5:  310-block  1
+branch  2 taken 0 (fallthrough)
+branch  3 taken 5
+    %%%%%:  310-block  2
+branch  4 never executed
+branch  5 never executed
+    #####:  311:        return;
+    %%%%%:  311-block  0
+        -:  312:
+        5:  313:    if (!window->lockKeyMods)
+        5:  313-block  0
+branch  0 taken 5 (fallthrough)
+branch  1 taken 0
+        5:  314:        mods &= ~(GLFW_MOD_CAPS_LOCK | GLFW_MOD_NUM_LOCK);
+        5:  314-block  0
+        -:  315:
+        5:  316:    if (window->callbacks.charmods)
+        5:  316-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 5
+    #####:  317:        window->callbacks.charmods((GLFWwindow*) window, codepoint, mods);
+    %%%%%:  317-block  0
+call    0 never executed
+        -:  318:
+        5:  319:    if (plain)
+        5:  319-block  0
+branch  0 taken 5 (fallthrough)
+branch  1 taken 0
+        -:  320:    {
+        5:  321:        if (window->callbacks.character)
+        5:  321-block  0
+branch  0 taken 5 (fallthrough)
+branch  1 taken 0
+        5:  322:            window->callbacks.character((GLFWwindow*) window, codepoint);
+        5:  322-block  0
+call    0 returned 5
+        -:  323:    }
+        -:  324:}
+        -:  325:
+        -:  326:// Notifies shared code of a scroll event
+        -:  327://
+function _glfwInputScroll called 0 returned 0% blocks executed 0%
+    #####:  328:void _glfwInputScroll(_GLFWwindow* window, double xoffset, double yoffset)
+        -:  329:{
+    #####:  330:    if (window->callbacks.scroll)
+    %%%%%:  330-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  331:        window->callbacks.scroll((GLFWwindow*) window, xoffset, yoffset);
+    %%%%%:  331-block  0
+call    0 never executed
+    #####:  332:}
+        -:  333:
+        -:  334:// Notifies shared code of a mouse button click event
+        -:  335://
+function _glfwInputMouseClick called 4 returned 100% blocks executed 83%
+        4:  336:void _glfwInputMouseClick(_GLFWwindow* window, int button, int action, int mods)
+        -:  337:{
+        4:  338:    if (button < 0 || button > GLFW_MOUSE_BUTTON_LAST)
+        4:  338-block  0
+branch  0 taken 4 (fallthrough)
+branch  1 taken 0
+        4:  338-block  1
+branch  2 taken 0 (fallthrough)
+branch  3 taken 4
+    #####:  339:        return;
+    %%%%%:  339-block  0
+        -:  340:
+        4:  341:    if (!window->lockKeyMods)
+        4:  341-block  0
+branch  0 taken 4 (fallthrough)
+branch  1 taken 0
+        4:  342:        mods &= ~(GLFW_MOD_CAPS_LOCK | GLFW_MOD_NUM_LOCK);
+        4:  342-block  0
+        -:  343:
+        4:  344:    if (action == GLFW_RELEASE && window->stickyMouseButtons)
+        4:  344-block  0
+branch  0 taken 2 (fallthrough)
+branch  1 taken 2
+        2:  344-block  1
+branch  2 taken 0 (fallthrough)
+branch  3 taken 2
+    #####:  345:        window->mouseButtons[button] = _GLFW_STICK;
+    %%%%%:  345-block  0
+        -:  346:    else
+        4:  347:        window->mouseButtons[button] = (char) action;
+        4:  347-block  0
+        -:  348:
+        4:  349:    if (window->callbacks.mouseButton)
+        4:  349-block  0
+branch  0 taken 4 (fallthrough)
+branch  1 taken 0
+        4:  350:        window->callbacks.mouseButton((GLFWwindow*) window, button, action, mods);
+        4:  350-block  0
+call    0 returned 4
+        -:  351:}
+        -:  352:
+        -:  353:// Notifies shared code of a cursor motion event
+        -:  354:// The position is specified in content area relative screen coordinates
+        -:  355://
+function _glfwInputCursorPos called 15 returned 100% blocks executed 100%
+       15:  356:void _glfwInputCursorPos(_GLFWwindow* window, double xpos, double ypos)
+        -:  357:{
+       15:  358:    if (window->virtualCursorPosX == xpos && window->virtualCursorPosY == ypos)
+       15:  358-block  0
+branch  0 taken 4 (fallthrough)
+branch  1 taken 11
+        4:  358-block  1
+branch  2 taken 4 (fallthrough)
+branch  3 taken 0
+        4:  359:        return;
+        4:  359-block  0
+        -:  360:
+       11:  361:    window->virtualCursorPosX = xpos;
+       11:  362:    window->virtualCursorPosY = ypos;
+        -:  363:
+       11:  364:    if (window->callbacks.cursorPos)
+       11:  364-block  0
+branch  0 taken 11 (fallthrough)
+branch  1 taken 0
+       11:  365:        window->callbacks.cursorPos((GLFWwindow*) window, xpos, ypos);
+       11:  365-block  0
+call    0 returned 11
+        -:  366:}
+        -:  367:
+        -:  368:// Notifies shared code of a cursor enter/leave event
+        -:  369://
+function _glfwInputCursorEnter called 2 returned 100% blocks executed 100%
+        2:  370:void _glfwInputCursorEnter(_GLFWwindow* window, GLFWbool entered)
+        -:  371:{
+        2:  372:    if (window->callbacks.cursorEnter)
+        2:  372-block  0
+branch  0 taken 2 (fallthrough)
+branch  1 taken 0
+        2:  373:        window->callbacks.cursorEnter((GLFWwindow*) window, entered);
+        2:  373-block  0
+call    0 returned 2
+        2:  374:}
+        -:  375:
+        -:  376:// Notifies shared code of files or directories dropped on a window
+        -:  377://
+function _glfwInputDrop called 0 returned 0% blocks executed 0%
+    #####:  378:void _glfwInputDrop(_GLFWwindow* window, int count, const char** paths)
+        -:  379:{
+    #####:  380:    if (window->callbacks.drop)
+    %%%%%:  380-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  381:        window->callbacks.drop((GLFWwindow*) window, count, paths);
+    %%%%%:  381-block  0
+call    0 never executed
+    #####:  382:}
+        -:  383:
+        -:  384:// Notifies shared code of a joystick connection or disconnection
+        -:  385://
+function _glfwInputJoystick called 16 returned 100% blocks executed 67%
+       16:  386:void _glfwInputJoystick(_GLFWjoystick* js, int event)
+        -:  387:{
+       16:  388:    const int jid = (int) (js - _glfw.joysticks);
+        -:  389:
+       16:  390:    if (_glfw.callbacks.joystick)
+       16:  390-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 16
+    #####:  391:        _glfw.callbacks.joystick(jid, event);
+    %%%%%:  391-block  0
+call    0 never executed
+       16:  392:}
+        -:  393:
+        -:  394:// Notifies shared code of the new value of a joystick axis
+        -:  395://
+function _glfwInputJoystickAxis called 0 returned 0% blocks executed 0%
+    #####:  396:void _glfwInputJoystickAxis(_GLFWjoystick* js, int axis, float value)
+        -:  397:{
+    #####:  398:    js->axes[axis] = value;
+    #####:  399:}
+        -:  400:
+        -:  401:// Notifies shared code of the new value of a joystick button
+        -:  402://
+function _glfwInputJoystickButton called 0 returned 0% blocks executed 0%
+    #####:  403:void _glfwInputJoystickButton(_GLFWjoystick* js, int button, char value)
+        -:  404:{
+    #####:  405:    js->buttons[button] = value;
+    #####:  406:}
+        -:  407:
+        -:  408:// Notifies shared code of the new value of a joystick hat
+        -:  409://
+function _glfwInputJoystickHat called 0 returned 0% blocks executed 0%
+    #####:  410:void _glfwInputJoystickHat(_GLFWjoystick* js, int hat, char value)
+        -:  411:{
+    #####:  412:    const int base = js->buttonCount + hat * 4;
+        -:  413:
+    #####:  414:    js->buttons[base + 0] = (value & 0x01) ? GLFW_PRESS : GLFW_RELEASE;
+    #####:  415:    js->buttons[base + 1] = (value & 0x02) ? GLFW_PRESS : GLFW_RELEASE;
+    #####:  416:    js->buttons[base + 2] = (value & 0x04) ? GLFW_PRESS : GLFW_RELEASE;
+    #####:  417:    js->buttons[base + 3] = (value & 0x08) ? GLFW_PRESS : GLFW_RELEASE;
+        -:  418:
+    #####:  419:    js->hats[hat] = value;
+    #####:  420:}
+        -:  421:
+        -:  422:
+        -:  423://////////////////////////////////////////////////////////////////////////
+        -:  424://////                       GLFW internal API                      //////
+        -:  425://////////////////////////////////////////////////////////////////////////
+        -:  426:
+        -:  427:// Returns an available joystick object with arrays and name allocated
+        -:  428://
+function _glfwAllocJoystick called 0 returned 0% blocks executed 0%
+    #####:  429:_GLFWjoystick* _glfwAllocJoystick(const char* name,
+        -:  430:                                  const char* guid,
+        -:  431:                                  int axisCount,
+        -:  432:                                  int buttonCount,
+        -:  433:                                  int hatCount)
+        -:  434:{
+        -:  435:    int jid;
+        -:  436:    _GLFWjoystick* js;
+        -:  437:
+    #####:  438:    for (jid = 0;  jid <= GLFW_JOYSTICK_LAST;  jid++)
+    %%%%%:  438-block  0
+    %%%%%:  438-block  1
+    %%%%%:  438-block  2
+branch  0 never executed
+branch  1 never executed
+        -:  439:    {
+    #####:  440:        if (!_glfw.joysticks[jid].present)
+    %%%%%:  440-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  441:            break;
+    %%%%%:  441-block  0
+        -:  442:    }
+        -:  443:
+    #####:  444:    if (jid > GLFW_JOYSTICK_LAST)
+    %%%%%:  444-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  445:        return NULL;
+    %%%%%:  445-block  0
+        -:  446:
+    #####:  447:    js = _glfw.joysticks + jid;
+    #####:  448:    js->present     = GLFW_TRUE;
+    #####:  449:    js->axes        = calloc(axisCount, sizeof(float));
+    #####:  450:    js->buttons     = calloc(buttonCount + (size_t) hatCount * 4, 1);
+    #####:  451:    js->hats        = calloc(hatCount, 1);
+    #####:  452:    js->axisCount   = axisCount;
+    #####:  453:    js->buttonCount = buttonCount;
+    #####:  454:    js->hatCount    = hatCount;
+        -:  455:
+    #####:  456:    strncpy(js->name, name, sizeof(js->name) - 1);
+    #####:  457:    strncpy(js->guid, guid, sizeof(js->guid) - 1);
+    #####:  458:    js->mapping = findValidMapping(js);
+    %%%%%:  458-block  0
+call    0 never executed
+        -:  459:
+    #####:  460:    return js;
+        -:  461:}
+        -:  462:
+        -:  463:// Frees arrays and name and flags the joystick object as unused
+        -:  464://
+function _glfwFreeJoystick called 16 returned 100% blocks executed 100%
+       16:  465:void _glfwFreeJoystick(_GLFWjoystick* js)
+        -:  466:{
+       16:  467:    free(js->axes);
+       16:  468:    free(js->buttons);
+       16:  469:    free(js->hats);
+       16:  470:    memset(js, 0, sizeof(_GLFWjoystick));
+       16:  471:}
+        -:  472:
+        -:  473:// Center the cursor in the content area of the specified window
+        -:  474://
+function _glfwCenterCursorInContentArea called 0 returned 0% blocks executed 0%
+    #####:  475:void _glfwCenterCursorInContentArea(_GLFWwindow* window)
+        -:  476:{
+        -:  477:    int width, height;
+        -:  478:
+    #####:  479:    _glfwPlatformGetWindowSize(window, &width, &height);
+    %%%%%:  479-block  0
+call    0 never executed
+    #####:  480:    _glfwPlatformSetCursorPos(window, width / 2.0, height / 2.0);
+call    0 never executed
+    #####:  481:}
+        -:  482:
+        -:  483:
+        -:  484://////////////////////////////////////////////////////////////////////////
+        -:  485://////                        GLFW public API                       //////
+        -:  486://////////////////////////////////////////////////////////////////////////
+        -:  487:
+function glfwGetInputMode called 0 returned 0% blocks executed 0%
+    #####:  488:GLFWAPI int glfwGetInputMode(GLFWwindow* handle, int mode)
+        -:  489:{
+    #####:  490:    _GLFWwindow* window = (_GLFWwindow*) handle;
+    #####:  491:    assert(window != NULL);
+    %%%%%:  491-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  491-block  1
+call    2 never executed
+    %%%%%:  491-block  2
+        -:  492:
+    #####:  493:    _GLFW_REQUIRE_INIT_OR_RETURN(0);
+    %%%%%:  493-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  493-block  1
+call    2 never executed
+        -:  494:
+    #####:  495:    switch (mode)
+    %%%%%:  495-block  0
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+branch  4 never executed
+branch  5 never executed
+        -:  496:    {
+    #####:  497:        case GLFW_CURSOR:
+    #####:  498:            return window->cursorMode;
+    %%%%%:  498-block  0
+    #####:  499:        case GLFW_STICKY_KEYS:
+    #####:  500:            return window->stickyKeys;
+    %%%%%:  500-block  0
+    #####:  501:        case GLFW_STICKY_MOUSE_BUTTONS:
+    #####:  502:            return window->stickyMouseButtons;
+    %%%%%:  502-block  0
+    #####:  503:        case GLFW_LOCK_KEY_MODS:
+    #####:  504:            return window->lockKeyMods;
+    %%%%%:  504-block  0
+    #####:  505:        case GLFW_RAW_MOUSE_MOTION:
+    #####:  506:            return window->rawMouseMotion;
+    %%%%%:  506-block  0
+        -:  507:    }
+        -:  508:
+    #####:  509:    _glfwInputError(GLFW_INVALID_ENUM, "Invalid input mode 0x%08X", mode);
+    %%%%%:  509-block  0
+call    0 never executed
+    #####:  510:    return 0;
+        -:  511:}
+        -:  512:
+function glfwSetInputMode called 0 returned 0% blocks executed 0%
+    #####:  513:GLFWAPI void glfwSetInputMode(GLFWwindow* handle, int mode, int value)
+        -:  514:{
+    #####:  515:    _GLFWwindow* window = (_GLFWwindow*) handle;
+    #####:  516:    assert(window != NULL);
+    %%%%%:  516-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  516-block  1
+call    2 never executed
+    %%%%%:  516-block  2
+        -:  517:
+    #####:  518:    _GLFW_REQUIRE_INIT();
+    %%%%%:  518-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  518-block  1
+call    2 never executed
+        -:  519:
+    #####:  520:    if (mode == GLFW_CURSOR)
+    %%%%%:  520-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  521:    {
+    #####:  522:        if (value != GLFW_CURSOR_NORMAL &&
+    %%%%%:  522-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  522-block  1
+branch  2 never executed
+branch  3 never executed
+    #####:  523:            value != GLFW_CURSOR_HIDDEN &&
+    %%%%%:  523-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  524:            value != GLFW_CURSOR_DISABLED)
+        -:  525:        {
+    #####:  526:            _glfwInputError(GLFW_INVALID_ENUM,
+    %%%%%:  526-block  0
+call    0 never executed
+        -:  527:                            "Invalid cursor mode 0x%08X",
+        -:  528:                            value);
+    #####:  529:            return;
+        -:  530:        }
+        -:  531:
+    #####:  532:        if (window->cursorMode == value)
+    %%%%%:  532-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  533:            return;
+    %%%%%:  533-block  0
+        -:  534:
+    #####:  535:        window->cursorMode = value;
+        -:  536:
+    #####:  537:        _glfwPlatformGetCursorPos(window,
+    %%%%%:  537-block  0
+call    0 never executed
+        -:  538:                                  &window->virtualCursorPosX,
+        -:  539:                                  &window->virtualCursorPosY);
+    #####:  540:        _glfwPlatformSetCursorMode(window, value);
+call    0 never executed
+        -:  541:    }
+    #####:  542:    else if (mode == GLFW_STICKY_KEYS)
+    %%%%%:  542-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  543:    {
+    #####:  544:        value = value ? GLFW_TRUE : GLFW_FALSE;
+    #####:  545:        if (window->stickyKeys == value)
+    %%%%%:  545-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  546:            return;
+    %%%%%:  546-block  0
+        -:  547:
+    #####:  548:        if (!value)
+    %%%%%:  548-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  549:        {
+        -:  550:            int i;
+        -:  551:
+        -:  552:            // Release all sticky keys
+    #####:  553:            for (i = 0;  i <= GLFW_KEY_LAST;  i++)
+    %%%%%:  553-block  0
+    %%%%%:  553-block  1
+    %%%%%:  553-block  2
+branch  0 never executed
+branch  1 never executed
+        -:  554:            {
+    #####:  555:                if (window->keys[i] == _GLFW_STICK)
+    %%%%%:  555-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  556:                    window->keys[i] = GLFW_RELEASE;
+    %%%%%:  556-block  0
+        -:  557:            }
+        -:  558:        }
+        -:  559:
+    #####:  560:        window->stickyKeys = value;
+    %%%%%:  560-block  0
+        -:  561:    }
+    #####:  562:    else if (mode == GLFW_STICKY_MOUSE_BUTTONS)
+    %%%%%:  562-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  563:    {
+    #####:  564:        value = value ? GLFW_TRUE : GLFW_FALSE;
+    #####:  565:        if (window->stickyMouseButtons == value)
+    %%%%%:  565-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  566:            return;
+    %%%%%:  566-block  0
+        -:  567:
+    #####:  568:        if (!value)
+    %%%%%:  568-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  569:        {
+        -:  570:            int i;
+        -:  571:
+        -:  572:            // Release all sticky mouse buttons
+    #####:  573:            for (i = 0;  i <= GLFW_MOUSE_BUTTON_LAST;  i++)
+    %%%%%:  573-block  0
+    %%%%%:  573-block  1
+    %%%%%:  573-block  2
+branch  0 never executed
+branch  1 never executed
+        -:  574:            {
+    #####:  575:                if (window->mouseButtons[i] == _GLFW_STICK)
+    %%%%%:  575-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  576:                    window->mouseButtons[i] = GLFW_RELEASE;
+    %%%%%:  576-block  0
+        -:  577:            }
+        -:  578:        }
+        -:  579:
+    #####:  580:        window->stickyMouseButtons = value;
+    %%%%%:  580-block  0
+        -:  581:    }
+    #####:  582:    else if (mode == GLFW_LOCK_KEY_MODS)
+    %%%%%:  582-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  583:    {
+    #####:  584:        window->lockKeyMods = value ? GLFW_TRUE : GLFW_FALSE;
+    %%%%%:  584-block  0
+        -:  585:    }
+    #####:  586:    else if (mode == GLFW_RAW_MOUSE_MOTION)
+    %%%%%:  586-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  587:    {
+    #####:  588:        if (!_glfwPlatformRawMouseMotionSupported())
+    %%%%%:  588-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  589:        {
+    #####:  590:            _glfwInputError(GLFW_PLATFORM_ERROR,
+    %%%%%:  590-block  0
+call    0 never executed
+        -:  591:                            "Raw mouse motion is not supported on this system");
+    #####:  592:            return;
+        -:  593:        }
+        -:  594:
+    #####:  595:        value = value ? GLFW_TRUE : GLFW_FALSE;
+    #####:  596:        if (window->rawMouseMotion == value)
+    %%%%%:  596-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  597:            return;
+    %%%%%:  597-block  0
+        -:  598:
+    #####:  599:        window->rawMouseMotion = value;
+    #####:  600:        _glfwPlatformSetRawMouseMotion(window, value);
+    %%%%%:  600-block  0
+call    0 never executed
+        -:  601:    }
+        -:  602:    else
+    #####:  603:        _glfwInputError(GLFW_INVALID_ENUM, "Invalid input mode 0x%08X", mode);
+    %%%%%:  603-block  0
+call    0 never executed
+        -:  604:}
+        -:  605:
+function glfwRawMouseMotionSupported called 0 returned 0% blocks executed 0%
+    #####:  606:GLFWAPI int glfwRawMouseMotionSupported(void)
+        -:  607:{
+    #####:  608:    _GLFW_REQUIRE_INIT_OR_RETURN(GLFW_FALSE);
+    %%%%%:  608-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  608-block  1
+call    2 never executed
+    #####:  609:    return _glfwPlatformRawMouseMotionSupported();
+    %%%%%:  609-block  0
+call    0 never executed
+        -:  610:}
+        -:  611:
+function glfwGetKeyName called 0 returned 0% blocks executed 0%
+    #####:  612:GLFWAPI const char* glfwGetKeyName(int key, int scancode)
+        -:  613:{
+    #####:  614:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+    %%%%%:  614-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  614-block  1
+call    2 never executed
+        -:  615:
+    #####:  616:    if (key != GLFW_KEY_UNKNOWN)
+    %%%%%:  616-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  617:    {
+    #####:  618:        if (key != GLFW_KEY_KP_EQUAL &&
+    %%%%%:  618-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  618-block  1
+branch  2 never executed
+branch  3 never executed
+    #####:  619:            (key < GLFW_KEY_KP_0 || key > GLFW_KEY_KP_ADD) &&
+    %%%%%:  619-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  619-block  1
+branch  2 never executed
+branch  3 never executed
+    #####:  620:            (key < GLFW_KEY_APOSTROPHE || key > GLFW_KEY_WORLD_2))
+    %%%%%:  620-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  621:        {
+    #####:  622:            return NULL;
+    %%%%%:  622-block  0
+        -:  623:        }
+        -:  624:
+    #####:  625:        scancode = _glfwPlatformGetKeyScancode(key);
+    %%%%%:  625-block  0
+call    0 never executed
+        -:  626:    }
+        -:  627:
+    #####:  628:    return _glfwPlatformGetScancodeName(scancode);
+    %%%%%:  628-block  0
+call    0 never executed
+        -:  629:}
+        -:  630:
+function glfwGetKeyScancode called 0 returned 0% blocks executed 0%
+    #####:  631:GLFWAPI int glfwGetKeyScancode(int key)
+        -:  632:{
+    #####:  633:    _GLFW_REQUIRE_INIT_OR_RETURN(-1);
+    %%%%%:  633-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  633-block  1
+call    2 never executed
+        -:  634:
+    #####:  635:    if (key < GLFW_KEY_SPACE || key > GLFW_KEY_LAST)
+    %%%%%:  635-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  635-block  1
+branch  2 never executed
+branch  3 never executed
+        -:  636:    {
+    #####:  637:        _glfwInputError(GLFW_INVALID_ENUM, "Invalid key %i", key);
+    %%%%%:  637-block  0
+call    0 never executed
+    #####:  638:        return GLFW_RELEASE;
+        -:  639:    }
+        -:  640:
+    #####:  641:    return _glfwPlatformGetKeyScancode(key);
+    %%%%%:  641-block  0
+call    0 never executed
+        -:  642:}
+        -:  643:
+function glfwGetKey called 0 returned 0% blocks executed 0%
+    #####:  644:GLFWAPI int glfwGetKey(GLFWwindow* handle, int key)
+        -:  645:{
+    #####:  646:    _GLFWwindow* window = (_GLFWwindow*) handle;
+    #####:  647:    assert(window != NULL);
+    %%%%%:  647-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  647-block  1
+call    2 never executed
+    %%%%%:  647-block  2
+        -:  648:
+    #####:  649:    _GLFW_REQUIRE_INIT_OR_RETURN(GLFW_RELEASE);
+    %%%%%:  649-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  649-block  1
+call    2 never executed
+        -:  650:
+    #####:  651:    if (key < GLFW_KEY_SPACE || key > GLFW_KEY_LAST)
+    %%%%%:  651-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  651-block  1
+branch  2 never executed
+branch  3 never executed
+        -:  652:    {
+    #####:  653:        _glfwInputError(GLFW_INVALID_ENUM, "Invalid key %i", key);
+    %%%%%:  653-block  0
+call    0 never executed
+    #####:  654:        return GLFW_RELEASE;
+        -:  655:    }
+        -:  656:
+    #####:  657:    if (window->keys[key] == _GLFW_STICK)
+    %%%%%:  657-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  658:    {
+        -:  659:        // Sticky mode: release key now
+    #####:  660:        window->keys[key] = GLFW_RELEASE;
+    #####:  661:        return GLFW_PRESS;
+    %%%%%:  661-block  0
+        -:  662:    }
+        -:  663:
+    #####:  664:    return (int) window->keys[key];
+    %%%%%:  664-block  0
+        -:  665:}
+        -:  666:
+function glfwGetMouseButton called 0 returned 0% blocks executed 0%
+    #####:  667:GLFWAPI int glfwGetMouseButton(GLFWwindow* handle, int button)
+        -:  668:{
+    #####:  669:    _GLFWwindow* window = (_GLFWwindow*) handle;
+    #####:  670:    assert(window != NULL);
+    %%%%%:  670-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  670-block  1
+call    2 never executed
+    %%%%%:  670-block  2
+        -:  671:
+    #####:  672:    _GLFW_REQUIRE_INIT_OR_RETURN(GLFW_RELEASE);
+    %%%%%:  672-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  672-block  1
+call    2 never executed
+        -:  673:
+    #####:  674:    if (button < GLFW_MOUSE_BUTTON_1 || button > GLFW_MOUSE_BUTTON_LAST)
+    %%%%%:  674-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  674-block  1
+branch  2 never executed
+branch  3 never executed
+        -:  675:    {
+    #####:  676:        _glfwInputError(GLFW_INVALID_ENUM, "Invalid mouse button %i", button);
+    %%%%%:  676-block  0
+call    0 never executed
+    #####:  677:        return GLFW_RELEASE;
+        -:  678:    }
+        -:  679:
+    #####:  680:    if (window->mouseButtons[button] == _GLFW_STICK)
+    %%%%%:  680-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  681:    {
+        -:  682:        // Sticky mode: release mouse button now
+    #####:  683:        window->mouseButtons[button] = GLFW_RELEASE;
+    #####:  684:        return GLFW_PRESS;
+    %%%%%:  684-block  0
+        -:  685:    }
+        -:  686:
+    #####:  687:    return (int) window->mouseButtons[button];
+    %%%%%:  687-block  0
+        -:  688:}
+        -:  689:
+function glfwGetCursorPos called 0 returned 0% blocks executed 0%
+    #####:  690:GLFWAPI void glfwGetCursorPos(GLFWwindow* handle, double* xpos, double* ypos)
+        -:  691:{
+    #####:  692:    _GLFWwindow* window = (_GLFWwindow*) handle;
+    #####:  693:    assert(window != NULL);
+    %%%%%:  693-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  693-block  1
+call    2 never executed
+    %%%%%:  693-block  2
+        -:  694:
+    #####:  695:    if (xpos)
+    %%%%%:  695-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  696:        *xpos = 0;
+    %%%%%:  696-block  0
+    #####:  697:    if (ypos)
+    %%%%%:  697-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  698:        *ypos = 0;
+    %%%%%:  698-block  0
+        -:  699:
+    #####:  700:    _GLFW_REQUIRE_INIT();
+    %%%%%:  700-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  700-block  1
+call    2 never executed
+        -:  701:
+    #####:  702:    if (window->cursorMode == GLFW_CURSOR_DISABLED)
+    %%%%%:  702-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  703:    {
+    #####:  704:        if (xpos)
+    %%%%%:  704-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  705:            *xpos = window->virtualCursorPosX;
+    %%%%%:  705-block  0
+    #####:  706:        if (ypos)
+    %%%%%:  706-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  707:            *ypos = window->virtualCursorPosY;
+    %%%%%:  707-block  0
+        -:  708:    }
+        -:  709:    else
+    #####:  710:        _glfwPlatformGetCursorPos(window, xpos, ypos);
+    %%%%%:  710-block  0
+call    0 never executed
+        -:  711:}
+        -:  712:
+function glfwSetCursorPos called 0 returned 0% blocks executed 0%
+    #####:  713:GLFWAPI void glfwSetCursorPos(GLFWwindow* handle, double xpos, double ypos)
+        -:  714:{
+    #####:  715:    _GLFWwindow* window = (_GLFWwindow*) handle;
+    #####:  716:    assert(window != NULL);
+    %%%%%:  716-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  716-block  1
+call    2 never executed
+    %%%%%:  716-block  2
+        -:  717:
+    #####:  718:    _GLFW_REQUIRE_INIT();
+    %%%%%:  718-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  718-block  1
+call    2 never executed
+        -:  719:
+    #####:  720:    if (xpos != xpos || xpos < -DBL_MAX || xpos > DBL_MAX ||
+    %%%%%:  720-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  720-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  720-block  2
+branch  4 never executed
+branch  5 never executed
+    %%%%%:  720-block  3
+branch  6 never executed
+branch  7 never executed
+    #####:  721:        ypos != ypos || ypos < -DBL_MAX || ypos > DBL_MAX)
+    %%%%%:  721-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  721-block  1
+branch  2 never executed
+branch  3 never executed
+        -:  722:    {
+    #####:  723:        _glfwInputError(GLFW_INVALID_VALUE,
+    %%%%%:  723-block  0
+call    0 never executed
+        -:  724:                        "Invalid cursor position %f %f",
+        -:  725:                        xpos, ypos);
+    #####:  726:        return;
+        -:  727:    }
+        -:  728:
+    #####:  729:    if (!_glfwPlatformWindowFocused(window))
+    %%%%%:  729-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####:  730:        return;
+    %%%%%:  730-block  0
+        -:  731:
+    #####:  732:    if (window->cursorMode == GLFW_CURSOR_DISABLED)
+    %%%%%:  732-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  733:    {
+        -:  734:        // Only update the accumulated position if the cursor is disabled
+    #####:  735:        window->virtualCursorPosX = xpos;
+    #####:  736:        window->virtualCursorPosY = ypos;
+    %%%%%:  736-block  0
+        -:  737:    }
+        -:  738:    else
+        -:  739:    {
+        -:  740:        // Update system cursor position
+    #####:  741:        _glfwPlatformSetCursorPos(window, xpos, ypos);
+    %%%%%:  741-block  0
+call    0 never executed
+        -:  742:    }
+        -:  743:}
+        -:  744:
+function glfwCreateCursor called 0 returned 0% blocks executed 0%
+    #####:  745:GLFWAPI GLFWcursor* glfwCreateCursor(const GLFWimage* image, int xhot, int yhot)
+        -:  746:{
+        -:  747:    _GLFWcursor* cursor;
+        -:  748:
+    #####:  749:    assert(image != NULL);
+    %%%%%:  749-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  749-block  1
+call    2 never executed
+    %%%%%:  749-block  2
+        -:  750:
+    #####:  751:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+    %%%%%:  751-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  751-block  1
+call    2 never executed
+        -:  752:
+    #####:  753:    cursor = calloc(1, sizeof(_GLFWcursor));
+    #####:  754:    cursor->next = _glfw.cursorListHead;
+    #####:  755:    _glfw.cursorListHead = cursor;
+        -:  756:
+    #####:  757:    if (!_glfwPlatformCreateCursor(cursor, image, xhot, yhot))
+    %%%%%:  757-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  758:    {
+    #####:  759:        glfwDestroyCursor((GLFWcursor*) cursor);
+    %%%%%:  759-block  0
+call    0 never executed
+    #####:  760:        return NULL;
+        -:  761:    }
+        -:  762:
+    #####:  763:    return (GLFWcursor*) cursor;
+    %%%%%:  763-block  0
+        -:  764:}
+        -:  765:
+function glfwCreateStandardCursor called 0 returned 0% blocks executed 0%
+    #####:  766:GLFWAPI GLFWcursor* glfwCreateStandardCursor(int shape)
+        -:  767:{
+        -:  768:    _GLFWcursor* cursor;
+        -:  769:
+    #####:  770:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+    %%%%%:  770-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  770-block  1
+call    2 never executed
+        -:  771:
+    #####:  772:    if (shape != GLFW_ARROW_CURSOR &&
+    %%%%%:  772-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  772-block  1
+branch  2 never executed
+branch  3 never executed
+    #####:  773:        shape != GLFW_IBEAM_CURSOR &&
+    %%%%%:  773-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  774:        shape != GLFW_CROSSHAIR_CURSOR &&
+    %%%%%:  774-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  775:        shape != GLFW_POINTING_HAND_CURSOR &&
+    %%%%%:  775-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  776:        shape != GLFW_RESIZE_EW_CURSOR &&
+    %%%%%:  776-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  777:        shape != GLFW_RESIZE_NS_CURSOR &&
+    %%%%%:  777-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  778:        shape != GLFW_RESIZE_NWSE_CURSOR &&
+    %%%%%:  778-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  779:        shape != GLFW_RESIZE_NESW_CURSOR &&
+    %%%%%:  779-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  780:        shape != GLFW_RESIZE_ALL_CURSOR &&
+    %%%%%:  780-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  781:        shape != GLFW_NOT_ALLOWED_CURSOR)
+        -:  782:    {
+    #####:  783:        _glfwInputError(GLFW_INVALID_ENUM, "Invalid standard cursor 0x%08X", shape);
+    %%%%%:  783-block  0
+call    0 never executed
+    #####:  784:        return NULL;
+        -:  785:    }
+        -:  786:
+    #####:  787:    cursor = calloc(1, sizeof(_GLFWcursor));
+    #####:  788:    cursor->next = _glfw.cursorListHead;
+    #####:  789:    _glfw.cursorListHead = cursor;
+        -:  790:
+    #####:  791:    if (!_glfwPlatformCreateStandardCursor(cursor, shape))
+    %%%%%:  791-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  792:    {
+    #####:  793:        glfwDestroyCursor((GLFWcursor*) cursor);
+    %%%%%:  793-block  0
+call    0 never executed
+    #####:  794:        return NULL;
+        -:  795:    }
+        -:  796:
+    #####:  797:    return (GLFWcursor*) cursor;
+    %%%%%:  797-block  0
+        -:  798:}
+        -:  799:
+function glfwDestroyCursor called 0 returned 0% blocks executed 0%
+    #####:  800:GLFWAPI void glfwDestroyCursor(GLFWcursor* handle)
+        -:  801:{
+    #####:  802:    _GLFWcursor* cursor = (_GLFWcursor*) handle;
+        -:  803:
+    #####:  804:    _GLFW_REQUIRE_INIT();
+    %%%%%:  804-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  804-block  1
+call    2 never executed
+        -:  805:
+    #####:  806:    if (cursor == NULL)
+    %%%%%:  806-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  807:        return;
+    %%%%%:  807-block  0
+        -:  808:
+        -:  809:    // Make sure the cursor is not being used by any window
+        -:  810:    {
+        -:  811:        _GLFWwindow* window;
+        -:  812:
+    #####:  813:        for (window = _glfw.windowListHead;  window;  window = window->next)
+    %%%%%:  813-block  0
+    %%%%%:  813-block  1
+    %%%%%:  813-block  2
+branch  0 never executed
+branch  1 never executed
+        -:  814:        {
+    #####:  815:            if (window->cursor == cursor)
+    %%%%%:  815-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  816:                glfwSetCursor((GLFWwindow*) window, NULL);
+    %%%%%:  816-block  0
+call    0 never executed
+        -:  817:        }
+        -:  818:    }
+        -:  819:
+    #####:  820:    _glfwPlatformDestroyCursor(cursor);
+    %%%%%:  820-block  0
+call    0 never executed
+        -:  821:
+        -:  822:    // Unlink cursor from global linked list
+        -:  823:    {
+    #####:  824:        _GLFWcursor** prev = &_glfw.cursorListHead;
+        -:  825:
+    #####:  826:        while (*prev != cursor)
+    %%%%%:  826-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  827:            prev = &((*prev)->next);
+    %%%%%:  827-block  0
+        -:  828:
+    #####:  829:        *prev = cursor->next;
+        -:  830:    }
+        -:  831:
+    #####:  832:    free(cursor);
+    %%%%%:  832-block  0
+        -:  833:}
+        -:  834:
+function glfwSetCursor called 0 returned 0% blocks executed 0%
+    #####:  835:GLFWAPI void glfwSetCursor(GLFWwindow* windowHandle, GLFWcursor* cursorHandle)
+        -:  836:{
+    #####:  837:    _GLFWwindow* window = (_GLFWwindow*) windowHandle;
+    #####:  838:    _GLFWcursor* cursor = (_GLFWcursor*) cursorHandle;
+    #####:  839:    assert(window != NULL);
+    %%%%%:  839-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  839-block  1
+call    2 never executed
+    %%%%%:  839-block  2
+        -:  840:
+    #####:  841:    _GLFW_REQUIRE_INIT();
+    %%%%%:  841-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  841-block  1
+call    2 never executed
+        -:  842:
+    #####:  843:    window->cursor = cursor;
+        -:  844:
+    #####:  845:    _glfwPlatformSetCursor(window, cursor);
+    %%%%%:  845-block  0
+call    0 never executed
+        -:  846:}
+        -:  847:
+function glfwSetKeyCallback called 1 returned 100% blocks executed 56%
+        1:  848:GLFWAPI GLFWkeyfun glfwSetKeyCallback(GLFWwindow* handle, GLFWkeyfun cbfun)
+        -:  849:{
+        1:  850:    _GLFWwindow* window = (_GLFWwindow*) handle;
+       1*:  851:    assert(window != NULL);
+        1:  851-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  851-block  1
+call    2 never executed
+        1:  851-block  2
+        -:  852:
+       1*:  853:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+        1:  853-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  853-block  1
+call    2 never executed
+        1:  854:    _GLFW_SWAP_POINTERS(window->callbacks.key, cbfun);
+        1:  855:    return cbfun;
+        1:  855-block  0
+        -:  856:}
+        -:  857:
+function glfwSetCharCallback called 1 returned 100% blocks executed 56%
+        1:  858:GLFWAPI GLFWcharfun glfwSetCharCallback(GLFWwindow* handle, GLFWcharfun cbfun)
+        -:  859:{
+        1:  860:    _GLFWwindow* window = (_GLFWwindow*) handle;
+       1*:  861:    assert(window != NULL);
+        1:  861-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  861-block  1
+call    2 never executed
+        1:  861-block  2
+        -:  862:
+       1*:  863:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+        1:  863-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  863-block  1
+call    2 never executed
+        1:  864:    _GLFW_SWAP_POINTERS(window->callbacks.character, cbfun);
+        1:  865:    return cbfun;
+        1:  865-block  0
+        -:  866:}
+        -:  867:
+function glfwSetCharModsCallback called 0 returned 0% blocks executed 0%
+    #####:  868:GLFWAPI GLFWcharmodsfun glfwSetCharModsCallback(GLFWwindow* handle, GLFWcharmodsfun cbfun)
+        -:  869:{
+    #####:  870:    _GLFWwindow* window = (_GLFWwindow*) handle;
+    #####:  871:    assert(window != NULL);
+    %%%%%:  871-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  871-block  1
+call    2 never executed
+    %%%%%:  871-block  2
+        -:  872:
+    #####:  873:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+    %%%%%:  873-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  873-block  1
+call    2 never executed
+    #####:  874:    _GLFW_SWAP_POINTERS(window->callbacks.charmods, cbfun);
+    #####:  875:    return cbfun;
+    %%%%%:  875-block  0
+        -:  876:}
+        -:  877:
+function glfwSetMouseButtonCallback called 1 returned 100% blocks executed 56%
+        1:  878:GLFWAPI GLFWmousebuttonfun glfwSetMouseButtonCallback(GLFWwindow* handle,
+        -:  879:                                                      GLFWmousebuttonfun cbfun)
+        -:  880:{
+        1:  881:    _GLFWwindow* window = (_GLFWwindow*) handle;
+       1*:  882:    assert(window != NULL);
+        1:  882-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  882-block  1
+call    2 never executed
+        1:  882-block  2
+        -:  883:
+       1*:  884:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+        1:  884-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  884-block  1
+call    2 never executed
+        1:  885:    _GLFW_SWAP_POINTERS(window->callbacks.mouseButton, cbfun);
+        1:  886:    return cbfun;
+        1:  886-block  0
+        -:  887:}
+        -:  888:
+function glfwSetCursorPosCallback called 1 returned 100% blocks executed 56%
+        1:  889:GLFWAPI GLFWcursorposfun glfwSetCursorPosCallback(GLFWwindow* handle,
+        -:  890:                                                  GLFWcursorposfun cbfun)
+        -:  891:{
+        1:  892:    _GLFWwindow* window = (_GLFWwindow*) handle;
+       1*:  893:    assert(window != NULL);
+        1:  893-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  893-block  1
+call    2 never executed
+        1:  893-block  2
+        -:  894:
+       1*:  895:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+        1:  895-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  895-block  1
+call    2 never executed
+        1:  896:    _GLFW_SWAP_POINTERS(window->callbacks.cursorPos, cbfun);
+        1:  897:    return cbfun;
+        1:  897-block  0
+        -:  898:}
+        -:  899:
+function glfwSetCursorEnterCallback called 1 returned 100% blocks executed 56%
+        1:  900:GLFWAPI GLFWcursorenterfun glfwSetCursorEnterCallback(GLFWwindow* handle,
+        -:  901:                                                      GLFWcursorenterfun cbfun)
+        -:  902:{
+        1:  903:    _GLFWwindow* window = (_GLFWwindow*) handle;
+       1*:  904:    assert(window != NULL);
+        1:  904-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  904-block  1
+call    2 never executed
+        1:  904-block  2
+        -:  905:
+       1*:  906:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+        1:  906-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  906-block  1
+call    2 never executed
+        1:  907:    _GLFW_SWAP_POINTERS(window->callbacks.cursorEnter, cbfun);
+        1:  908:    return cbfun;
+        1:  908-block  0
+        -:  909:}
+        -:  910:
+function glfwSetScrollCallback called 1 returned 100% blocks executed 56%
+        1:  911:GLFWAPI GLFWscrollfun glfwSetScrollCallback(GLFWwindow* handle,
+        -:  912:                                            GLFWscrollfun cbfun)
+        -:  913:{
+        1:  914:    _GLFWwindow* window = (_GLFWwindow*) handle;
+       1*:  915:    assert(window != NULL);
+        1:  915-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  915-block  1
+call    2 never executed
+        1:  915-block  2
+        -:  916:
+       1*:  917:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+        1:  917-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  917-block  1
+call    2 never executed
+        1:  918:    _GLFW_SWAP_POINTERS(window->callbacks.scroll, cbfun);
+        1:  919:    return cbfun;
+        1:  919-block  0
+        -:  920:}
+        -:  921:
+function glfwSetDropCallback called 1 returned 100% blocks executed 56%
+        1:  922:GLFWAPI GLFWdropfun glfwSetDropCallback(GLFWwindow* handle, GLFWdropfun cbfun)
+        -:  923:{
+        1:  924:    _GLFWwindow* window = (_GLFWwindow*) handle;
+       1*:  925:    assert(window != NULL);
+        1:  925-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  925-block  1
+call    2 never executed
+        1:  925-block  2
+        -:  926:
+       1*:  927:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+        1:  927-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  927-block  1
+call    2 never executed
+        1:  928:    _GLFW_SWAP_POINTERS(window->callbacks.drop, cbfun);
+        1:  929:    return cbfun;
+        1:  929-block  0
+        -:  930:}
+        -:  931:
+function glfwJoystickPresent called 416 returned 100% blocks executed 55%
+      416:  932:GLFWAPI int glfwJoystickPresent(int jid)
+        -:  933:{
+        -:  934:    _GLFWjoystick* js;
+        -:  935:
+     416*:  936:    assert(jid >= GLFW_JOYSTICK_1);
+      416:  936-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 416
+    %%%%%:  936-block  1
+call    2 never executed
+      416:  936-block  2
+     416*:  937:    assert(jid <= GLFW_JOYSTICK_LAST);
+      416:  937-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 416
+    %%%%%:  937-block  1
+call    2 never executed
+      416:  937-block  2
+        -:  938:
+     416*:  939:    _GLFW_REQUIRE_INIT_OR_RETURN(GLFW_FALSE);
+      416:  939-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 416
+    %%%%%:  939-block  1
+call    2 never executed
+        -:  940:
+      416:  941:    if (jid < 0 || jid > GLFW_JOYSTICK_LAST)
+      416:  941-block  0
+branch  0 taken 416 (fallthrough)
+branch  1 taken 0
+      416:  941-block  1
+branch  2 taken 0 (fallthrough)
+branch  3 taken 416
+        -:  942:    {
+    #####:  943:        _glfwInputError(GLFW_INVALID_ENUM, "Invalid joystick ID %i", jid);
+    %%%%%:  943-block  0
+call    0 never executed
+    #####:  944:        return GLFW_FALSE;
+        -:  945:    }
+        -:  946:
+      416:  947:    if (!initJoysticks())
+      416:  947-block  0
+call    0 returned 416
+branch  1 taken 0 (fallthrough)
+branch  2 taken 416
+    #####:  948:        return GLFW_FALSE;
+    %%%%%:  948-block  0
+        -:  949:
+      416:  950:    js = _glfw.joysticks + jid;
+      416:  951:    if (!js->present)
+      416:  951-block  0
+branch  0 taken 416 (fallthrough)
+branch  1 taken 0
+      416:  952:        return GLFW_FALSE;
+      416:  952-block  0
+        -:  953:
+    #####:  954:    return _glfwPlatformPollJoystick(js, _GLFW_POLL_PRESENCE);
+    %%%%%:  954-block  0
+call    0 never executed
+        -:  955:}
+        -:  956:
+function glfwGetJoystickAxes called 0 returned 0% blocks executed 0%
+    #####:  957:GLFWAPI const float* glfwGetJoystickAxes(int jid, int* count)
+        -:  958:{
+        -:  959:    _GLFWjoystick* js;
+        -:  960:
+    #####:  961:    assert(jid >= GLFW_JOYSTICK_1);
+    %%%%%:  961-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  961-block  1
+call    2 never executed
+    %%%%%:  961-block  2
+    #####:  962:    assert(jid <= GLFW_JOYSTICK_LAST);
+    %%%%%:  962-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  962-block  1
+call    2 never executed
+    %%%%%:  962-block  2
+    #####:  963:    assert(count != NULL);
+    %%%%%:  963-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  963-block  1
+call    2 never executed
+    %%%%%:  963-block  2
+        -:  964:
+    #####:  965:    *count = 0;
+        -:  966:
+    #####:  967:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+    %%%%%:  967-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  967-block  1
+call    2 never executed
+        -:  968:
+    #####:  969:    if (jid < 0 || jid > GLFW_JOYSTICK_LAST)
+    %%%%%:  969-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  969-block  1
+branch  2 never executed
+branch  3 never executed
+        -:  970:    {
+    #####:  971:        _glfwInputError(GLFW_INVALID_ENUM, "Invalid joystick ID %i", jid);
+    %%%%%:  971-block  0
+call    0 never executed
+    #####:  972:        return NULL;
+        -:  973:    }
+        -:  974:
+    #####:  975:    if (!initJoysticks())
+    %%%%%:  975-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####:  976:        return NULL;
+    %%%%%:  976-block  0
+        -:  977:
+    #####:  978:    js = _glfw.joysticks + jid;
+    #####:  979:    if (!js->present)
+    %%%%%:  979-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  980:        return NULL;
+    %%%%%:  980-block  0
+        -:  981:
+    #####:  982:    if (!_glfwPlatformPollJoystick(js, _GLFW_POLL_AXES))
+    %%%%%:  982-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####:  983:        return NULL;
+    %%%%%:  983-block  0
+        -:  984:
+    #####:  985:    *count = js->axisCount;
+    #####:  986:    return js->axes;
+    %%%%%:  986-block  0
+        -:  987:}
+        -:  988:
+function glfwGetJoystickButtons called 0 returned 0% blocks executed 0%
+    #####:  989:GLFWAPI const unsigned char* glfwGetJoystickButtons(int jid, int* count)
+        -:  990:{
+        -:  991:    _GLFWjoystick* js;
+        -:  992:
+    #####:  993:    assert(jid >= GLFW_JOYSTICK_1);
+    %%%%%:  993-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  993-block  1
+call    2 never executed
+    %%%%%:  993-block  2
+    #####:  994:    assert(jid <= GLFW_JOYSTICK_LAST);
+    %%%%%:  994-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  994-block  1
+call    2 never executed
+    %%%%%:  994-block  2
+    #####:  995:    assert(count != NULL);
+    %%%%%:  995-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  995-block  1
+call    2 never executed
+    %%%%%:  995-block  2
+        -:  996:
+    #####:  997:    *count = 0;
+        -:  998:
+    #####:  999:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+    %%%%%:  999-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  999-block  1
+call    2 never executed
+        -: 1000:
+    #####: 1001:    if (jid < 0 || jid > GLFW_JOYSTICK_LAST)
+    %%%%%: 1001-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1001-block  1
+branch  2 never executed
+branch  3 never executed
+        -: 1002:    {
+    #####: 1003:        _glfwInputError(GLFW_INVALID_ENUM, "Invalid joystick ID %i", jid);
+    %%%%%: 1003-block  0
+call    0 never executed
+    #####: 1004:        return NULL;
+        -: 1005:    }
+        -: 1006:
+    #####: 1007:    if (!initJoysticks())
+    %%%%%: 1007-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####: 1008:        return NULL;
+    %%%%%: 1008-block  0
+        -: 1009:
+    #####: 1010:    js = _glfw.joysticks + jid;
+    #####: 1011:    if (!js->present)
+    %%%%%: 1011-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1012:        return NULL;
+    %%%%%: 1012-block  0
+        -: 1013:
+    #####: 1014:    if (!_glfwPlatformPollJoystick(js, _GLFW_POLL_BUTTONS))
+    %%%%%: 1014-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####: 1015:        return NULL;
+    %%%%%: 1015-block  0
+        -: 1016:
+    #####: 1017:    if (_glfw.hints.init.hatButtons)
+    %%%%%: 1017-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1018:        *count = js->buttonCount + js->hatCount * 4;
+    %%%%%: 1018-block  0
+        -: 1019:    else
+    #####: 1020:        *count = js->buttonCount;
+    %%%%%: 1020-block  0
+        -: 1021:
+    #####: 1022:    return js->buttons;
+    %%%%%: 1022-block  0
+        -: 1023:}
+        -: 1024:
+function glfwGetJoystickHats called 0 returned 0% blocks executed 0%
+    #####: 1025:GLFWAPI const unsigned char* glfwGetJoystickHats(int jid, int* count)
+        -: 1026:{
+        -: 1027:    _GLFWjoystick* js;
+        -: 1028:
+    #####: 1029:    assert(jid >= GLFW_JOYSTICK_1);
+    %%%%%: 1029-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1029-block  1
+call    2 never executed
+    %%%%%: 1029-block  2
+    #####: 1030:    assert(jid <= GLFW_JOYSTICK_LAST);
+    %%%%%: 1030-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1030-block  1
+call    2 never executed
+    %%%%%: 1030-block  2
+    #####: 1031:    assert(count != NULL);
+    %%%%%: 1031-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1031-block  1
+call    2 never executed
+    %%%%%: 1031-block  2
+        -: 1032:
+    #####: 1033:    *count = 0;
+        -: 1034:
+    #####: 1035:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+    %%%%%: 1035-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1035-block  1
+call    2 never executed
+        -: 1036:
+    #####: 1037:    if (jid < 0 || jid > GLFW_JOYSTICK_LAST)
+    %%%%%: 1037-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1037-block  1
+branch  2 never executed
+branch  3 never executed
+        -: 1038:    {
+    #####: 1039:        _glfwInputError(GLFW_INVALID_ENUM, "Invalid joystick ID %i", jid);
+    %%%%%: 1039-block  0
+call    0 never executed
+    #####: 1040:        return NULL;
+        -: 1041:    }
+        -: 1042:
+    #####: 1043:    if (!initJoysticks())
+    %%%%%: 1043-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####: 1044:        return NULL;
+    %%%%%: 1044-block  0
+        -: 1045:
+    #####: 1046:    js = _glfw.joysticks + jid;
+    #####: 1047:    if (!js->present)
+    %%%%%: 1047-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1048:        return NULL;
+    %%%%%: 1048-block  0
+        -: 1049:
+    #####: 1050:    if (!_glfwPlatformPollJoystick(js, _GLFW_POLL_BUTTONS))
+    %%%%%: 1050-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####: 1051:        return NULL;
+    %%%%%: 1051-block  0
+        -: 1052:
+    #####: 1053:    *count = js->hatCount;
+    #####: 1054:    return js->hats;
+    %%%%%: 1054-block  0
+        -: 1055:}
+        -: 1056:
+function glfwGetJoystickName called 0 returned 0% blocks executed 0%
+    #####: 1057:GLFWAPI const char* glfwGetJoystickName(int jid)
+        -: 1058:{
+        -: 1059:    _GLFWjoystick* js;
+        -: 1060:
+    #####: 1061:    assert(jid >= GLFW_JOYSTICK_1);
+    %%%%%: 1061-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1061-block  1
+call    2 never executed
+    %%%%%: 1061-block  2
+    #####: 1062:    assert(jid <= GLFW_JOYSTICK_LAST);
+    %%%%%: 1062-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1062-block  1
+call    2 never executed
+    %%%%%: 1062-block  2
+        -: 1063:
+    #####: 1064:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+    %%%%%: 1064-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1064-block  1
+call    2 never executed
+        -: 1065:
+    #####: 1066:    if (jid < 0 || jid > GLFW_JOYSTICK_LAST)
+    %%%%%: 1066-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1066-block  1
+branch  2 never executed
+branch  3 never executed
+        -: 1067:    {
+    #####: 1068:        _glfwInputError(GLFW_INVALID_ENUM, "Invalid joystick ID %i", jid);
+    %%%%%: 1068-block  0
+call    0 never executed
+    #####: 1069:        return NULL;
+        -: 1070:    }
+        -: 1071:
+    #####: 1072:    if (!initJoysticks())
+    %%%%%: 1072-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####: 1073:        return NULL;
+    %%%%%: 1073-block  0
+        -: 1074:
+    #####: 1075:    js = _glfw.joysticks + jid;
+    #####: 1076:    if (!js->present)
+    %%%%%: 1076-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1077:        return NULL;
+    %%%%%: 1077-block  0
+        -: 1078:
+    #####: 1079:    if (!_glfwPlatformPollJoystick(js, _GLFW_POLL_PRESENCE))
+    %%%%%: 1079-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####: 1080:        return NULL;
+    %%%%%: 1080-block  0
+        -: 1081:
+    #####: 1082:    return js->name;
+    %%%%%: 1082-block  0
+        -: 1083:}
+        -: 1084:
+function glfwGetJoystickGUID called 0 returned 0% blocks executed 0%
+    #####: 1085:GLFWAPI const char* glfwGetJoystickGUID(int jid)
+        -: 1086:{
+        -: 1087:    _GLFWjoystick* js;
+        -: 1088:
+    #####: 1089:    assert(jid >= GLFW_JOYSTICK_1);
+    %%%%%: 1089-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1089-block  1
+call    2 never executed
+    %%%%%: 1089-block  2
+    #####: 1090:    assert(jid <= GLFW_JOYSTICK_LAST);
+    %%%%%: 1090-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1090-block  1
+call    2 never executed
+    %%%%%: 1090-block  2
+        -: 1091:
+    #####: 1092:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+    %%%%%: 1092-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1092-block  1
+call    2 never executed
+        -: 1093:
+    #####: 1094:    if (jid < 0 || jid > GLFW_JOYSTICK_LAST)
+    %%%%%: 1094-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1094-block  1
+branch  2 never executed
+branch  3 never executed
+        -: 1095:    {
+    #####: 1096:        _glfwInputError(GLFW_INVALID_ENUM, "Invalid joystick ID %i", jid);
+    %%%%%: 1096-block  0
+call    0 never executed
+    #####: 1097:        return NULL;
+        -: 1098:    }
+        -: 1099:
+    #####: 1100:    if (!initJoysticks())
+    %%%%%: 1100-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####: 1101:        return NULL;
+    %%%%%: 1101-block  0
+        -: 1102:
+    #####: 1103:    js = _glfw.joysticks + jid;
+    #####: 1104:    if (!js->present)
+    %%%%%: 1104-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1105:        return NULL;
+    %%%%%: 1105-block  0
+        -: 1106:
+    #####: 1107:    if (!_glfwPlatformPollJoystick(js, _GLFW_POLL_PRESENCE))
+    %%%%%: 1107-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####: 1108:        return NULL;
+    %%%%%: 1108-block  0
+        -: 1109:
+    #####: 1110:    return js->guid;
+    %%%%%: 1110-block  0
+        -: 1111:}
+        -: 1112:
+function glfwSetJoystickUserPointer called 0 returned 0% blocks executed 0%
+    #####: 1113:GLFWAPI void glfwSetJoystickUserPointer(int jid, void* pointer)
+        -: 1114:{
+        -: 1115:    _GLFWjoystick* js;
+        -: 1116:
+    #####: 1117:    assert(jid >= GLFW_JOYSTICK_1);
+    %%%%%: 1117-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1117-block  1
+call    2 never executed
+    %%%%%: 1117-block  2
+    #####: 1118:    assert(jid <= GLFW_JOYSTICK_LAST);
+    %%%%%: 1118-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1118-block  1
+call    2 never executed
+    %%%%%: 1118-block  2
+        -: 1119:
+    #####: 1120:    _GLFW_REQUIRE_INIT();
+    %%%%%: 1120-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1120-block  1
+call    2 never executed
+        -: 1121:
+    #####: 1122:    js = _glfw.joysticks + jid;
+    #####: 1123:    if (!js->present)
+    %%%%%: 1123-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1124:        return;
+    %%%%%: 1124-block  0
+        -: 1125:
+    #####: 1126:    js->userPointer = pointer;
+    %%%%%: 1126-block  0
+        -: 1127:}
+        -: 1128:
+function glfwGetJoystickUserPointer called 0 returned 0% blocks executed 0%
+    #####: 1129:GLFWAPI void* glfwGetJoystickUserPointer(int jid)
+        -: 1130:{
+        -: 1131:    _GLFWjoystick* js;
+        -: 1132:
+    #####: 1133:    assert(jid >= GLFW_JOYSTICK_1);
+    %%%%%: 1133-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1133-block  1
+call    2 never executed
+    %%%%%: 1133-block  2
+    #####: 1134:    assert(jid <= GLFW_JOYSTICK_LAST);
+    %%%%%: 1134-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1134-block  1
+call    2 never executed
+    %%%%%: 1134-block  2
+        -: 1135:
+    #####: 1136:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+    %%%%%: 1136-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1136-block  1
+call    2 never executed
+        -: 1137:
+    #####: 1138:    js = _glfw.joysticks + jid;
+    #####: 1139:    if (!js->present)
+    %%%%%: 1139-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1140:        return NULL;
+    %%%%%: 1140-block  0
+        -: 1141:
+    #####: 1142:    return js->userPointer;
+    %%%%%: 1142-block  0
+        -: 1143:}
+        -: 1144:
+function glfwSetJoystickCallback called 1 returned 100% blocks executed 62%
+        1: 1145:GLFWAPI GLFWjoystickfun glfwSetJoystickCallback(GLFWjoystickfun cbfun)
+        -: 1146:{
+       1*: 1147:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+        1: 1147-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%: 1147-block  1
+call    2 never executed
+        -: 1148:
+        1: 1149:    if (!initJoysticks())
+        1: 1149-block  0
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
+    #####: 1150:        return NULL;
+    %%%%%: 1150-block  0
+        -: 1151:
+        1: 1152:    _GLFW_SWAP_POINTERS(_glfw.callbacks.joystick, cbfun);
+        1: 1153:    return cbfun;
+        1: 1153-block  0
+        -: 1154:}
+        -: 1155:
+function glfwUpdateGamepadMappings called 410 returned 100% blocks executed 67%
+      410: 1156:GLFWAPI int glfwUpdateGamepadMappings(const char* string)
+        -: 1157:{
+        -: 1158:    int jid;
+      410: 1159:    const char* c = string;
+        -: 1160:
+     410*: 1161:    assert(string != NULL);
+      410: 1161-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 410
+    %%%%%: 1161-block  1
+call    2 never executed
+      410: 1161-block  2
+        -: 1162:
+     410*: 1163:    _GLFW_REQUIRE_INIT_OR_RETURN(GLFW_FALSE);
+      410: 1163-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 410
+    %%%%%: 1163-block  1
+call    2 never executed
+        -: 1164:
+      820: 1165:    while (*c)
+      410: 1165-block  0
+      820: 1165-block  1
+branch  0 taken 410
+branch  1 taken 410 (fallthrough)
+        -: 1166:    {
+     410*: 1167:        if ((*c >= '0' && *c <= '9') ||
+      410: 1167-block  0
+branch  0 taken 410 (fallthrough)
+branch  1 taken 0
+      410: 1167-block  1
+branch  2 taken 0 (fallthrough)
+branch  3 taken 410
+    #####: 1168:            (*c >= 'a' && *c <= 'f') ||
+    %%%%%: 1168-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1168-block  1
+branch  2 never executed
+branch  3 never executed
+    #####: 1169:            (*c >= 'A' && *c <= 'F'))
+    %%%%%: 1169-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1169-block  1
+branch  2 never executed
+branch  3 never executed
+      410: 1170:        {
+        -: 1171:            char line[1024];
+        -: 1172:
+      410: 1173:            const size_t length = strcspn(c, "\r\n");
+      410: 1174:            if (length < sizeof(line))
+      410: 1174-block  0
+branch  0 taken 410 (fallthrough)
+branch  1 taken 0
+        -: 1175:            {
+      410: 1176:                _GLFWmapping mapping = {{0}};
+        -: 1177:
+      410: 1178:                memcpy(line, c, length);
+      410: 1179:                line[length] = '\0';
+        -: 1180:
+      410: 1181:                if (parseMapping(&mapping, line))
+      410: 1181-block  0
+call    0 returned 410
+branch  1 taken 146 (fallthrough)
+branch  2 taken 264
+        -: 1182:                {
+      146: 1183:                    _GLFWmapping* previous = findMapping(mapping.guid);
+      146: 1183-block  0
+call    0 returned 146
+      146: 1184:                    if (previous)
+branch  0 taken 1 (fallthrough)
+branch  1 taken 145
+        1: 1185:                        *previous = mapping;
+        1: 1185-block  0
+        -: 1186:                    else
+        -: 1187:                    {
+      145: 1188:                        _glfw.mappingCount++;
+      145: 1189:                        _glfw.mappings =
+      145: 1190:                            realloc(_glfw.mappings,
+      145: 1191:                                    sizeof(_GLFWmapping) * _glfw.mappingCount);
+      145: 1192:                        _glfw.mappings[_glfw.mappingCount - 1] = mapping;
+      145: 1192-block  0
+        -: 1193:                    }
+        -: 1194:                }
+        -: 1195:            }
+        -: 1196:
+      410: 1197:            c += length;
+      410: 1197-block  0
+        -: 1198:        }
+        -: 1199:        else
+        -: 1200:        {
+    #####: 1201:            c += strcspn(c, "\r\n");
+    #####: 1202:            c += strspn(c, "\r\n");
+    %%%%%: 1202-block  0
+        -: 1203:        }
+        -: 1204:    }
+        -: 1205:
+     6970: 1206:    for (jid = 0;  jid <= GLFW_JOYSTICK_LAST;  jid++)
+      410: 1206-block  0
+     6560: 1206-block  1
+     6970: 1206-block  2
+branch  0 taken 6560
+branch  1 taken 410 (fallthrough)
+        -: 1207:    {
+     6560: 1208:        _GLFWjoystick* js = _glfw.joysticks + jid;
+     6560: 1209:        if (js->present)
+     6560: 1209-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 6560
+    #####: 1210:            js->mapping = findValidMapping(js);
+    %%%%%: 1210-block  0
+call    0 never executed
+        -: 1211:    }
+        -: 1212:
+      410: 1213:    return GLFW_TRUE;
+      410: 1213-block  0
+        -: 1214:}
+        -: 1215:
+function glfwJoystickIsGamepad called 0 returned 0% blocks executed 0%
+    #####: 1216:GLFWAPI int glfwJoystickIsGamepad(int jid)
+        -: 1217:{
+        -: 1218:    _GLFWjoystick* js;
+        -: 1219:
+    #####: 1220:    assert(jid >= GLFW_JOYSTICK_1);
+    %%%%%: 1220-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1220-block  1
+call    2 never executed
+    %%%%%: 1220-block  2
+    #####: 1221:    assert(jid <= GLFW_JOYSTICK_LAST);
+    %%%%%: 1221-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1221-block  1
+call    2 never executed
+    %%%%%: 1221-block  2
+        -: 1222:
+    #####: 1223:    _GLFW_REQUIRE_INIT_OR_RETURN(GLFW_FALSE);
+    %%%%%: 1223-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1223-block  1
+call    2 never executed
+        -: 1224:
+    #####: 1225:    if (jid < 0 || jid > GLFW_JOYSTICK_LAST)
+    %%%%%: 1225-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1225-block  1
+branch  2 never executed
+branch  3 never executed
+        -: 1226:    {
+    #####: 1227:        _glfwInputError(GLFW_INVALID_ENUM, "Invalid joystick ID %i", jid);
+    %%%%%: 1227-block  0
+call    0 never executed
+    #####: 1228:        return GLFW_FALSE;
+        -: 1229:    }
+        -: 1230:
+    #####: 1231:    if (!initJoysticks())
+    %%%%%: 1231-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####: 1232:        return GLFW_FALSE;
+    %%%%%: 1232-block  0
+        -: 1233:
+    #####: 1234:    js = _glfw.joysticks + jid;
+    #####: 1235:    if (!js->present)
+    %%%%%: 1235-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1236:        return GLFW_FALSE;
+    %%%%%: 1236-block  0
+        -: 1237:
+    #####: 1238:    if (!_glfwPlatformPollJoystick(js, _GLFW_POLL_PRESENCE))
+    %%%%%: 1238-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####: 1239:        return GLFW_FALSE;
+    %%%%%: 1239-block  0
+        -: 1240:
+    #####: 1241:    return js->mapping != NULL;
+    %%%%%: 1241-block  0
+        -: 1242:}
+        -: 1243:
+function glfwGetGamepadName called 0 returned 0% blocks executed 0%
+    #####: 1244:GLFWAPI const char* glfwGetGamepadName(int jid)
+        -: 1245:{
+        -: 1246:    _GLFWjoystick* js;
+        -: 1247:
+    #####: 1248:    assert(jid >= GLFW_JOYSTICK_1);
+    %%%%%: 1248-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1248-block  1
+call    2 never executed
+    %%%%%: 1248-block  2
+    #####: 1249:    assert(jid <= GLFW_JOYSTICK_LAST);
+    %%%%%: 1249-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1249-block  1
+call    2 never executed
+    %%%%%: 1249-block  2
+        -: 1250:
+    #####: 1251:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+    %%%%%: 1251-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1251-block  1
+call    2 never executed
+        -: 1252:
+    #####: 1253:    if (jid < 0 || jid > GLFW_JOYSTICK_LAST)
+    %%%%%: 1253-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1253-block  1
+branch  2 never executed
+branch  3 never executed
+        -: 1254:    {
+    #####: 1255:        _glfwInputError(GLFW_INVALID_ENUM, "Invalid joystick ID %i", jid);
+    %%%%%: 1255-block  0
+call    0 never executed
+    #####: 1256:        return NULL;
+        -: 1257:    }
+        -: 1258:
+    #####: 1259:    if (!initJoysticks())
+    %%%%%: 1259-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####: 1260:        return NULL;
+    %%%%%: 1260-block  0
+        -: 1261:
+    #####: 1262:    js = _glfw.joysticks + jid;
+    #####: 1263:    if (!js->present)
+    %%%%%: 1263-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1264:        return NULL;
+    %%%%%: 1264-block  0
+        -: 1265:
+    #####: 1266:    if (!_glfwPlatformPollJoystick(js, _GLFW_POLL_PRESENCE))
+    %%%%%: 1266-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####: 1267:        return NULL;
+    %%%%%: 1267-block  0
+        -: 1268:
+    #####: 1269:    if (!js->mapping)
+    %%%%%: 1269-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1270:        return NULL;
+    %%%%%: 1270-block  0
+        -: 1271:
+    #####: 1272:    return js->mapping->name;
+    %%%%%: 1272-block  0
+        -: 1273:}
+        -: 1274:
+function glfwGetGamepadState called 0 returned 0% blocks executed 0%
+    #####: 1275:GLFWAPI int glfwGetGamepadState(int jid, GLFWgamepadstate* state)
+        -: 1276:{
+        -: 1277:    int i;
+        -: 1278:    _GLFWjoystick* js;
+        -: 1279:
+    #####: 1280:    assert(jid >= GLFW_JOYSTICK_1);
+    %%%%%: 1280-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1280-block  1
+call    2 never executed
+    %%%%%: 1280-block  2
+    #####: 1281:    assert(jid <= GLFW_JOYSTICK_LAST);
+    %%%%%: 1281-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1281-block  1
+call    2 never executed
+    %%%%%: 1281-block  2
+    #####: 1282:    assert(state != NULL);
+    %%%%%: 1282-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1282-block  1
+call    2 never executed
+    %%%%%: 1282-block  2
+        -: 1283:
+    #####: 1284:    memset(state, 0, sizeof(GLFWgamepadstate));
+        -: 1285:
+    #####: 1286:    _GLFW_REQUIRE_INIT_OR_RETURN(GLFW_FALSE);
+    %%%%%: 1286-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1286-block  1
+call    2 never executed
+        -: 1287:
+    #####: 1288:    if (jid < 0 || jid > GLFW_JOYSTICK_LAST)
+    %%%%%: 1288-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1288-block  1
+branch  2 never executed
+branch  3 never executed
+        -: 1289:    {
+    #####: 1290:        _glfwInputError(GLFW_INVALID_ENUM, "Invalid joystick ID %i", jid);
+    %%%%%: 1290-block  0
+call    0 never executed
+    #####: 1291:        return GLFW_FALSE;
+        -: 1292:    }
+        -: 1293:
+    #####: 1294:    if (!initJoysticks())
+    %%%%%: 1294-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####: 1295:        return GLFW_FALSE;
+    %%%%%: 1295-block  0
+        -: 1296:
+    #####: 1297:    js = _glfw.joysticks + jid;
+    #####: 1298:    if (!js->present)
+    %%%%%: 1298-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1299:        return GLFW_FALSE;
+    %%%%%: 1299-block  0
+        -: 1300:
+    #####: 1301:    if (!_glfwPlatformPollJoystick(js, _GLFW_POLL_ALL))
+    %%%%%: 1301-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####: 1302:        return GLFW_FALSE;
+    %%%%%: 1302-block  0
+        -: 1303:
+    #####: 1304:    if (!js->mapping)
+    %%%%%: 1304-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1305:        return GLFW_FALSE;
+    %%%%%: 1305-block  0
+        -: 1306:
+    #####: 1307:    for (i = 0;  i <= GLFW_GAMEPAD_BUTTON_LAST;  i++)
+    %%%%%: 1307-block  0
+    %%%%%: 1307-block  1
+    %%%%%: 1307-block  2
+branch  0 never executed
+branch  1 never executed
+        -: 1308:    {
+    #####: 1309:        const _GLFWmapelement* e = js->mapping->buttons + i;
+    #####: 1310:        if (e->type == _GLFW_JOYSTICK_AXIS)
+    %%%%%: 1310-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1311:        {
+    #####: 1312:            const float value = js->axes[e->index] * e->axisScale + e->axisOffset;
+        -: 1313:            // HACK: This should be baked into the value transform
+        -: 1314:            // TODO: Bake into transform when implementing output modifiers
+    #####: 1315:            if (e->axisOffset < 0 || (e->axisOffset == 0 && e->axisScale > 0))
+    %%%%%: 1315-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1315-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%: 1315-block  2
+branch  4 never executed
+branch  5 never executed
+        -: 1316:            {
+    #####: 1317:                if (value >= 0.f)
+    %%%%%: 1317-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1318:                    state->buttons[i] = GLFW_PRESS;
+    %%%%%: 1318-block  0
+        -: 1319:            }
+        -: 1320:            else
+        -: 1321:            {
+    #####: 1322:                if (value <= 0.f)
+    %%%%%: 1322-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1323:                    state->buttons[i] = GLFW_PRESS;
+    %%%%%: 1323-block  0
+        -: 1324:            }
+        -: 1325:        }
+    #####: 1326:        else if (e->type == _GLFW_JOYSTICK_HATBIT)
+    %%%%%: 1326-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1327:        {
+    #####: 1328:            const unsigned int hat = e->index >> 4;
+    #####: 1329:            const unsigned int bit = e->index & 0xf;
+    #####: 1330:            if (js->hats[hat] & bit)
+    %%%%%: 1330-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1331:                state->buttons[i] = GLFW_PRESS;
+    %%%%%: 1331-block  0
+        -: 1332:        }
+    #####: 1333:        else if (e->type == _GLFW_JOYSTICK_BUTTON)
+    %%%%%: 1333-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1334:            state->buttons[i] = js->buttons[e->index];
+    %%%%%: 1334-block  0
+        -: 1335:    }
+        -: 1336:
+    #####: 1337:    for (i = 0;  i <= GLFW_GAMEPAD_AXIS_LAST;  i++)
+    %%%%%: 1337-block  0
+    %%%%%: 1337-block  1
+    %%%%%: 1337-block  2
+branch  0 never executed
+branch  1 never executed
+        -: 1338:    {
+    #####: 1339:        const _GLFWmapelement* e = js->mapping->axes + i;
+    #####: 1340:        if (e->type == _GLFW_JOYSTICK_AXIS)
+    %%%%%: 1340-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1341:        {
+    #####: 1342:            const float value = js->axes[e->index] * e->axisScale + e->axisOffset;
+    #####: 1343:            state->axes[i] = _glfw_fminf(_glfw_fmaxf(value, -1.f), 1.f);
+    %%%%%: 1343-block  0
+call    0 never executed
+call    1 never executed
+        -: 1344:        }
+    #####: 1345:        else if (e->type == _GLFW_JOYSTICK_HATBIT)
+    %%%%%: 1345-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1346:        {
+    #####: 1347:            const unsigned int hat = e->index >> 4;
+    #####: 1348:            const unsigned int bit = e->index & 0xf;
+    #####: 1349:            if (js->hats[hat] & bit)
+    %%%%%: 1349-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1350:                state->axes[i] = 1.f;
+    %%%%%: 1350-block  0
+        -: 1351:            else
+    #####: 1352:                state->axes[i] = -1.f;
+    %%%%%: 1352-block  0
+        -: 1353:        }
+    #####: 1354:        else if (e->type == _GLFW_JOYSTICK_BUTTON)
+    %%%%%: 1354-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1355:            state->axes[i] = js->buttons[e->index] * 2.f - 1.f;
+    %%%%%: 1355-block  0
+        -: 1356:    }
+        -: 1357:
+    #####: 1358:    return GLFW_TRUE;
+    %%%%%: 1358-block  0
+        -: 1359:}
+        -: 1360:
+function glfwSetClipboardString called 0 returned 0% blocks executed 0%
+    #####: 1361:GLFWAPI void glfwSetClipboardString(GLFWwindow* handle, const char* string)
+        -: 1362:{
+    #####: 1363:    assert(string != NULL);
+    %%%%%: 1363-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1363-block  1
+call    2 never executed
+    %%%%%: 1363-block  2
+        -: 1364:
+    #####: 1365:    _GLFW_REQUIRE_INIT();
+    %%%%%: 1365-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1365-block  1
+call    2 never executed
+    #####: 1366:    _glfwPlatformSetClipboardString(string);
+    %%%%%: 1366-block  0
+call    0 never executed
+        -: 1367:}
+        -: 1368:
+function glfwGetClipboardString called 0 returned 0% blocks executed 0%
+    #####: 1369:GLFWAPI const char* glfwGetClipboardString(GLFWwindow* handle)
+        -: 1370:{
+    #####: 1371:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+    %%%%%: 1371-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1371-block  1
+call    2 never executed
+    #####: 1372:    return _glfwPlatformGetClipboardString();
+    %%%%%: 1372-block  0
+call    0 never executed
+        -: 1373:}
+        -: 1374:
+function glfwGetTime called 9951664 returned 100% blocks executed 71%
+  9951664: 1375:GLFWAPI double glfwGetTime(void)
+        -: 1376:{
+ 9951664*: 1377:    _GLFW_REQUIRE_INIT_OR_RETURN(0.0);
+  9951664: 1377-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 9951664
+    %%%%%: 1377-block  1
+call    2 never executed
+ 19903328: 1378:    return (double) (_glfwPlatformGetTimerValue() - _glfw.timer.offset) /
+  9951664: 1378-block  0
+call    0 returned 9951664
+  9951664: 1379:        _glfwPlatformGetTimerFrequency();
+call    0 returned 9951664
+        -: 1380:}
+        -: 1381:
+function glfwSetTime called 0 returned 0% blocks executed 0%
+    #####: 1382:GLFWAPI void glfwSetTime(double time)
+        -: 1383:{
+    #####: 1384:    _GLFW_REQUIRE_INIT();
+    %%%%%: 1384-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1384-block  1
+call    2 never executed
+        -: 1385:
+    #####: 1386:    if (time != time || time < 0.0 || time > 18446744073.0)
+    %%%%%: 1386-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1386-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%: 1386-block  2
+branch  4 never executed
+branch  5 never executed
+        -: 1387:    {
+    #####: 1388:        _glfwInputError(GLFW_INVALID_VALUE, "Invalid time %f", time);
+    %%%%%: 1388-block  0
+call    0 never executed
+    #####: 1389:        return;
+        -: 1390:    }
+        -: 1391:
+    #####: 1392:    _glfw.timer.offset = _glfwPlatformGetTimerValue() -
+    %%%%%: 1392-block  0
+call    0 never executed
+    #####: 1393:        (uint64_t) (time * _glfwPlatformGetTimerFrequency());
+call    0 never executed
+        -: 1394:}
+        -: 1395:
+function glfwGetTimerValue called 0 returned 0% blocks executed 0%
+    #####: 1396:GLFWAPI uint64_t glfwGetTimerValue(void)
+        -: 1397:{
+    #####: 1398:    _GLFW_REQUIRE_INIT_OR_RETURN(0);
+    %%%%%: 1398-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1398-block  1
+call    2 never executed
+    #####: 1399:    return _glfwPlatformGetTimerValue();
+    %%%%%: 1399-block  0
+call    0 never executed
+        -: 1400:}
+        -: 1401:
+function glfwGetTimerFrequency called 0 returned 0% blocks executed 0%
+    #####: 1402:GLFWAPI uint64_t glfwGetTimerFrequency(void)
+        -: 1403:{
+    #####: 1404:    _GLFW_REQUIRE_INIT_OR_RETURN(0);
+    %%%%%: 1404-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1404-block  1
+call    2 never executed
+    #####: 1405:    return _glfwPlatformGetTimerFrequency();
+    %%%%%: 1405-block  0
+call    0 never executed
+        -: 1406:}

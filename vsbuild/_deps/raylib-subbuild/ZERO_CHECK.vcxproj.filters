@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Dev\CLionProjects\Snake-raylib\vsbuild\_deps\raylib-subbuild\CMakeFiles\5ea853f16ff928c7b562472edf618755\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{85D8F521-579E-3174-ACF2-489115457844}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

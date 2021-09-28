@@ -1,0 +1,46 @@
+#IncludeRegexLine: ^[ 	]*[#%][ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/Food.h
+
+../include/Segment.h
+
+C:/Dev/CLionProjects/Snake-raylib/src/Food.cpp
+Food.h
+C:/Dev/CLionProjects/Snake-raylib/src/Food.h
+random
+-
+iostream
+-
+
+C:/Dev/CLionProjects/Snake-raylib/src/Segment.cpp
+Segment.h
+C:/Dev/CLionProjects/Snake-raylib/src/Segment.h
+raylib.h
+C:/Dev/CLionProjects/Snake-raylib/src/raylib.h
+
+C:/Dev/CLionProjects/Snake-raylib/src/main.cpp
+iostream
+-
+raylib.h
+C:/Dev/CLionProjects/Snake-raylib/src/raylib.h
+vector
+-
+Segment.h
+C:/Dev/CLionProjects/Snake-raylib/src/Segment.h
+algorithm
+-
+Food.h
+C:/Dev/CLionProjects/Snake-raylib/src/Food.h
+
+_deps/raylib-src/src/raylib.h
+stdarg.h
+-
+stdbool.h
+-
+

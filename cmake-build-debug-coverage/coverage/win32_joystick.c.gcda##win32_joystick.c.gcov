@@ -1,0 +1,1153 @@
+        -:    0:Source:C:/Dev/CLionProjects/Snake-raylib/cmake-build-debug-coverage/_deps/raylib-src/src/external/glfw/src/win32_joystick.c
+        -:    0:Graph:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\external\glfw\src\CMakeFiles\glfw.dir\win32_joystick.c.gcno
+        -:    0:Data:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\external\glfw\src\CMakeFiles\glfw.dir\win32_joystick.c.gcda
+        -:    0:Runs:1
+        -:    1://========================================================================
+        -:    2:// GLFW 3.4 Win32 - www.glfw.org
+        -:    3://------------------------------------------------------------------------
+        -:    4:// Copyright (c) 2002-2006 Marcus Geelnard
+        -:    5:// Copyright (c) 2006-2019 Camilla Löwy <elmindreda@glfw.org>
+        -:    6://
+        -:    7:// This software is provided 'as-is', without any express or implied
+        -:    8:// warranty. In no event will the authors be held liable for any damages
+        -:    9:// arising from the use of this software.
+        -:   10://
+        -:   11:// Permission is granted to anyone to use this software for any purpose,
+        -:   12:// including commercial applications, and to alter it and redistribute it
+        -:   13:// freely, subject to the following restrictions:
+        -:   14://
+        -:   15:// 1. The origin of this software must not be misrepresented; you must not
+        -:   16://    claim that you wrote the original software. If you use this software
+        -:   17://    in a product, an acknowledgment in the product documentation would
+        -:   18://    be appreciated but is not required.
+        -:   19://
+        -:   20:// 2. Altered source versions must be plainly marked as such, and must not
+        -:   21://    be misrepresented as being the original software.
+        -:   22://
+        -:   23:// 3. This notice may not be removed or altered from any source
+        -:   24://    distribution.
+        -:   25://
+        -:   26://========================================================================
+        -:   27:// Please use C89 style variable declarations in this file because VS 2010
+        -:   28://========================================================================
+        -:   29:
+        -:   30:#include "internal.h"
+        -:   31:
+        -:   32:#include <stdio.h>
+        -:   33:#include <math.h>
+        -:   34:
+        -:   35:#define _GLFW_TYPE_AXIS     0
+        -:   36:#define _GLFW_TYPE_SLIDER   1
+        -:   37:#define _GLFW_TYPE_BUTTON   2
+        -:   38:#define _GLFW_TYPE_POV      3
+        -:   39:
+        -:   40:// Data produced with DirectInput device object enumeration
+        -:   41://
+        -:   42:typedef struct _GLFWobjenumWin32
+        -:   43:{
+        -:   44:    IDirectInputDevice8W*   device;
+        -:   45:    _GLFWjoyobjectWin32*    objects;
+        -:   46:    int                     objectCount;
+        -:   47:    int                     axisCount;
+        -:   48:    int                     sliderCount;
+        -:   49:    int                     buttonCount;
+        -:   50:    int                     povCount;
+        -:   51:} _GLFWobjenumWin32;
+        -:   52:
+        -:   53:// Define local copies of the necessary GUIDs
+        -:   54://
+        -:   55:static const GUID _glfw_IID_IDirectInput8W =
+        -:   56:    {0xbf798031,0x483a,0x4da2,{0xaa,0x99,0x5d,0x64,0xed,0x36,0x97,0x00}};
+        -:   57:static const GUID _glfw_GUID_XAxis =
+        -:   58:    {0xa36d02e0,0xc9f3,0x11cf,{0xbf,0xc7,0x44,0x45,0x53,0x54,0x00,0x00}};
+        -:   59:static const GUID _glfw_GUID_YAxis =
+        -:   60:    {0xa36d02e1,0xc9f3,0x11cf,{0xbf,0xc7,0x44,0x45,0x53,0x54,0x00,0x00}};
+        -:   61:static const GUID _glfw_GUID_ZAxis =
+        -:   62:    {0xa36d02e2,0xc9f3,0x11cf,{0xbf,0xc7,0x44,0x45,0x53,0x54,0x00,0x00}};
+        -:   63:static const GUID _glfw_GUID_RxAxis =
+        -:   64:    {0xa36d02f4,0xc9f3,0x11cf,{0xbf,0xc7,0x44,0x45,0x53,0x54,0x00,0x00}};
+        -:   65:static const GUID _glfw_GUID_RyAxis =
+        -:   66:    {0xa36d02f5,0xc9f3,0x11cf,{0xbf,0xc7,0x44,0x45,0x53,0x54,0x00,0x00}};
+        -:   67:static const GUID _glfw_GUID_RzAxis =
+        -:   68:    {0xa36d02e3,0xc9f3,0x11cf,{0xbf,0xc7,0x44,0x45,0x53,0x54,0x00,0x00}};
+        -:   69:static const GUID _glfw_GUID_Slider =
+        -:   70:    {0xa36d02e4,0xc9f3,0x11cf,{0xbf,0xc7,0x44,0x45,0x53,0x54,0x00,0x00}};
+        -:   71:static const GUID _glfw_GUID_POV =
+        -:   72:    {0xa36d02f2,0xc9f3,0x11cf,{0xbf,0xc7,0x44,0x45,0x53,0x54,0x00,0x00}};
+        -:   73:
+        -:   74:#define IID_IDirectInput8W _glfw_IID_IDirectInput8W
+        -:   75:#define GUID_XAxis _glfw_GUID_XAxis
+        -:   76:#define GUID_YAxis _glfw_GUID_YAxis
+        -:   77:#define GUID_ZAxis _glfw_GUID_ZAxis
+        -:   78:#define GUID_RxAxis _glfw_GUID_RxAxis
+        -:   79:#define GUID_RyAxis _glfw_GUID_RyAxis
+        -:   80:#define GUID_RzAxis _glfw_GUID_RzAxis
+        -:   81:#define GUID_Slider _glfw_GUID_Slider
+        -:   82:#define GUID_POV _glfw_GUID_POV
+        -:   83:
+        -:   84:// Object data array for our clone of c_dfDIJoystick
+        -:   85:// Generated with https://github.com/elmindreda/c_dfDIJoystick2
+        -:   86://
+        -:   87:static DIOBJECTDATAFORMAT _glfwObjectDataFormats[] =
+        -:   88:{
+        -:   89:    { &GUID_XAxis,DIJOFS_X,DIDFT_AXIS|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,DIDOI_ASPECTPOSITION },
+        -:   90:    { &GUID_YAxis,DIJOFS_Y,DIDFT_AXIS|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,DIDOI_ASPECTPOSITION },
+        -:   91:    { &GUID_ZAxis,DIJOFS_Z,DIDFT_AXIS|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,DIDOI_ASPECTPOSITION },
+        -:   92:    { &GUID_RxAxis,DIJOFS_RX,DIDFT_AXIS|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,DIDOI_ASPECTPOSITION },
+        -:   93:    { &GUID_RyAxis,DIJOFS_RY,DIDFT_AXIS|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,DIDOI_ASPECTPOSITION },
+        -:   94:    { &GUID_RzAxis,DIJOFS_RZ,DIDFT_AXIS|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,DIDOI_ASPECTPOSITION },
+        -:   95:    { &GUID_Slider,DIJOFS_SLIDER(0),DIDFT_AXIS|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,DIDOI_ASPECTPOSITION },
+        -:   96:    { &GUID_Slider,DIJOFS_SLIDER(1),DIDFT_AXIS|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,DIDOI_ASPECTPOSITION },
+        -:   97:    { &GUID_POV,DIJOFS_POV(0),DIDFT_POV|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:   98:    { &GUID_POV,DIJOFS_POV(1),DIDFT_POV|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:   99:    { &GUID_POV,DIJOFS_POV(2),DIDFT_POV|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  100:    { &GUID_POV,DIJOFS_POV(3),DIDFT_POV|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  101:    { NULL,DIJOFS_BUTTON(0),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  102:    { NULL,DIJOFS_BUTTON(1),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  103:    { NULL,DIJOFS_BUTTON(2),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  104:    { NULL,DIJOFS_BUTTON(3),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  105:    { NULL,DIJOFS_BUTTON(4),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  106:    { NULL,DIJOFS_BUTTON(5),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  107:    { NULL,DIJOFS_BUTTON(6),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  108:    { NULL,DIJOFS_BUTTON(7),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  109:    { NULL,DIJOFS_BUTTON(8),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  110:    { NULL,DIJOFS_BUTTON(9),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  111:    { NULL,DIJOFS_BUTTON(10),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  112:    { NULL,DIJOFS_BUTTON(11),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  113:    { NULL,DIJOFS_BUTTON(12),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  114:    { NULL,DIJOFS_BUTTON(13),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  115:    { NULL,DIJOFS_BUTTON(14),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  116:    { NULL,DIJOFS_BUTTON(15),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  117:    { NULL,DIJOFS_BUTTON(16),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  118:    { NULL,DIJOFS_BUTTON(17),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  119:    { NULL,DIJOFS_BUTTON(18),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  120:    { NULL,DIJOFS_BUTTON(19),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  121:    { NULL,DIJOFS_BUTTON(20),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  122:    { NULL,DIJOFS_BUTTON(21),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  123:    { NULL,DIJOFS_BUTTON(22),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  124:    { NULL,DIJOFS_BUTTON(23),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  125:    { NULL,DIJOFS_BUTTON(24),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  126:    { NULL,DIJOFS_BUTTON(25),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  127:    { NULL,DIJOFS_BUTTON(26),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  128:    { NULL,DIJOFS_BUTTON(27),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  129:    { NULL,DIJOFS_BUTTON(28),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  130:    { NULL,DIJOFS_BUTTON(29),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  131:    { NULL,DIJOFS_BUTTON(30),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  132:    { NULL,DIJOFS_BUTTON(31),DIDFT_BUTTON|DIDFT_OPTIONAL|DIDFT_ANYINSTANCE,0 },
+        -:  133:};
+        -:  134:
+        -:  135:// Our clone of c_dfDIJoystick
+        -:  136://
+        -:  137:static const DIDATAFORMAT _glfwDataFormat =
+        -:  138:{
+        -:  139:    sizeof(DIDATAFORMAT),
+        -:  140:    sizeof(DIOBJECTDATAFORMAT),
+        -:  141:    DIDFT_ABSAXIS,
+        -:  142:    sizeof(DIJOYSTATE),
+        -:  143:    sizeof(_glfwObjectDataFormats) / sizeof(DIOBJECTDATAFORMAT),
+        -:  144:    _glfwObjectDataFormats
+        -:  145:};
+        -:  146:
+        -:  147:// Returns a description fitting the specified XInput capabilities
+        -:  148://
+function getDeviceDescription called 0 returned 0% blocks executed 0%
+    #####:  149:static const char* getDeviceDescription(const XINPUT_CAPABILITIES* xic)
+        -:  150:{
+    #####:  151:    switch (xic->SubType)
+    %%%%%:  151-block  0
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+branch  4 never executed
+branch  5 never executed
+branch  6 never executed
+branch  7 never executed
+        -:  152:    {
+    #####:  153:        case XINPUT_DEVSUBTYPE_WHEEL:
+    #####:  154:            return "XInput Wheel";
+    %%%%%:  154-block  0
+    #####:  155:        case XINPUT_DEVSUBTYPE_ARCADE_STICK:
+    #####:  156:            return "XInput Arcade Stick";
+    %%%%%:  156-block  0
+    #####:  157:        case XINPUT_DEVSUBTYPE_FLIGHT_STICK:
+    #####:  158:            return "XInput Flight Stick";
+    %%%%%:  158-block  0
+    #####:  159:        case XINPUT_DEVSUBTYPE_DANCE_PAD:
+    #####:  160:            return "XInput Dance Pad";
+    %%%%%:  160-block  0
+    #####:  161:        case XINPUT_DEVSUBTYPE_GUITAR:
+    #####:  162:            return "XInput Guitar";
+    %%%%%:  162-block  0
+    #####:  163:        case XINPUT_DEVSUBTYPE_DRUM_KIT:
+    #####:  164:            return "XInput Drum Kit";
+    %%%%%:  164-block  0
+    #####:  165:        case XINPUT_DEVSUBTYPE_GAMEPAD:
+        -:  166:        {
+    #####:  167:            if (xic->Flags & XINPUT_CAPS_WIRELESS)
+    %%%%%:  167-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  168:                return "Wireless Xbox Controller";
+    %%%%%:  168-block  0
+        -:  169:            else
+    #####:  170:                return "Xbox Controller";
+    %%%%%:  170-block  0
+        -:  171:        }
+        -:  172:    }
+        -:  173:
+    #####:  174:    return "Unknown XInput Device";
+    %%%%%:  174-block  0
+        -:  175:}
+        -:  176:
+        -:  177:// Lexically compare device objects
+        -:  178://
+function compareJoystickObjects called 0 returned 0% blocks executed 0%
+    #####:  179:static int compareJoystickObjects(const void* first, const void* second)
+        -:  180:{
+    #####:  181:    const _GLFWjoyobjectWin32* fo = first;
+    #####:  182:    const _GLFWjoyobjectWin32* so = second;
+        -:  183:
+    #####:  184:    if (fo->type != so->type)
+    %%%%%:  184-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  185:        return fo->type - so->type;
+    %%%%%:  185-block  0
+        -:  186:
+    #####:  187:    return fo->offset - so->offset;
+    %%%%%:  187-block  0
+        -:  188:}
+        -:  189:
+        -:  190:// Checks whether the specified device supports XInput
+        -:  191:// Technique from FDInputJoystickManager::IsXInputDeviceFast in ZDoom
+        -:  192://
+function supportsXInput called 0 returned 0% blocks executed 0%
+    #####:  193:static GLFWbool supportsXInput(const GUID* guid)
+        -:  194:{
+    #####:  195:    UINT i, count = 0;
+        -:  196:    RAWINPUTDEVICELIST* ridl;
+    #####:  197:    GLFWbool result = GLFW_FALSE;
+        -:  198:
+    #####:  199:    if (GetRawInputDeviceList(NULL, &count, sizeof(RAWINPUTDEVICELIST)) != 0)
+    %%%%%:  199-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####:  200:        return GLFW_FALSE;
+    %%%%%:  200-block  0
+        -:  201:
+    #####:  202:    ridl = calloc(count, sizeof(RAWINPUTDEVICELIST));
+        -:  203:
+    #####:  204:    if (GetRawInputDeviceList(ridl, &count, sizeof(RAWINPUTDEVICELIST)) == (UINT) -1)
+    %%%%%:  204-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  205:    {
+    #####:  206:        free(ridl);
+    #####:  207:        return GLFW_FALSE;
+    %%%%%:  207-block  0
+        -:  208:    }
+        -:  209:
+    #####:  210:    for (i = 0;  i < count;  i++)
+    %%%%%:  210-block  0
+    %%%%%:  210-block  1
+    %%%%%:  210-block  2
+branch  0 never executed
+branch  1 never executed
+        -:  211:    {
+        -:  212:        RID_DEVICE_INFO rdi;
+        -:  213:        char name[256];
+        -:  214:        UINT size;
+        -:  215:
+    #####:  216:        if (ridl[i].dwType != RIM_TYPEHID)
+    %%%%%:  216-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  217:            continue;
+    %%%%%:  217-block  0
+    %%%%%:  217-block  1
+        -:  218:
+    #####:  219:        ZeroMemory(&rdi, sizeof(rdi));
+    #####:  220:        rdi.cbSize = sizeof(rdi);
+    #####:  221:        size = sizeof(rdi);
+        -:  222:
+    #####:  223:        if ((INT) GetRawInputDeviceInfoA(ridl[i].hDevice,
+    %%%%%:  223-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  224:                                         RIDI_DEVICEINFO,
+        -:  225:                                         &rdi, &size) == -1)
+        -:  226:        {
+    #####:  227:            continue;
+    %%%%%:  227-block  0
+        -:  228:        }
+        -:  229:
+    #####:  230:        if (MAKELONG(rdi.hid.dwVendorId, rdi.hid.dwProductId) != (LONG) guid->Data1)
+    %%%%%:  230-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  231:            continue;
+    %%%%%:  231-block  0
+        -:  232:
+    #####:  233:        memset(name, 0, sizeof(name));
+    #####:  234:        size = sizeof(name);
+        -:  235:
+    #####:  236:        if ((INT) GetRawInputDeviceInfoA(ridl[i].hDevice,
+    %%%%%:  236-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  237:                                         RIDI_DEVICENAME,
+        -:  238:                                         name, &size) == -1)
+        -:  239:        {
+    #####:  240:            break;
+    %%%%%:  240-block  0
+    %%%%%:  240-block  1
+        -:  241:        }
+        -:  242:
+    #####:  243:        name[sizeof(name) - 1] = '\0';
+    #####:  244:        if (strstr(name, "IG_"))
+    %%%%%:  244-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  245:        {
+    #####:  246:            result = GLFW_TRUE;
+    #####:  247:            break;
+    %%%%%:  247-block  0
+        -:  248:        }
+        -:  249:    }
+        -:  250:
+    #####:  251:    free(ridl);
+    #####:  252:    return result;
+    %%%%%:  252-block  0
+        -:  253:}
+        -:  254:
+        -:  255:// Frees all resources associated with the specified joystick
+        -:  256://
+function closeJoystick called 16 returned 100% blocks executed 67%
+       16:  257:static void closeJoystick(_GLFWjoystick* js)
+        -:  258:{
+       16:  259:    if (js->win32.device)
+       16:  259-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 16
+        -:  260:    {
+    #####:  261:        IDirectInputDevice8_Unacquire(js->win32.device);
+    %%%%%:  261-block  0
+call    0 never executed
+    #####:  262:        IDirectInputDevice8_Release(js->win32.device);
+call    0 never executed
+        -:  263:    }
+        -:  264:
+       16:  265:    free(js->win32.objects);
+        -:  266:
+       16:  267:    _glfwFreeJoystick(js);
+       16:  267-block  0
+call    0 returned 16
+       16:  268:    _glfwInputJoystick(js, GLFW_DISCONNECTED);
+call    0 returned 16
+       16:  269:}
+        -:  270:
+        -:  271:// DirectInput device object enumeration callback
+        -:  272:// Insights gleaned from SDL
+        -:  273://
+function deviceObjectCallback called 0 returned 0% blocks executed 0%
+    #####:  274:static BOOL CALLBACK deviceObjectCallback(const DIDEVICEOBJECTINSTANCEW* doi,
+        -:  275:                                          void* user)
+        -:  276:{
+    #####:  277:    _GLFWobjenumWin32* data = user;
+    #####:  278:    _GLFWjoyobjectWin32* object = data->objects + data->objectCount;
+        -:  279:
+    #####:  280:    if (DIDFT_GETTYPE(doi->dwType) & DIDFT_AXIS)
+    %%%%%:  280-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  281:    {
+        -:  282:        DIPROPRANGE dipr;
+        -:  283:
+    #####:  284:        if (memcmp(&doi->guidType, &GUID_Slider, sizeof(GUID)) == 0)
+    %%%%%:  284-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  285:            object->offset = DIJOFS_SLIDER(data->sliderCount);
+    %%%%%:  285-block  0
+    #####:  286:        else if (memcmp(&doi->guidType, &GUID_XAxis, sizeof(GUID)) == 0)
+    %%%%%:  286-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  287:            object->offset = DIJOFS_X;
+    %%%%%:  287-block  0
+    #####:  288:        else if (memcmp(&doi->guidType, &GUID_YAxis, sizeof(GUID)) == 0)
+    %%%%%:  288-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  289:            object->offset = DIJOFS_Y;
+    %%%%%:  289-block  0
+    #####:  290:        else if (memcmp(&doi->guidType, &GUID_ZAxis, sizeof(GUID)) == 0)
+    %%%%%:  290-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  291:            object->offset = DIJOFS_Z;
+    %%%%%:  291-block  0
+    #####:  292:        else if (memcmp(&doi->guidType, &GUID_RxAxis, sizeof(GUID)) == 0)
+    %%%%%:  292-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  293:            object->offset = DIJOFS_RX;
+    %%%%%:  293-block  0
+    #####:  294:        else if (memcmp(&doi->guidType, &GUID_RyAxis, sizeof(GUID)) == 0)
+    %%%%%:  294-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  295:            object->offset = DIJOFS_RY;
+    %%%%%:  295-block  0
+    #####:  296:        else if (memcmp(&doi->guidType, &GUID_RzAxis, sizeof(GUID)) == 0)
+    %%%%%:  296-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  297:            object->offset = DIJOFS_RZ;
+    %%%%%:  297-block  0
+        -:  298:        else
+    #####:  299:            return DIENUM_CONTINUE;
+    %%%%%:  299-block  0
+    %%%%%:  299-block  1
+        -:  300:
+    #####:  301:        ZeroMemory(&dipr, sizeof(dipr));
+    #####:  302:        dipr.diph.dwSize = sizeof(dipr);
+    #####:  303:        dipr.diph.dwHeaderSize = sizeof(dipr.diph);
+    #####:  304:        dipr.diph.dwObj = doi->dwType;
+    #####:  305:        dipr.diph.dwHow = DIPH_BYID;
+    #####:  306:        dipr.lMin = -32768;
+    #####:  307:        dipr.lMax =  32767;
+        -:  308:
+    #####:  309:        if (FAILED(IDirectInputDevice8_SetProperty(data->device,
+    %%%%%:  309-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  310:                                                   DIPROP_RANGE,
+        -:  311:                                                   &dipr.diph)))
+        -:  312:        {
+    #####:  313:            return DIENUM_CONTINUE;
+    %%%%%:  313-block  0
+        -:  314:        }
+        -:  315:
+    #####:  316:        if (memcmp(&doi->guidType, &GUID_Slider, sizeof(GUID)) == 0)
+    %%%%%:  316-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  317:        {
+    #####:  318:            object->type = _GLFW_TYPE_SLIDER;
+    #####:  319:            data->sliderCount++;
+    %%%%%:  319-block  0
+        -:  320:        }
+        -:  321:        else
+        -:  322:        {
+    #####:  323:            object->type = _GLFW_TYPE_AXIS;
+    #####:  324:            data->axisCount++;
+    %%%%%:  324-block  0
+        -:  325:        }
+        -:  326:    }
+    #####:  327:    else if (DIDFT_GETTYPE(doi->dwType) & DIDFT_BUTTON)
+    %%%%%:  327-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  328:    {
+    #####:  329:        object->offset = DIJOFS_BUTTON(data->buttonCount);
+    #####:  330:        object->type = _GLFW_TYPE_BUTTON;
+    #####:  331:        data->buttonCount++;
+    %%%%%:  331-block  0
+        -:  332:    }
+    #####:  333:    else if (DIDFT_GETTYPE(doi->dwType) & DIDFT_POV)
+    %%%%%:  333-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  334:    {
+    #####:  335:        object->offset = DIJOFS_POV(data->povCount);
+    #####:  336:        object->type = _GLFW_TYPE_POV;
+    #####:  337:        data->povCount++;
+    %%%%%:  337-block  0
+        -:  338:    }
+        -:  339:
+    #####:  340:    data->objectCount++;
+    #####:  341:    return DIENUM_CONTINUE;
+    %%%%%:  341-block  0
+        -:  342:}
+        -:  343:
+        -:  344:// DirectInput device enumeration callback
+        -:  345://
+function deviceCallback called 0 returned 0% blocks executed 0%
+    #####:  346:static BOOL CALLBACK deviceCallback(const DIDEVICEINSTANCE* di, void* user)
+        -:  347:{
+    #####:  348:    int jid = 0;
+        -:  349:    DIDEVCAPS dc;
+        -:  350:    DIPROPDWORD dipd;
+        -:  351:    IDirectInputDevice8* device;
+        -:  352:    _GLFWobjenumWin32 data;
+        -:  353:    _GLFWjoystick* js;
+        -:  354:    char guid[33];
+        -:  355:    char name[256];
+        -:  356:
+    #####:  357:    for (jid = 0;  jid <= GLFW_JOYSTICK_LAST;  jid++)
+    %%%%%:  357-block  0
+    %%%%%:  357-block  1
+    %%%%%:  357-block  2
+branch  0 never executed
+branch  1 never executed
+        -:  358:    {
+    #####:  359:        js = _glfw.joysticks + jid;
+    #####:  360:        if (js->present)
+    %%%%%:  360-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  361:        {
+    #####:  362:            if (memcmp(&js->win32.guid, &di->guidInstance, sizeof(GUID)) == 0)
+    %%%%%:  362-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  363:                return DIENUM_CONTINUE;
+    %%%%%:  363-block  0
+        -:  364:        }
+        -:  365:    }
+        -:  366:
+    #####:  367:    if (supportsXInput(&di->guidProduct))
+    %%%%%:  367-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####:  368:        return DIENUM_CONTINUE;
+    %%%%%:  368-block  0
+        -:  369:
+    #####:  370:    if (FAILED(IDirectInput8_CreateDevice(_glfw.win32.dinput8.api,
+    %%%%%:  370-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  371:                                          &di->guidInstance,
+        -:  372:                                          &device,
+        -:  373:                                          NULL)))
+        -:  374:    {
+    #####:  375:        _glfwInputError(GLFW_PLATFORM_ERROR, "Win32: Failed to create device");
+    %%%%%:  375-block  0
+call    0 never executed
+    #####:  376:        return DIENUM_CONTINUE;
+        -:  377:    }
+        -:  378:
+    #####:  379:    if (FAILED(IDirectInputDevice8_SetDataFormat(device, &_glfwDataFormat)))
+    %%%%%:  379-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  380:    {
+    #####:  381:        _glfwInputError(GLFW_PLATFORM_ERROR,
+    %%%%%:  381-block  0
+call    0 never executed
+        -:  382:                        "Win32: Failed to set device data format");
+        -:  383:
+    #####:  384:        IDirectInputDevice8_Release(device);
+call    0 never executed
+    #####:  385:        return DIENUM_CONTINUE;
+        -:  386:    }
+        -:  387:
+    #####:  388:    ZeroMemory(&dc, sizeof(dc));
+    #####:  389:    dc.dwSize = sizeof(dc);
+        -:  390:
+    #####:  391:    if (FAILED(IDirectInputDevice8_GetCapabilities(device, &dc)))
+    %%%%%:  391-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  392:    {
+    #####:  393:        _glfwInputError(GLFW_PLATFORM_ERROR,
+    %%%%%:  393-block  0
+call    0 never executed
+        -:  394:                        "Win32: Failed to query device capabilities");
+        -:  395:
+    #####:  396:        IDirectInputDevice8_Release(device);
+call    0 never executed
+    #####:  397:        return DIENUM_CONTINUE;
+        -:  398:    }
+        -:  399:
+    #####:  400:    ZeroMemory(&dipd, sizeof(dipd));
+    #####:  401:    dipd.diph.dwSize = sizeof(dipd);
+    #####:  402:    dipd.diph.dwHeaderSize = sizeof(dipd.diph);
+    #####:  403:    dipd.diph.dwHow = DIPH_DEVICE;
+    #####:  404:    dipd.dwData = DIPROPAXISMODE_ABS;
+        -:  405:
+    #####:  406:    if (FAILED(IDirectInputDevice8_SetProperty(device,
+    %%%%%:  406-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  407:                                               DIPROP_AXISMODE,
+        -:  408:                                               &dipd.diph)))
+        -:  409:    {
+    #####:  410:        _glfwInputError(GLFW_PLATFORM_ERROR,
+    %%%%%:  410-block  0
+call    0 never executed
+        -:  411:                        "Win32: Failed to set device axis mode");
+        -:  412:
+    #####:  413:        IDirectInputDevice8_Release(device);
+call    0 never executed
+    #####:  414:        return DIENUM_CONTINUE;
+        -:  415:    }
+        -:  416:
+    #####:  417:    memset(&data, 0, sizeof(data));
+    #####:  418:    data.device = device;
+    #####:  419:    data.objects = calloc(dc.dwAxes + (size_t) dc.dwButtons + dc.dwPOVs,
+        -:  420:                          sizeof(_GLFWjoyobjectWin32));
+        -:  421:
+    #####:  422:    if (FAILED(IDirectInputDevice8_EnumObjects(device,
+    %%%%%:  422-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  423:                                               deviceObjectCallback,
+        -:  424:                                               &data,
+        -:  425:                                               DIDFT_AXIS | DIDFT_BUTTON | DIDFT_POV)))
+        -:  426:    {
+    #####:  427:        _glfwInputError(GLFW_PLATFORM_ERROR,
+    %%%%%:  427-block  0
+call    0 never executed
+        -:  428:                        "Win32: Failed to enumerate device objects");
+        -:  429:
+    #####:  430:        IDirectInputDevice8_Release(device);
+call    0 never executed
+    #####:  431:        free(data.objects);
+    #####:  432:        return DIENUM_CONTINUE;
+        -:  433:    }
+        -:  434:
+    #####:  435:    qsort(data.objects, data.objectCount,
+    %%%%%:  435-block  0
+call    0 never executed
+        -:  436:          sizeof(_GLFWjoyobjectWin32),
+        -:  437:          compareJoystickObjects);
+        -:  438:
+    #####:  439:    if (!WideCharToMultiByte(CP_UTF8, 0,
+branch  0 never executed
+branch  1 never executed
+    #####:  440:                             di->tszInstanceName, -1,
+call    0 never executed
+        -:  441:                             name, sizeof(name),
+        -:  442:                             NULL, NULL))
+        -:  443:    {
+    #####:  444:        _glfwInputError(GLFW_PLATFORM_ERROR,
+    %%%%%:  444-block  0
+call    0 never executed
+        -:  445:                        "Win32: Failed to convert joystick name to UTF-8");
+        -:  446:
+    #####:  447:        IDirectInputDevice8_Release(device);
+call    0 never executed
+    #####:  448:        free(data.objects);
+    #####:  449:        return DIENUM_STOP;
+        -:  450:    }
+        -:  451:
+        -:  452:    // Generate a joystick GUID that matches the SDL 2.0.5+ one
+    #####:  453:    if (memcmp(&di->guidProduct.Data4[2], "PIDVID", 6) == 0)
+    %%%%%:  453-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  454:    {
+    #####:  455:        sprintf(guid, "03000000%02x%02x0000%02x%02x000000000000",
+    #####:  456:                (uint8_t) di->guidProduct.Data1,
+    #####:  457:                (uint8_t) (di->guidProduct.Data1 >> 8),
+    #####:  458:                (uint8_t) (di->guidProduct.Data1 >> 16),
+    #####:  459:                (uint8_t) (di->guidProduct.Data1 >> 24));
+    %%%%%:  459-block  0
+call    0 never executed
+        -:  460:    }
+        -:  461:    else
+        -:  462:    {
+    #####:  463:        sprintf(guid, "05000000%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x00",
+    #####:  464:                name[0], name[1], name[2], name[3],
+    #####:  465:                name[4], name[5], name[6], name[7],
+    #####:  466:                name[8], name[9], name[10]);
+    %%%%%:  466-block  0
+call    0 never executed
+        -:  467:    }
+        -:  468:
+    #####:  469:    js = _glfwAllocJoystick(name, guid,
+    #####:  470:                            data.axisCount + data.sliderCount,
+    %%%%%:  470-block  0
+call    0 never executed
+        -:  471:                            data.buttonCount,
+        -:  472:                            data.povCount);
+    #####:  473:    if (!js)
+branch  0 never executed
+branch  1 never executed
+        -:  474:    {
+    #####:  475:        IDirectInputDevice8_Release(device);
+    %%%%%:  475-block  0
+call    0 never executed
+    #####:  476:        free(data.objects);
+    #####:  477:        return DIENUM_STOP;
+        -:  478:    }
+        -:  479:
+    #####:  480:    js->win32.device = device;
+    #####:  481:    js->win32.guid = di->guidInstance;
+    #####:  482:    js->win32.objects = data.objects;
+    #####:  483:    js->win32.objectCount = data.objectCount;
+        -:  484:
+    #####:  485:    _glfwInputJoystick(js, GLFW_CONNECTED);
+    %%%%%:  485-block  0
+call    0 never executed
+    #####:  486:    return DIENUM_CONTINUE;
+        -:  487:}
+        -:  488:
+        -:  489:
+        -:  490://////////////////////////////////////////////////////////////////////////
+        -:  491://////                       GLFW internal API                      //////
+        -:  492://////////////////////////////////////////////////////////////////////////
+        -:  493:
+        -:  494:// Checks for new joysticks after DBT_DEVICEARRIVAL
+        -:  495://
+function _glfwDetectJoystickConnectionWin32 called 1 returned 100% blocks executed 57%
+        1:  496:void _glfwDetectJoystickConnectionWin32(void)
+        -:  497:{
+        1:  498:    if (_glfw.win32.xinput.instance)
+        1:  498-block  0
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+        -:  499:    {
+        -:  500:        DWORD index;
+        -:  501:
+        5:  502:        for (index = 0;  index < XUSER_MAX_COUNT;  index++)
+        1:  502-block  0
+        4:  502-block  1
+        5:  502-block  2
+branch  0 taken 4
+branch  1 taken 1 (fallthrough)
+        -:  503:        {
+        -:  504:            int jid;
+        -:  505:            char guid[33];
+        -:  506:            XINPUT_CAPABILITIES xic;
+        -:  507:            _GLFWjoystick* js;
+        -:  508:
+       68:  509:            for (jid = 0;  jid <= GLFW_JOYSTICK_LAST;  jid++)
+        4:  509-block  0
+       64:  509-block  1
+       68:  509-block  2
+branch  0 taken 64
+branch  1 taken 4 (fallthrough)
+        -:  510:            {
+      64*:  511:                if (_glfw.joysticks[jid].present &&
+       64:  511-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 64
+    #####:  512:                    _glfw.joysticks[jid].win32.device == NULL &&
+    %%%%%:  512-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  513:                    _glfw.joysticks[jid].win32.index == index)
+    %%%%%:  513-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  514:                {
+    #####:  515:                    break;
+    %%%%%:  515-block  0
+        -:  516:                }
+        -:  517:            }
+        -:  518:
+        4:  519:            if (jid <= GLFW_JOYSTICK_LAST)
+        4:  519-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 4
+       4*:  520:                continue;
+    %%%%%:  520-block  0
+        4:  520-block  1
+        -:  521:
+        4:  522:            if (XInputGetCapabilities(index, 0, &xic) != ERROR_SUCCESS)
+        4:  522-block  0
+call    0 returned 4
+branch  1 taken 4 (fallthrough)
+branch  2 taken 0
+        4:  523:                continue;
+        4:  523-block  0
+        -:  524:
+        -:  525:            // Generate a joystick GUID that matches the SDL 2.0.5+ one
+    #####:  526:            sprintf(guid, "78696e707574%02x000000000000000000",
+    #####:  527:                    xic.SubType & 0xff);
+    %%%%%:  527-block  0
+call    0 never executed
+        -:  528:
+    #####:  529:            js = _glfwAllocJoystick(getDeviceDescription(&xic), guid, 6, 10, 1);
+call    0 never executed
+call    1 never executed
+    #####:  530:            if (!js)
+branch  0 never executed
+branch  1 never executed
+    #####:  531:                continue;
+    %%%%%:  531-block  0
+        -:  532:
+    #####:  533:            js->win32.index = index;
+        -:  534:
+    #####:  535:            _glfwInputJoystick(js, GLFW_CONNECTED);
+    %%%%%:  535-block  0
+call    0 never executed
+        -:  536:        }
+        -:  537:    }
+        -:  538:
+        1:  539:    if (_glfw.win32.dinput8.api)
+        1:  539-block  0
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+        -:  540:    {
+        1:  541:        if (FAILED(IDirectInput8_EnumDevices(_glfw.win32.dinput8.api,
+        1:  541-block  0
+call    0 returned 1
+branch  1 taken 0 (fallthrough)
+branch  2 taken 1
+        -:  542:                                             DI8DEVCLASS_GAMECTRL,
+        -:  543:                                             deviceCallback,
+        -:  544:                                             NULL,
+        -:  545:                                             DIEDFL_ALLDEVICES)))
+        -:  546:        {
+    #####:  547:            _glfwInputError(GLFW_PLATFORM_ERROR,
+    %%%%%:  547-block  0
+call    0 never executed
+        -:  548:                            "Failed to enumerate DirectInput8 devices");
+    #####:  549:            return;
+        -:  550:        }
+        -:  551:    }
+        -:  552:}
+        -:  553:
+        -:  554:// Checks for joystick disconnection after DBT_DEVICEREMOVECOMPLETE
+        -:  555://
+function _glfwDetectJoystickDisconnectionWin32 called 0 returned 0% blocks executed 0%
+    #####:  556:void _glfwDetectJoystickDisconnectionWin32(void)
+        -:  557:{
+        -:  558:    int jid;
+        -:  559:
+    #####:  560:    for (jid = 0;  jid <= GLFW_JOYSTICK_LAST;  jid++)
+    %%%%%:  560-block  0
+    %%%%%:  560-block  1
+    %%%%%:  560-block  2
+branch  0 never executed
+branch  1 never executed
+        -:  561:    {
+    #####:  562:        _GLFWjoystick* js = _glfw.joysticks + jid;
+    #####:  563:        if (js->present)
+    %%%%%:  563-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  564:            _glfwPlatformPollJoystick(js, _GLFW_POLL_PRESENCE);
+    %%%%%:  564-block  0
+call    0 never executed
+        -:  565:    }
+    #####:  566:}
+        -:  567:
+        -:  568:
+        -:  569://////////////////////////////////////////////////////////////////////////
+        -:  570://////                       GLFW platform API                      //////
+        -:  571://////////////////////////////////////////////////////////////////////////
+        -:  572:
+function _glfwPlatformInitJoysticks called 1 returned 100% blocks executed 78%
+        1:  573:GLFWbool _glfwPlatformInitJoysticks(void)
+        -:  574:{
+        1:  575:    if (_glfw.win32.dinput8.instance)
+        1:  575-block  0
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+        -:  576:    {
+        1:  577:        if (FAILED(DirectInput8Create(GetModuleHandle(NULL),
+        1:  577-block  0
+call    0 returned 1
+call    1 returned 1
+branch  2 taken 0 (fallthrough)
+branch  3 taken 1
+        -:  578:                                      DIRECTINPUT_VERSION,
+        -:  579:                                      &IID_IDirectInput8W,
+        -:  580:                                      (void**) &_glfw.win32.dinput8.api,
+        -:  581:                                      NULL)))
+        -:  582:        {
+    #####:  583:            _glfwInputError(GLFW_PLATFORM_ERROR,
+    %%%%%:  583-block  0
+call    0 never executed
+        -:  584:                            "Win32: Failed to create interface");
+    #####:  585:            return GLFW_FALSE;
+        -:  586:        }
+        -:  587:    }
+        -:  588:
+        1:  589:    _glfwDetectJoystickConnectionWin32();
+        1:  589-block  0
+call    0 returned 1
+        1:  590:    return GLFW_TRUE;
+        -:  591:}
+        -:  592:
+function _glfwPlatformTerminateJoysticks called 1 returned 100% blocks executed 100%
+        1:  593:void _glfwPlatformTerminateJoysticks(void)
+        -:  594:{
+        -:  595:    int jid;
+        -:  596:
+       17:  597:    for (jid = GLFW_JOYSTICK_1;  jid <= GLFW_JOYSTICK_LAST;  jid++)
+        1:  597-block  0
+       17:  597-block  1
+branch  0 taken 16
+branch  1 taken 1 (fallthrough)
+       16:  598:        closeJoystick(_glfw.joysticks + jid);
+       16:  598-block  0
+call    0 returned 16
+        -:  599:
+        1:  600:    if (_glfw.win32.dinput8.api)
+        1:  600-block  0
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+        1:  601:        IDirectInput8_Release(_glfw.win32.dinput8.api);
+        1:  601-block  0
+call    0 returned 1
+        1:  602:}
+        -:  603:
+function _glfwPlatformPollJoystick called 0 returned 0% blocks executed 0%
+    #####:  604:int _glfwPlatformPollJoystick(_GLFWjoystick* js, int mode)
+        -:  605:{
+    #####:  606:    if (js->win32.device)
+    %%%%%:  606-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  607:    {
+    #####:  608:        int i, ai = 0, bi = 0, pi = 0;
+        -:  609:        HRESULT result;
+        -:  610:        DIJOYSTATE state;
+        -:  611:
+    #####:  612:        IDirectInputDevice8_Poll(js->win32.device);
+    %%%%%:  612-block  0
+call    0 never executed
+    #####:  613:        result = IDirectInputDevice8_GetDeviceState(js->win32.device,
+call    0 never executed
+        -:  614:                                                    sizeof(state),
+        -:  615:                                                    &state);
+    #####:  616:        if (result == DIERR_NOTACQUIRED || result == DIERR_INPUTLOST)
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  616-block  0
+branch  2 never executed
+branch  3 never executed
+        -:  617:        {
+    #####:  618:            IDirectInputDevice8_Acquire(js->win32.device);
+    %%%%%:  618-block  0
+call    0 never executed
+    #####:  619:            IDirectInputDevice8_Poll(js->win32.device);
+call    0 never executed
+    #####:  620:            result = IDirectInputDevice8_GetDeviceState(js->win32.device,
+call    0 never executed
+        -:  621:                                                        sizeof(state),
+        -:  622:                                                        &state);
+        -:  623:        }
+        -:  624:
+    #####:  625:        if (FAILED(result))
+    %%%%%:  625-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  626:        {
+    #####:  627:            closeJoystick(js);
+    %%%%%:  627-block  0
+call    0 never executed
+    #####:  628:            return GLFW_FALSE;
+    %%%%%:  628-block  0
+        -:  629:        }
+        -:  630:
+    #####:  631:        if (mode == _GLFW_POLL_PRESENCE)
+    %%%%%:  631-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  632:            return GLFW_TRUE;
+    %%%%%:  632-block  0
+        -:  633:
+    #####:  634:        for (i = 0;  i < js->win32.objectCount;  i++)
+    %%%%%:  634-block  0
+    %%%%%:  634-block  1
+branch  0 never executed
+branch  1 never executed
+        -:  635:        {
+    #####:  636:            const void* data = (char*) &state + js->win32.objects[i].offset;
+        -:  637:
+    #####:  638:            switch (js->win32.objects[i].type)
+    %%%%%:  638-block  0
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+        -:  639:            {
+    #####:  640:                case _GLFW_TYPE_AXIS:
+        -:  641:                case _GLFW_TYPE_SLIDER:
+        -:  642:                {
+    #####:  643:                    const float value = (*((LONG*) data) + 0.5f) / 32767.5f;
+    #####:  644:                    _glfwInputJoystickAxis(js, ai, value);
+    %%%%%:  644-block  0
+call    0 never executed
+    #####:  645:                    ai++;
+    #####:  646:                    break;
+        -:  647:                }
+        -:  648:
+    #####:  649:                case _GLFW_TYPE_BUTTON:
+        -:  650:                {
+    #####:  651:                    const char value = (*((BYTE*) data) & 0x80) != 0;
+    #####:  652:                    _glfwInputJoystickButton(js, bi, value);
+    %%%%%:  652-block  0
+call    0 never executed
+    #####:  653:                    bi++;
+    #####:  654:                    break;
+        -:  655:                }
+        -:  656:
+    #####:  657:                case _GLFW_TYPE_POV:
+        -:  658:                {
+    #####:  659:                    const int states[9] =
+        -:  660:                    {
+        -:  661:                        GLFW_HAT_UP,
+        -:  662:                        GLFW_HAT_RIGHT_UP,
+        -:  663:                        GLFW_HAT_RIGHT,
+        -:  664:                        GLFW_HAT_RIGHT_DOWN,
+        -:  665:                        GLFW_HAT_DOWN,
+        -:  666:                        GLFW_HAT_LEFT_DOWN,
+        -:  667:                        GLFW_HAT_LEFT,
+        -:  668:                        GLFW_HAT_LEFT_UP,
+        -:  669:                        GLFW_HAT_CENTERED
+        -:  670:                    };
+        -:  671:
+        -:  672:                    // Screams of horror are appropriate at this point
+    #####:  673:                    int stateIndex = LOWORD(*(DWORD*) data) / (45 * DI_DEGREES);
+    #####:  674:                    if (stateIndex < 0 || stateIndex > 8)
+    %%%%%:  674-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  674-block  1
+branch  2 never executed
+branch  3 never executed
+    #####:  675:                        stateIndex = 8;
+    %%%%%:  675-block  0
+        -:  676:
+    #####:  677:                    _glfwInputJoystickHat(js, pi, states[stateIndex]);
+    %%%%%:  677-block  0
+call    0 never executed
+    #####:  678:                    pi++;
+    #####:  679:                    break;
+        -:  680:                }
+        -:  681:            }
+    #####:  682:        }
+    %%%%%:  682-block  0
+        -:  683:    }
+        -:  684:    else
+        -:  685:    {
+    #####:  686:        int i, dpad = 0;
+        -:  687:        DWORD result;
+        -:  688:        XINPUT_STATE xis;
+    #####:  689:        const WORD buttons[10] =
+        -:  690:        {
+        -:  691:            XINPUT_GAMEPAD_A,
+        -:  692:            XINPUT_GAMEPAD_B,
+        -:  693:            XINPUT_GAMEPAD_X,
+        -:  694:            XINPUT_GAMEPAD_Y,
+        -:  695:            XINPUT_GAMEPAD_LEFT_SHOULDER,
+        -:  696:            XINPUT_GAMEPAD_RIGHT_SHOULDER,
+        -:  697:            XINPUT_GAMEPAD_BACK,
+        -:  698:            XINPUT_GAMEPAD_START,
+        -:  699:            XINPUT_GAMEPAD_LEFT_THUMB,
+        -:  700:            XINPUT_GAMEPAD_RIGHT_THUMB
+        -:  701:        };
+        -:  702:
+    #####:  703:        result = XInputGetState(js->win32.index, &xis);
+    %%%%%:  703-block  0
+call    0 never executed
+    #####:  704:        if (result != ERROR_SUCCESS)
+branch  0 never executed
+branch  1 never executed
+        -:  705:        {
+    #####:  706:            if (result == ERROR_DEVICE_NOT_CONNECTED)
+    %%%%%:  706-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  707:                closeJoystick(js);
+    %%%%%:  707-block  0
+call    0 never executed
+        -:  708:
+    #####:  709:            return GLFW_FALSE;
+    %%%%%:  709-block  0
+    %%%%%:  709-block  1
+        -:  710:        }
+        -:  711:
+    #####:  712:        if (mode == _GLFW_POLL_PRESENCE)
+    %%%%%:  712-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  713:            return GLFW_TRUE;
+    %%%%%:  713-block  0
+        -:  714:
+    #####:  715:        _glfwInputJoystickAxis(js, 0, (xis.Gamepad.sThumbLX + 0.5f) / 32767.5f);
+    %%%%%:  715-block  0
+call    0 never executed
+    #####:  716:        _glfwInputJoystickAxis(js, 1, -(xis.Gamepad.sThumbLY + 0.5f) / 32767.5f);
+call    0 never executed
+    #####:  717:        _glfwInputJoystickAxis(js, 2, (xis.Gamepad.sThumbRX + 0.5f) / 32767.5f);
+call    0 never executed
+    #####:  718:        _glfwInputJoystickAxis(js, 3, -(xis.Gamepad.sThumbRY + 0.5f) / 32767.5f);
+call    0 never executed
+    #####:  719:        _glfwInputJoystickAxis(js, 4, xis.Gamepad.bLeftTrigger / 127.5f - 1.f);
+call    0 never executed
+    #####:  720:        _glfwInputJoystickAxis(js, 5, xis.Gamepad.bRightTrigger / 127.5f - 1.f);
+call    0 never executed
+        -:  721:
+    #####:  722:        for (i = 0;  i < 10;  i++)
+    %%%%%:  722-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  723:        {
+    #####:  724:            const char value = (xis.Gamepad.wButtons & buttons[i]) ? 1 : 0;
+    #####:  725:            _glfwInputJoystickButton(js, i, value);
+    %%%%%:  725-block  0
+call    0 never executed
+        -:  726:        }
+        -:  727:
+    #####:  728:        if (xis.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP)
+    %%%%%:  728-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  729:            dpad |= GLFW_HAT_UP;
+    %%%%%:  729-block  0
+    #####:  730:        if (xis.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT)
+    %%%%%:  730-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  731:            dpad |= GLFW_HAT_RIGHT;
+    %%%%%:  731-block  0
+    #####:  732:        if (xis.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN)
+    %%%%%:  732-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  733:            dpad |= GLFW_HAT_DOWN;
+    %%%%%:  733-block  0
+    #####:  734:        if (xis.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT)
+    %%%%%:  734-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  735:            dpad |= GLFW_HAT_LEFT;
+    %%%%%:  735-block  0
+        -:  736:
+    #####:  737:        _glfwInputJoystickHat(js, 0, dpad);
+    %%%%%:  737-block  0
+call    0 never executed
+        -:  738:    }
+        -:  739:
+    #####:  740:    return GLFW_TRUE;
+    %%%%%:  740-block  0
+        -:  741:}
+        -:  742:
+function _glfwPlatformUpdateGamepadGUID called 146 returned 100% blocks executed 50%
+      146:  743:void _glfwPlatformUpdateGamepadGUID(char* guid)
+        -:  744:{
+      146:  745:    if (strcmp(guid + 20, "504944564944") == 0)
+      146:  745-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 146
+        -:  746:    {
+        -:  747:        char original[33];
+    #####:  748:        strncpy(original, guid, sizeof(original) - 1);
+    #####:  749:        sprintf(guid, "03000000%.4s0000%.4s000000000000",
+    %%%%%:  749-block  0
+call    0 never executed
+        -:  750:                original, original + 4);
+        -:  751:    }
+      146:  752:}
+        -:  753:

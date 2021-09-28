@@ -1,0 +1,14 @@
+# Target labels
+ raylib-populate
+# Source files and their labels
+C:/Dev/CLionProjects/Snake-raylib/vsbuild2/build/Mingw64-Debug/_deps/raylib-subbuild/CMakeFiles/raylib-populate
+C:/Dev/CLionProjects/Snake-raylib/vsbuild2/build/Mingw64-Debug/_deps/raylib-subbuild/CMakeFiles/raylib-populate.rule
+C:/Dev/CLionProjects/Snake-raylib/vsbuild2/build/Mingw64-Debug/_deps/raylib-subbuild/CMakeFiles/raylib-populate-complete.rule
+C:/Dev/CLionProjects/Snake-raylib/vsbuild2/build/Mingw64-Debug/_deps/raylib-subbuild/raylib-populate-prefix/src/raylib-populate-stamp/raylib-populate-build.rule
+C:/Dev/CLionProjects/Snake-raylib/vsbuild2/build/Mingw64-Debug/_deps/raylib-subbuild/raylib-populate-prefix/src/raylib-populate-stamp/raylib-populate-configure.rule
+C:/Dev/CLionProjects/Snake-raylib/vsbuild2/build/Mingw64-Debug/_deps/raylib-subbuild/raylib-populate-prefix/src/raylib-populate-stamp/raylib-populate-download.rule
+C:/Dev/CLionProjects/Snake-raylib/vsbuild2/build/Mingw64-Debug/_deps/raylib-subbuild/raylib-populate-prefix/src/raylib-populate-stamp/raylib-populate-install.rule
+C:/Dev/CLionProjects/Snake-raylib/vsbuild2/build/Mingw64-Debug/_deps/raylib-subbuild/raylib-populate-prefix/src/raylib-populate-stamp/raylib-populate-mkdir.rule
+C:/Dev/CLionProjects/Snake-raylib/vsbuild2/build/Mingw64-Debug/_deps/raylib-subbuild/raylib-populate-prefix/src/raylib-populate-stamp/raylib-populate-patch.rule
+C:/Dev/CLionProjects/Snake-raylib/vsbuild2/build/Mingw64-Debug/_deps/raylib-subbuild/raylib-populate-prefix/src/raylib-populate-stamp/raylib-populate-test.rule
+C:/Dev/CLionProjects/Snake-raylib/vsbuild2/build/Mingw64-Debug/_deps/raylib-subbuild/raylib-populate-prefix/src/raylib-populate-stamp/raylib-populate-update.rule

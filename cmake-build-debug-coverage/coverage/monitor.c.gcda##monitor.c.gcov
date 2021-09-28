@@ -1,0 +1,1029 @@
+        -:    0:Source:C:/Dev/CLionProjects/Snake-raylib/cmake-build-debug-coverage/_deps/raylib-src/src/external/glfw/src/monitor.c
+        -:    0:Graph:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\external\glfw\src\CMakeFiles\glfw.dir\monitor.c.gcno
+        -:    0:Data:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\external\glfw\src\CMakeFiles\glfw.dir\monitor.c.gcda
+        -:    0:Runs:1
+        -:    1://========================================================================
+        -:    2:// GLFW 3.4 - www.glfw.org
+        -:    3://------------------------------------------------------------------------
+        -:    4:// Copyright (c) 2002-2006 Marcus Geelnard
+        -:    5:// Copyright (c) 2006-2019 Camilla Löwy <elmindreda@glfw.org>
+        -:    6://
+        -:    7:// This software is provided 'as-is', without any express or implied
+        -:    8:// warranty. In no event will the authors be held liable for any damages
+        -:    9:// arising from the use of this software.
+        -:   10://
+        -:   11:// Permission is granted to anyone to use this software for any purpose,
+        -:   12:// including commercial applications, and to alter it and redistribute it
+        -:   13:// freely, subject to the following restrictions:
+        -:   14://
+        -:   15:// 1. The origin of this software must not be misrepresented; you must not
+        -:   16://    claim that you wrote the original software. If you use this software
+        -:   17://    in a product, an acknowledgment in the product documentation would
+        -:   18://    be appreciated but is not required.
+        -:   19://
+        -:   20:// 2. Altered source versions must be plainly marked as such, and must not
+        -:   21://    be misrepresented as being the original software.
+        -:   22://
+        -:   23:// 3. This notice may not be removed or altered from any source
+        -:   24://    distribution.
+        -:   25://
+        -:   26://========================================================================
+        -:   27:// Please use C89 style variable declarations in this file because VS 2010
+        -:   28://========================================================================
+        -:   29:
+        -:   30:#include "internal.h"
+        -:   31:
+        -:   32:#include <assert.h>
+        -:   33:#include <math.h>
+        -:   34:#include <float.h>
+        -:   35:#include <string.h>
+        -:   36:#include <stdlib.h>
+        -:   37:#include <limits.h>
+        -:   38:
+        -:   39:
+        -:   40:// Lexically compare video modes, used by qsort
+        -:   41://
+function compareVideoModes called 0 returned 0% blocks executed 0%
+    #####:   42:static int compareVideoModes(const void* fp, const void* sp)
+        -:   43:{
+    #####:   44:    const GLFWvidmode* fm = fp;
+    #####:   45:    const GLFWvidmode* sm = sp;
+    #####:   46:    const int fbpp = fm->redBits + fm->greenBits + fm->blueBits;
+    #####:   47:    const int sbpp = sm->redBits + sm->greenBits + sm->blueBits;
+    #####:   48:    const int farea = fm->width * fm->height;
+    #####:   49:    const int sarea = sm->width * sm->height;
+        -:   50:
+        -:   51:    // First sort on color bits per pixel
+    #####:   52:    if (fbpp != sbpp)
+    %%%%%:   52-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:   53:        return fbpp - sbpp;
+    %%%%%:   53-block  0
+        -:   54:
+        -:   55:    // Then sort on screen area
+    #####:   56:    if (farea != sarea)
+    %%%%%:   56-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:   57:        return farea - sarea;
+    %%%%%:   57-block  0
+        -:   58:
+        -:   59:    // Then sort on width
+    #####:   60:    if (fm->width != sm->width)
+    %%%%%:   60-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:   61:        return fm->width - sm->width;
+    %%%%%:   61-block  0
+        -:   62:
+        -:   63:    // Lastly sort on refresh rate
+    #####:   64:    return fm->refreshRate - sm->refreshRate;
+    %%%%%:   64-block  0
+        -:   65:}
+        -:   66:
+        -:   67:// Retrieves the available modes for the specified monitor
+        -:   68://
+function refreshVideoModes called 0 returned 0% blocks executed 0%
+    #####:   69:static GLFWbool refreshVideoModes(_GLFWmonitor* monitor)
+        -:   70:{
+        -:   71:    int modeCount;
+        -:   72:    GLFWvidmode* modes;
+        -:   73:
+    #####:   74:    if (monitor->modes)
+    %%%%%:   74-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:   75:        return GLFW_TRUE;
+    %%%%%:   75-block  0
+        -:   76:
+    #####:   77:    modes = _glfwPlatformGetVideoModes(monitor, &modeCount);
+    %%%%%:   77-block  0
+call    0 never executed
+    #####:   78:    if (!modes)
+branch  0 never executed
+branch  1 never executed
+    #####:   79:        return GLFW_FALSE;
+    %%%%%:   79-block  0
+        -:   80:
+    #####:   81:    qsort(modes, modeCount, sizeof(GLFWvidmode), compareVideoModes);
+    %%%%%:   81-block  0
+call    0 never executed
+        -:   82:
+    #####:   83:    free(monitor->modes);
+    #####:   84:    monitor->modes = modes;
+    #####:   85:    monitor->modeCount = modeCount;
+        -:   86:
+    #####:   87:    return GLFW_TRUE;
+        -:   88:}
+        -:   89:
+        -:   90:
+        -:   91://////////////////////////////////////////////////////////////////////////
+        -:   92://////                         GLFW event API                       //////
+        -:   93://////////////////////////////////////////////////////////////////////////
+        -:   94:
+        -:   95:// Notifies shared code of a monitor connection or disconnection
+        -:   96://
+function _glfwInputMonitor called 2 returned 100% blocks executed 29%
+        2:   97:void _glfwInputMonitor(_GLFWmonitor* monitor, int action, int placement)
+        -:   98:{
+        2:   99:    if (action == GLFW_CONNECTED)
+        2:   99-block  0
+branch  0 taken 2 (fallthrough)
+branch  1 taken 0
+        -:  100:    {
+        2:  101:        _glfw.monitorCount++;
+        2:  102:        _glfw.monitors =
+        2:  103:            realloc(_glfw.monitors, sizeof(_GLFWmonitor*) * _glfw.monitorCount);
+        -:  104:
+        2:  105:        if (placement == _GLFW_INSERT_FIRST)
+        2:  105-block  0
+branch  0 taken 1 (fallthrough)
+branch  1 taken 1
+        -:  106:        {
+        1:  107:            memmove(_glfw.monitors + 1,
+        1:  108:                    _glfw.monitors,
+        1:  109:                    ((size_t) _glfw.monitorCount - 1) * sizeof(_GLFWmonitor*));
+        1:  110:            _glfw.monitors[0] = monitor;
+        1:  110-block  0
+        -:  111:        }
+        -:  112:        else
+        1:  113:            _glfw.monitors[_glfw.monitorCount - 1] = monitor;
+        1:  113-block  0
+        -:  114:    }
+    #####:  115:    else if (action == GLFW_DISCONNECTED)
+    %%%%%:  115-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  116:    {
+        -:  117:        int i;
+        -:  118:        _GLFWwindow* window;
+        -:  119:
+    #####:  120:        for (window = _glfw.windowListHead;  window;  window = window->next)
+    %%%%%:  120-block  0
+    %%%%%:  120-block  1
+    %%%%%:  120-block  2
+branch  0 never executed
+branch  1 never executed
+        -:  121:        {
+    #####:  122:            if (window->monitor == monitor)
+    %%%%%:  122-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  123:            {
+        -:  124:                int width, height, xoff, yoff;
+    #####:  125:                _glfwPlatformGetWindowSize(window, &width, &height);
+    %%%%%:  125-block  0
+call    0 never executed
+    #####:  126:                _glfwPlatformSetWindowMonitor(window, NULL, 0, 0, width, height, 0);
+call    0 never executed
+    #####:  127:                _glfwPlatformGetWindowFrameSize(window, &xoff, &yoff, NULL, NULL);
+call    0 never executed
+    #####:  128:                _glfwPlatformSetWindowPos(window, xoff, yoff);
+call    0 never executed
+        -:  129:            }
+        -:  130:        }
+        -:  131:
+    #####:  132:        for (i = 0;  i < _glfw.monitorCount;  i++)
+    %%%%%:  132-block  0
+    %%%%%:  132-block  1
+    %%%%%:  132-block  2
+branch  0 never executed
+branch  1 never executed
+        -:  133:        {
+    #####:  134:            if (_glfw.monitors[i] == monitor)
+    %%%%%:  134-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  135:            {
+    #####:  136:                _glfw.monitorCount--;
+    #####:  137:                memmove(_glfw.monitors + i,
+    #####:  138:                        _glfw.monitors + i + 1,
+    #####:  139:                        ((size_t) _glfw.monitorCount - i) * sizeof(_GLFWmonitor*));
+    #####:  140:                break;
+    %%%%%:  140-block  0
+        -:  141:            }
+        -:  142:        }
+        -:  143:    }
+        -:  144:
+        2:  145:    if (_glfw.callbacks.monitor)
+        2:  145-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2
+    #####:  146:        _glfw.callbacks.monitor((GLFWmonitor*) monitor, action);
+    %%%%%:  146-block  0
+call    0 never executed
+        -:  147:
+        2:  148:    if (action == GLFW_DISCONNECTED)
+        2:  148-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2
+    #####:  149:        _glfwFreeMonitor(monitor);
+    %%%%%:  149-block  0
+call    0 never executed
+        2:  150:}
+        -:  151:
+        -:  152:// Notifies shared code that a full screen window has acquired or released
+        -:  153:// a monitor
+        -:  154://
+function _glfwInputMonitorWindow called 0 returned 0% blocks executed 0%
+    #####:  155:void _glfwInputMonitorWindow(_GLFWmonitor* monitor, _GLFWwindow* window)
+        -:  156:{
+    #####:  157:    monitor->window = window;
+    #####:  158:}
+        -:  159:
+        -:  160:
+        -:  161://////////////////////////////////////////////////////////////////////////
+        -:  162://////                       GLFW internal API                      //////
+        -:  163://////////////////////////////////////////////////////////////////////////
+        -:  164:
+        -:  165:// Allocates and returns a monitor object with the specified name and dimensions
+        -:  166://
+function _glfwAllocMonitor called 2 returned 100% blocks executed 100%
+        2:  167:_GLFWmonitor* _glfwAllocMonitor(const char* name, int widthMM, int heightMM)
+        -:  168:{
+        2:  169:    _GLFWmonitor* monitor = calloc(1, sizeof(_GLFWmonitor));
+        2:  170:    monitor->widthMM = widthMM;
+        2:  171:    monitor->heightMM = heightMM;
+        -:  172:
+        2:  173:    strncpy(monitor->name, name, sizeof(monitor->name) - 1);
+        -:  174:
+        2:  175:    return monitor;
+        2:  175-block  0
+        -:  176:}
+        -:  177:
+        -:  178:// Frees a monitor object and any data associated with it
+        -:  179://
+function _glfwFreeMonitor called 2 returned 100% blocks executed 86%
+        2:  180:void _glfwFreeMonitor(_GLFWmonitor* monitor)
+        -:  181:{
+        2:  182:    if (monitor == NULL)
+        2:  182-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2
+    #####:  183:        return;
+    %%%%%:  183-block  0
+        -:  184:
+        2:  185:    _glfwPlatformFreeMonitor(monitor);
+        2:  185-block  0
+call    0 returned 2
+        -:  186:
+        2:  187:    _glfwFreeGammaArrays(&monitor->originalRamp);
+call    0 returned 2
+        2:  188:    _glfwFreeGammaArrays(&monitor->currentRamp);
+call    0 returned 2
+        -:  189:
+        2:  190:    free(monitor->modes);
+        2:  191:    free(monitor);
+        -:  192:}
+        -:  193:
+        -:  194:// Allocates red, green and blue value arrays of the specified size
+        -:  195://
+function _glfwAllocGammaArrays called 0 returned 0% blocks executed 0%
+    #####:  196:void _glfwAllocGammaArrays(GLFWgammaramp* ramp, unsigned int size)
+        -:  197:{
+    #####:  198:    ramp->red = calloc(size, sizeof(unsigned short));
+    #####:  199:    ramp->green = calloc(size, sizeof(unsigned short));
+    #####:  200:    ramp->blue = calloc(size, sizeof(unsigned short));
+    #####:  201:    ramp->size = size;
+    #####:  202:}
+        -:  203:
+        -:  204:// Frees the red, green and blue value arrays and clears the struct
+        -:  205://
+function _glfwFreeGammaArrays called 4 returned 100% blocks executed 100%
+        4:  206:void _glfwFreeGammaArrays(GLFWgammaramp* ramp)
+        -:  207:{
+        4:  208:    free(ramp->red);
+        4:  209:    free(ramp->green);
+        4:  210:    free(ramp->blue);
+        -:  211:
+        4:  212:    memset(ramp, 0, sizeof(GLFWgammaramp));
+        4:  213:}
+        -:  214:
+        -:  215:// Chooses the video mode most closely matching the desired one
+        -:  216://
+function _glfwChooseVideoMode called 0 returned 0% blocks executed 0%
+    #####:  217:const GLFWvidmode* _glfwChooseVideoMode(_GLFWmonitor* monitor,
+        -:  218:                                        const GLFWvidmode* desired)
+        -:  219:{
+        -:  220:    int i;
+    #####:  221:    unsigned int sizeDiff, leastSizeDiff = UINT_MAX;
+    #####:  222:    unsigned int rateDiff, leastRateDiff = UINT_MAX;
+    #####:  223:    unsigned int colorDiff, leastColorDiff = UINT_MAX;
+        -:  224:    const GLFWvidmode* current;
+    #####:  225:    const GLFWvidmode* closest = NULL;
+        -:  226:
+    #####:  227:    if (!refreshVideoModes(monitor))
+    %%%%%:  227-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####:  228:        return NULL;
+    %%%%%:  228-block  0
+        -:  229:
+    #####:  230:    for (i = 0;  i < monitor->modeCount;  i++)
+    %%%%%:  230-block  0
+    %%%%%:  230-block  1
+    %%%%%:  230-block  2
+branch  0 never executed
+branch  1 never executed
+        -:  231:    {
+    #####:  232:        current = monitor->modes + i;
+        -:  233:
+    #####:  234:        colorDiff = 0;
+        -:  235:
+    #####:  236:        if (desired->redBits != GLFW_DONT_CARE)
+    %%%%%:  236-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  237:            colorDiff += abs(current->redBits - desired->redBits);
+    %%%%%:  237-block  0
+    #####:  238:        if (desired->greenBits != GLFW_DONT_CARE)
+    %%%%%:  238-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  239:            colorDiff += abs(current->greenBits - desired->greenBits);
+    %%%%%:  239-block  0
+    #####:  240:        if (desired->blueBits != GLFW_DONT_CARE)
+    %%%%%:  240-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  241:            colorDiff += abs(current->blueBits - desired->blueBits);
+    %%%%%:  241-block  0
+        -:  242:
+    #####:  243:        sizeDiff = abs((current->width - desired->width) *
+    #####:  244:                       (current->width - desired->width) +
+    #####:  245:                       (current->height - desired->height) *
+    #####:  246:                       (current->height - desired->height));
+        -:  247:
+    #####:  248:        if (desired->refreshRate != GLFW_DONT_CARE)
+    %%%%%:  248-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  249:            rateDiff = abs(current->refreshRate - desired->refreshRate);
+    %%%%%:  249-block  0
+        -:  250:        else
+    #####:  251:            rateDiff = UINT_MAX - current->refreshRate;
+    %%%%%:  251-block  0
+        -:  252:
+    #####:  253:        if ((colorDiff < leastColorDiff) ||
+    %%%%%:  253-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  253-block  1
+branch  2 never executed
+branch  3 never executed
+    #####:  254:            (colorDiff == leastColorDiff && sizeDiff < leastSizeDiff) ||
+    %%%%%:  254-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  254-block  1
+branch  2 never executed
+branch  3 never executed
+    #####:  255:            (colorDiff == leastColorDiff && sizeDiff == leastSizeDiff && rateDiff < leastRateDiff))
+    %%%%%:  255-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  255-block  1
+branch  2 never executed
+branch  3 never executed
+        -:  256:        {
+    #####:  257:            closest = current;
+    #####:  258:            leastSizeDiff = sizeDiff;
+    #####:  259:            leastRateDiff = rateDiff;
+    #####:  260:            leastColorDiff = colorDiff;
+    %%%%%:  260-block  0
+        -:  261:        }
+        -:  262:    }
+        -:  263:
+    #####:  264:    return closest;
+    %%%%%:  264-block  0
+        -:  265:}
+        -:  266:
+        -:  267:// Performs lexical comparison between two @ref GLFWvidmode structures
+        -:  268://
+function _glfwCompareVideoModes called 0 returned 0% blocks executed 0%
+    #####:  269:int _glfwCompareVideoModes(const GLFWvidmode* fm, const GLFWvidmode* sm)
+        -:  270:{
+    #####:  271:    return compareVideoModes(fm, sm);
+    %%%%%:  271-block  0
+call    0 never executed
+        -:  272:}
+        -:  273:
+        -:  274:// Splits a color depth into red, green and blue bit depths
+        -:  275://
+function _glfwSplitBPP called 1 returned 100% blocks executed 71%
+        1:  276:void _glfwSplitBPP(int bpp, int* red, int* green, int* blue)
+        -:  277:{
+        -:  278:    int delta;
+        -:  279:
+        -:  280:    // We assume that by 32 the user really meant 24
+        1:  281:    if (bpp == 32)
+        1:  281-block  0
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+        1:  282:        bpp = 24;
+        1:  282-block  0
+        -:  283:
+        -:  284:    // Convert "bits per pixel" to red, green & blue sizes
+        -:  285:
+        1:  286:    *red = *green = *blue = bpp / 3;
+        1:  287:    delta = bpp - (*red * 3);
+        1:  288:    if (delta >= 1)
+        1:  288-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    #####:  289:        *green = *green + 1;
+    %%%%%:  289-block  0
+        -:  290:
+        1:  291:    if (delta == 2)
+        1:  291-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    #####:  292:        *red = *red + 1;
+    %%%%%:  292-block  0
+        1:  293:}
+        -:  294:
+        -:  295:
+        -:  296://////////////////////////////////////////////////////////////////////////
+        -:  297://////                        GLFW public API                       //////
+        -:  298://////////////////////////////////////////////////////////////////////////
+        -:  299:
+function glfwGetMonitors called 0 returned 0% blocks executed 0%
+    #####:  300:GLFWAPI GLFWmonitor** glfwGetMonitors(int* count)
+        -:  301:{
+    #####:  302:    assert(count != NULL);
+    %%%%%:  302-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  302-block  1
+call    2 never executed
+    %%%%%:  302-block  2
+        -:  303:
+    #####:  304:    *count = 0;
+        -:  305:
+    #####:  306:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+    %%%%%:  306-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  306-block  1
+call    2 never executed
+        -:  307:
+    #####:  308:    *count = _glfw.monitorCount;
+    #####:  309:    return (GLFWmonitor**) _glfw.monitors;
+    %%%%%:  309-block  0
+        -:  310:}
+        -:  311:
+function glfwGetPrimaryMonitor called 1 returned 100% blocks executed 57%
+        1:  312:GLFWAPI GLFWmonitor* glfwGetPrimaryMonitor(void)
+        -:  313:{
+       1*:  314:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+        1:  314-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  314-block  1
+call    2 never executed
+        -:  315:
+        1:  316:    if (!_glfw.monitorCount)
+        1:  316-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    #####:  317:        return NULL;
+    %%%%%:  317-block  0
+        -:  318:
+        1:  319:    return (GLFWmonitor*) _glfw.monitors[0];
+        1:  319-block  0
+        -:  320:}
+        -:  321:
+function glfwGetMonitorPos called 0 returned 0% blocks executed 0%
+    #####:  322:GLFWAPI void glfwGetMonitorPos(GLFWmonitor* handle, int* xpos, int* ypos)
+        -:  323:{
+    #####:  324:    _GLFWmonitor* monitor = (_GLFWmonitor*) handle;
+    #####:  325:    assert(monitor != NULL);
+    %%%%%:  325-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  325-block  1
+call    2 never executed
+    %%%%%:  325-block  2
+        -:  326:
+    #####:  327:    if (xpos)
+    %%%%%:  327-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  328:        *xpos = 0;
+    %%%%%:  328-block  0
+    #####:  329:    if (ypos)
+    %%%%%:  329-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  330:        *ypos = 0;
+    %%%%%:  330-block  0
+        -:  331:
+    #####:  332:    _GLFW_REQUIRE_INIT();
+    %%%%%:  332-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  332-block  1
+call    2 never executed
+        -:  333:
+    #####:  334:    _glfwPlatformGetMonitorPos(monitor, xpos, ypos);
+    %%%%%:  334-block  0
+call    0 never executed
+        -:  335:}
+        -:  336:
+function glfwGetMonitorWorkarea called 0 returned 0% blocks executed 0%
+    #####:  337:GLFWAPI void glfwGetMonitorWorkarea(GLFWmonitor* handle,
+        -:  338:                                    int* xpos, int* ypos,
+        -:  339:                                    int* width, int* height)
+        -:  340:{
+    #####:  341:    _GLFWmonitor* monitor = (_GLFWmonitor*) handle;
+    #####:  342:    assert(monitor != NULL);
+    %%%%%:  342-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  342-block  1
+call    2 never executed
+    %%%%%:  342-block  2
+        -:  343:
+    #####:  344:    if (xpos)
+    %%%%%:  344-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  345:        *xpos = 0;
+    %%%%%:  345-block  0
+    #####:  346:    if (ypos)
+    %%%%%:  346-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  347:        *ypos = 0;
+    %%%%%:  347-block  0
+    #####:  348:    if (width)
+    %%%%%:  348-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  349:        *width = 0;
+    %%%%%:  349-block  0
+    #####:  350:    if (height)
+    %%%%%:  350-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  351:        *height = 0;
+    %%%%%:  351-block  0
+        -:  352:
+    #####:  353:    _GLFW_REQUIRE_INIT();
+    %%%%%:  353-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  353-block  1
+call    2 never executed
+        -:  354:
+    #####:  355:    _glfwPlatformGetMonitorWorkarea(monitor, xpos, ypos, width, height);
+    %%%%%:  355-block  0
+call    0 never executed
+        -:  356:}
+        -:  357:
+function glfwGetMonitorPhysicalSize called 0 returned 0% blocks executed 0%
+    #####:  358:GLFWAPI void glfwGetMonitorPhysicalSize(GLFWmonitor* handle, int* widthMM, int* heightMM)
+        -:  359:{
+    #####:  360:    _GLFWmonitor* monitor = (_GLFWmonitor*) handle;
+    #####:  361:    assert(monitor != NULL);
+    %%%%%:  361-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  361-block  1
+call    2 never executed
+    %%%%%:  361-block  2
+        -:  362:
+    #####:  363:    if (widthMM)
+    %%%%%:  363-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  364:        *widthMM = 0;
+    %%%%%:  364-block  0
+    #####:  365:    if (heightMM)
+    %%%%%:  365-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  366:        *heightMM = 0;
+    %%%%%:  366-block  0
+        -:  367:
+    #####:  368:    _GLFW_REQUIRE_INIT();
+    %%%%%:  368-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  368-block  1
+call    2 never executed
+        -:  369:
+    #####:  370:    if (widthMM)
+    %%%%%:  370-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  371:        *widthMM = monitor->widthMM;
+    %%%%%:  371-block  0
+    #####:  372:    if (heightMM)
+    %%%%%:  372-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  373:        *heightMM = monitor->heightMM;
+    %%%%%:  373-block  0
+        -:  374:}
+        -:  375:
+function glfwGetMonitorContentScale called 0 returned 0% blocks executed 0%
+    #####:  376:GLFWAPI void glfwGetMonitorContentScale(GLFWmonitor* handle,
+        -:  377:                                        float* xscale, float* yscale)
+        -:  378:{
+    #####:  379:    _GLFWmonitor* monitor = (_GLFWmonitor*) handle;
+    #####:  380:    assert(monitor != NULL);
+    %%%%%:  380-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  380-block  1
+call    2 never executed
+    %%%%%:  380-block  2
+        -:  381:
+    #####:  382:    if (xscale)
+    %%%%%:  382-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  383:        *xscale = 0.f;
+    %%%%%:  383-block  0
+    #####:  384:    if (yscale)
+    %%%%%:  384-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  385:        *yscale = 0.f;
+    %%%%%:  385-block  0
+        -:  386:
+    #####:  387:    _GLFW_REQUIRE_INIT();
+    %%%%%:  387-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  387-block  1
+call    2 never executed
+    #####:  388:    _glfwPlatformGetMonitorContentScale(monitor, xscale, yscale);
+    %%%%%:  388-block  0
+call    0 never executed
+        -:  389:}
+        -:  390:
+function glfwGetMonitorName called 0 returned 0% blocks executed 0%
+    #####:  391:GLFWAPI const char* glfwGetMonitorName(GLFWmonitor* handle)
+        -:  392:{
+    #####:  393:    _GLFWmonitor* monitor = (_GLFWmonitor*) handle;
+    #####:  394:    assert(monitor != NULL);
+    %%%%%:  394-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  394-block  1
+call    2 never executed
+    %%%%%:  394-block  2
+        -:  395:
+    #####:  396:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+    %%%%%:  396-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  396-block  1
+call    2 never executed
+    #####:  397:    return monitor->name;
+    %%%%%:  397-block  0
+        -:  398:}
+        -:  399:
+function glfwSetMonitorUserPointer called 0 returned 0% blocks executed 0%
+    #####:  400:GLFWAPI void glfwSetMonitorUserPointer(GLFWmonitor* handle, void* pointer)
+        -:  401:{
+    #####:  402:    _GLFWmonitor* monitor = (_GLFWmonitor*) handle;
+    #####:  403:    assert(monitor != NULL);
+    %%%%%:  403-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  403-block  1
+call    2 never executed
+    %%%%%:  403-block  2
+        -:  404:
+    #####:  405:    _GLFW_REQUIRE_INIT();
+    %%%%%:  405-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  405-block  1
+call    2 never executed
+    #####:  406:    monitor->userPointer = pointer;
+    %%%%%:  406-block  0
+        -:  407:}
+        -:  408:
+function glfwGetMonitorUserPointer called 0 returned 0% blocks executed 0%
+    #####:  409:GLFWAPI void* glfwGetMonitorUserPointer(GLFWmonitor* handle)
+        -:  410:{
+    #####:  411:    _GLFWmonitor* monitor = (_GLFWmonitor*) handle;
+    #####:  412:    assert(monitor != NULL);
+    %%%%%:  412-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  412-block  1
+call    2 never executed
+    %%%%%:  412-block  2
+        -:  413:
+    #####:  414:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+    %%%%%:  414-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  414-block  1
+call    2 never executed
+    #####:  415:    return monitor->userPointer;
+    %%%%%:  415-block  0
+        -:  416:}
+        -:  417:
+function glfwSetMonitorCallback called 0 returned 0% blocks executed 0%
+    #####:  418:GLFWAPI GLFWmonitorfun glfwSetMonitorCallback(GLFWmonitorfun cbfun)
+        -:  419:{
+    #####:  420:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+    %%%%%:  420-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  420-block  1
+call    2 never executed
+    #####:  421:    _GLFW_SWAP_POINTERS(_glfw.callbacks.monitor, cbfun);
+    #####:  422:    return cbfun;
+    %%%%%:  422-block  0
+        -:  423:}
+        -:  424:
+function glfwGetVideoModes called 0 returned 0% blocks executed 0%
+    #####:  425:GLFWAPI const GLFWvidmode* glfwGetVideoModes(GLFWmonitor* handle, int* count)
+        -:  426:{
+    #####:  427:    _GLFWmonitor* monitor = (_GLFWmonitor*) handle;
+    #####:  428:    assert(monitor != NULL);
+    %%%%%:  428-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  428-block  1
+call    2 never executed
+    %%%%%:  428-block  2
+    #####:  429:    assert(count != NULL);
+    %%%%%:  429-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  429-block  1
+call    2 never executed
+    %%%%%:  429-block  2
+        -:  430:
+    #####:  431:    *count = 0;
+        -:  432:
+    #####:  433:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+    %%%%%:  433-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  433-block  1
+call    2 never executed
+        -:  434:
+    #####:  435:    if (!refreshVideoModes(monitor))
+    %%%%%:  435-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####:  436:        return NULL;
+    %%%%%:  436-block  0
+        -:  437:
+    #####:  438:    *count = monitor->modeCount;
+    #####:  439:    return monitor->modes;
+    %%%%%:  439-block  0
+        -:  440:}
+        -:  441:
+function glfwGetVideoMode called 1 returned 100% blocks executed 60%
+        1:  442:GLFWAPI const GLFWvidmode* glfwGetVideoMode(GLFWmonitor* handle)
+        -:  443:{
+        1:  444:    _GLFWmonitor* monitor = (_GLFWmonitor*) handle;
+       1*:  445:    assert(monitor != NULL);
+        1:  445-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  445-block  1
+call    2 never executed
+        1:  445-block  2
+        -:  446:
+       1*:  447:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+        1:  447-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:  447-block  1
+call    2 never executed
+        -:  448:
+        1:  449:    _glfwPlatformGetVideoMode(monitor, &monitor->currentMode);
+        1:  449-block  0
+call    0 returned 1
+        1:  450:    return &monitor->currentMode;
+        -:  451:}
+        -:  452:
+function glfwSetGamma called 0 returned 0% blocks executed 0%
+    #####:  453:GLFWAPI void glfwSetGamma(GLFWmonitor* handle, float gamma)
+        -:  454:{
+        -:  455:    unsigned int i;
+        -:  456:    unsigned short* values;
+        -:  457:    GLFWgammaramp ramp;
+        -:  458:    const GLFWgammaramp* original;
+    #####:  459:    assert(handle != NULL);
+    %%%%%:  459-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  459-block  1
+call    2 never executed
+    %%%%%:  459-block  2
+    #####:  460:    assert(gamma > 0.f);
+    %%%%%:  460-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  460-block  1
+call    2 never executed
+    %%%%%:  460-block  2
+    #####:  461:    assert(gamma <= FLT_MAX);
+    %%%%%:  461-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  461-block  1
+call    2 never executed
+    %%%%%:  461-block  2
+        -:  462:
+    #####:  463:    _GLFW_REQUIRE_INIT();
+    %%%%%:  463-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  463-block  1
+call    2 never executed
+    %%%%%:  463-block  2
+        -:  464:
+    #####:  465:    if (gamma != gamma || gamma <= 0.f || gamma > FLT_MAX)
+    %%%%%:  465-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  465-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  465-block  2
+branch  4 never executed
+branch  5 never executed
+        -:  466:    {
+    #####:  467:        _glfwInputError(GLFW_INVALID_VALUE, "Invalid gamma value %f", gamma);
+    %%%%%:  467-block  0
+call    0 never executed
+    #####:  468:        return;
+        -:  469:    }
+        -:  470:
+    #####:  471:    original = glfwGetGammaRamp(handle);
+    %%%%%:  471-block  0
+call    0 never executed
+    #####:  472:    if (!original)
+branch  0 never executed
+branch  1 never executed
+    #####:  473:        return;
+    %%%%%:  473-block  0
+        -:  474:
+    #####:  475:    values = calloc(original->size, sizeof(unsigned short));
+        -:  476:
+    #####:  477:    for (i = 0;  i < original->size;  i++)
+    %%%%%:  477-block  0
+    %%%%%:  477-block  1
+branch  0 never executed
+branch  1 never executed
+        -:  478:    {
+        -:  479:        float value;
+        -:  480:
+        -:  481:        // Calculate intensity
+    #####:  482:        value = i / (float) (original->size - 1);
+        -:  483:        // Apply gamma curve
+    #####:  484:        value = powf(value, 1.f / gamma) * 65535.f + 0.5f;
+        -:  485:        // Clamp to value range
+    #####:  486:        value = _glfw_fminf(value, 65535.f);
+    %%%%%:  486-block  0
+call    0 never executed
+        -:  487:
+    #####:  488:        values[i] = (unsigned short) value;
+        -:  489:    }
+        -:  490:
+    #####:  491:    ramp.red = values;
+    #####:  492:    ramp.green = values;
+    #####:  493:    ramp.blue = values;
+    #####:  494:    ramp.size = original->size;
+        -:  495:
+    #####:  496:    glfwSetGammaRamp(handle, &ramp);
+    %%%%%:  496-block  0
+call    0 never executed
+    #####:  497:    free(values);
+        -:  498:}
+        -:  499:
+function glfwGetGammaRamp called 0 returned 0% blocks executed 0%
+    #####:  500:GLFWAPI const GLFWgammaramp* glfwGetGammaRamp(GLFWmonitor* handle)
+        -:  501:{
+    #####:  502:    _GLFWmonitor* monitor = (_GLFWmonitor*) handle;
+    #####:  503:    assert(monitor != NULL);
+    %%%%%:  503-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  503-block  1
+call    2 never executed
+    %%%%%:  503-block  2
+        -:  504:
+    #####:  505:    _GLFW_REQUIRE_INIT_OR_RETURN(NULL);
+    %%%%%:  505-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  505-block  1
+call    2 never executed
+        -:  506:
+    #####:  507:    _glfwFreeGammaArrays(&monitor->currentRamp);
+    %%%%%:  507-block  0
+call    0 never executed
+    #####:  508:    if (!_glfwPlatformGetGammaRamp(monitor, &monitor->currentRamp))
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####:  509:        return NULL;
+    %%%%%:  509-block  0
+        -:  510:
+    #####:  511:    return &monitor->currentRamp;
+    %%%%%:  511-block  0
+        -:  512:}
+        -:  513:
+function glfwSetGammaRamp called 0 returned 0% blocks executed 0%
+    #####:  514:GLFWAPI void glfwSetGammaRamp(GLFWmonitor* handle, const GLFWgammaramp* ramp)
+        -:  515:{
+    #####:  516:    _GLFWmonitor* monitor = (_GLFWmonitor*) handle;
+    #####:  517:    assert(monitor != NULL);
+    %%%%%:  517-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  517-block  1
+call    2 never executed
+    %%%%%:  517-block  2
+    #####:  518:    assert(ramp != NULL);
+    %%%%%:  518-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  518-block  1
+call    2 never executed
+    %%%%%:  518-block  2
+    #####:  519:    assert(ramp->size > 0);
+    %%%%%:  519-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  519-block  1
+call    2 never executed
+    %%%%%:  519-block  2
+    #####:  520:    assert(ramp->red != NULL);
+    %%%%%:  520-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  520-block  1
+call    2 never executed
+    %%%%%:  520-block  2
+    #####:  521:    assert(ramp->green != NULL);
+    %%%%%:  521-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  521-block  1
+call    2 never executed
+    %%%%%:  521-block  2
+    #####:  522:    assert(ramp->blue != NULL);
+    %%%%%:  522-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  522-block  1
+call    2 never executed
+    %%%%%:  522-block  2
+        -:  523:
+    #####:  524:    if (ramp->size <= 0)
+    %%%%%:  524-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  525:    {
+    #####:  526:        _glfwInputError(GLFW_INVALID_VALUE,
+    %%%%%:  526-block  0
+call    0 never executed
+        -:  527:                        "Invalid gamma ramp size %i",
+        -:  528:                        ramp->size);
+    #####:  529:        return;
+        -:  530:    }
+        -:  531:
+    #####:  532:    _GLFW_REQUIRE_INIT();
+    %%%%%:  532-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  532-block  1
+call    2 never executed
+        -:  533:
+    #####:  534:    if (!monitor->originalRamp.size)
+    %%%%%:  534-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  535:    {
+    #####:  536:        if (!_glfwPlatformGetGammaRamp(monitor, &monitor->originalRamp))
+    %%%%%:  536-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####:  537:            return;
+    %%%%%:  537-block  0
+        -:  538:    }
+        -:  539:
+    #####:  540:    _glfwPlatformSetGammaRamp(monitor, ramp);
+    %%%%%:  540-block  0
+call    0 never executed
+        -:  541:}
+        -:  542:

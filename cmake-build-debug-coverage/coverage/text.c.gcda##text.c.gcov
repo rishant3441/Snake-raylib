@@ -1,0 +1,2787 @@
+        -:    0:Source:C:/Dev/CLionProjects/Snake-raylib/cmake-build-debug-coverage/_deps/raylib-src/src/text.c
+        -:    0:Graph:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\CMakeFiles\raylib.dir\text.c.gcno
+        -:    0:Data:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\CMakeFiles\raylib.dir\text.c.gcda
+        -:    0:Runs:1
+        -:    1:/**********************************************************************************************
+        -:    2:*
+        -:    3:*   raylib.text - Basic functions to load Fonts and draw Text
+        -:    4:*
+        -:    5:*   CONFIGURATION:
+        -:    6:*
+        -:    7:*   #define SUPPORT_FILEFORMAT_FNT
+        -:    8:*   #define SUPPORT_FILEFORMAT_TTF
+        -:    9:*       Selected desired fileformats to be supported for loading. Some of those formats are
+        -:   10:*       supported by default, to remove support, just comment unrequired #define in this module
+        -:   11:*
+        -:   12:*   #define SUPPORT_DEFAULT_FONT
+        -:   13:*       Load default raylib font on initialization to be used by DrawText() and MeasureText().
+        -:   14:*       If no default font loaded, DrawTextEx() and MeasureTextEx() are required.
+        -:   15:*
+        -:   16:*   #define TEXTSPLIT_MAX_TEXT_BUFFER_LENGTH
+        -:   17:*       TextSplit() function static buffer max size
+        -:   18:*
+        -:   19:*   #define MAX_TEXTSPLIT_COUNT
+        -:   20:*       TextSplit() function static substrings pointers array (pointing to static buffer)
+        -:   21:*
+        -:   22:*
+        -:   23:*   DEPENDENCIES:
+        -:   24:*       stb_truetype  - Load TTF file and rasterize characters data
+        -:   25:*       stb_rect_pack - Rectangles packing algorythms, required for font atlas generation
+        -:   26:*
+        -:   27:*
+        -:   28:*   LICENSE: zlib/libpng
+        -:   29:*
+        -:   30:*   Copyright (c) 2013-2021 Ramon Santamaria (@raysan5)
+        -:   31:*
+        -:   32:*   This software is provided "as-is", without any express or implied warranty. In no event
+        -:   33:*   will the authors be held liable for any damages arising from the use of this software.
+        -:   34:*
+        -:   35:*   Permission is granted to anyone to use this software for any purpose, including commercial
+        -:   36:*   applications, and to alter it and redistribute it freely, subject to the following restrictions:
+        -:   37:*
+        -:   38:*     1. The origin of this software must not be misrepresented; you must not claim that you
+        -:   39:*     wrote the original software. If you use this software in a product, an acknowledgment
+        -:   40:*     in the product documentation would be appreciated but is not required.
+        -:   41:*
+        -:   42:*     2. Altered source versions must be plainly marked as such, and must not be misrepresented
+        -:   43:*     as being the original software.
+        -:   44:*
+        -:   45:*     3. This notice may not be removed or altered from any source distribution.
+        -:   46:*
+        -:   47:**********************************************************************************************/
+        -:   48:
+        -:   49:#include "raylib.h"         // Declares module functions
+        -:   50:
+        -:   51:// Check if config flags have been externally provided on compilation line
+        -:   52:#if !defined(EXTERNAL_CONFIG_FLAGS)
+        -:   53:    #include "config.h"     // Defines module configuration flags
+        -:   54:#endif
+        -:   55:
+        -:   56:#include "utils.h"          // Required for: LoadFileText()
+        -:   57:#include "rlgl.h"           // OpenGL abstraction layer to OpenGL 1.1, 2.1, 3.3+ or ES2 -> Only DrawTextPro()
+        -:   58:
+        -:   59:#include <stdlib.h>         // Required for: malloc(), free()
+        -:   60:#include <stdio.h>          // Required for: vsprintf()
+        -:   61:#include <string.h>         // Required for: strcmp(), strstr(), strcpy(), strncpy() [Used in TextReplace()], sscanf() [Used in LoadBMFont()]
+        -:   62:#include <stdarg.h>         // Required for: va_list, va_start(), vsprintf(), va_end() [Used in TextFormat()]
+        -:   63:#include <ctype.h>          // Requried for: toupper(), tolower() [Used in TextToUpper(), TextToLower()]
+        -:   64:
+        -:   65:#if defined(SUPPORT_FILEFORMAT_TTF)
+        -:   66:    #define STB_RECT_PACK_IMPLEMENTATION
+        -:   67:    #include "external/stb_rect_pack.h"     // Required for: ttf font rectangles packaging
+        -:   68:
+        -:   69:    #define STBTT_STATIC
+        -:   70:    #define STB_TRUETYPE_IMPLEMENTATION
+        -:   71:    #include "external/stb_truetype.h"      // Required for: ttf font data reading
+        -:   72:#endif
+        -:   73:
+        -:   74://----------------------------------------------------------------------------------
+        -:   75:// Defines and Macros
+        -:   76://----------------------------------------------------------------------------------
+        -:   77:#ifndef MAX_TEXT_BUFFER_LENGTH
+        -:   78:    #define MAX_TEXT_BUFFER_LENGTH              1024        // Size of internal static buffers used on some functions:
+        -:   79:                                                            // TextFormat(), TextSubtext(), TextToUpper(), TextToLower(), TextToPascal(), TextSplit()
+        -:   80:#endif
+        -:   81:#ifndef MAX_TEXT_UNICODE_CHARS
+        -:   82:    #define MAX_TEXT_UNICODE_CHARS               512        // Maximum number of unicode codepoints: GetCodepoints()
+        -:   83:#endif
+        -:   84:#ifndef MAX_TEXTSPLIT_COUNT
+        -:   85:    #define MAX_TEXTSPLIT_COUNT                  128        // Maximum number of substrings to split: TextSplit()
+        -:   86:#endif
+        -:   87:
+        -:   88://----------------------------------------------------------------------------------
+        -:   89:// Types and Structures Definition
+        -:   90://----------------------------------------------------------------------------------
+        -:   91:// ...
+        -:   92:
+        -:   93://----------------------------------------------------------------------------------
+        -:   94:// Global variables
+        -:   95://----------------------------------------------------------------------------------
+        -:   96:#if defined(SUPPORT_DEFAULT_FONT)
+        -:   97:// Default font provided by raylib
+        -:   98:// NOTE: Default font is loaded on InitWindow() and disposed on CloseWindow() [module: core]
+        -:   99:static Font defaultFont = { 0 };
+        -:  100:#endif
+        -:  101:
+        -:  102://----------------------------------------------------------------------------------
+        -:  103:// Other Modules Functions Declaration (required by text)
+        -:  104://----------------------------------------------------------------------------------
+        -:  105://...
+        -:  106:
+        -:  107://----------------------------------------------------------------------------------
+        -:  108:// Module specific Functions Declaration
+        -:  109://----------------------------------------------------------------------------------
+        -:  110:#if defined(SUPPORT_FILEFORMAT_FNT)
+        -:  111:static Font LoadBMFont(const char *fileName);     // Load a BMFont file (AngelCode font file)
+        -:  112:#endif
+        -:  113:
+        -:  114:#if defined(SUPPORT_DEFAULT_FONT)
+        -:  115:extern void LoadFontDefault(void);
+        -:  116:extern void UnloadFontDefault(void);
+        -:  117:#endif
+        -:  118:
+        -:  119://----------------------------------------------------------------------------------
+        -:  120:// Module Functions Definition
+        -:  121://----------------------------------------------------------------------------------
+        -:  122:#if defined(SUPPORT_DEFAULT_FONT)
+        -:  123:
+        -:  124:// Load raylib default font
+function LoadFontDefault called 1 returned 100% blocks executed 100%
+        1:  125:extern void LoadFontDefault(void)
+        -:  126:{
+        -:  127:    #define BIT_CHECK(a,b) ((a) & (1u << (b)))
+        -:  128:
+        -:  129:    // NOTE: Using UTF-8 encoding table for Unicode U+0000..U+00FF Basic Latin + Latin-1 Supplement
+        -:  130:    // Ref: http://www.utf8-chartable.de/unicode-utf8-table.pl
+        -:  131:
+        1:  132:    defaultFont.glyphCount = 224;   // Number of chars included in our default font
+        1:  133:    defaultFont.glyphPadding = 0;   // Characters padding
+        -:  134:
+        -:  135:    // Default font is directly defined here (data generated from a sprite font image)
+        -:  136:    // This way, we reconstruct Font without creating large global variables
+        -:  137:    // This data is automatically allocated to Stack and automatically deallocated at the end of this function
+        1:  138:    unsigned int defaultFontData[512] = {
+        -:  139:        0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00200020, 0x0001b000, 0x00000000, 0x00000000, 0x8ef92520, 0x00020a00, 0x7dbe8000, 0x1f7df45f,
+        -:  140:        0x4a2bf2a0, 0x0852091e, 0x41224000, 0x10041450, 0x2e292020, 0x08220812, 0x41222000, 0x10041450, 0x10f92020, 0x3efa084c, 0x7d22103c, 0x107df7de,
+        -:  141:        0xe8a12020, 0x08220832, 0x05220800, 0x10450410, 0xa4a3f000, 0x08520832, 0x05220400, 0x10450410, 0xe2f92020, 0x0002085e, 0x7d3e0281, 0x107df41f,
+        -:  142:        0x00200000, 0x8001b000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+        -:  143:        0x00000000, 0x00000000, 0x00000000, 0x00000000, 0xc0000fbe, 0xfbf7e00f, 0x5fbf7e7d, 0x0050bee8, 0x440808a2, 0x0a142fe8, 0x50810285, 0x0050a048,
+        -:  144:        0x49e428a2, 0x0a142828, 0x40810284, 0x0048a048, 0x10020fbe, 0x09f7ebaf, 0xd89f3e84, 0x0047a04f, 0x09e48822, 0x0a142aa1, 0x50810284, 0x0048a048,
+        -:  145:        0x04082822, 0x0a142fa0, 0x50810285, 0x0050a248, 0x00008fbe, 0xfbf42021, 0x5f817e7d, 0x07d09ce8, 0x00008000, 0x00000fe0, 0x00000000, 0x00000000,
+        -:  146:        0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x000c0180,
+        -:  147:        0xdfbf4282, 0x0bfbf7ef, 0x42850505, 0x004804bf, 0x50a142c6, 0x08401428, 0x42852505, 0x00a808a0, 0x50a146aa, 0x08401428, 0x42852505, 0x00081090,
+        -:  148:        0x5fa14a92, 0x0843f7e8, 0x7e792505, 0x00082088, 0x40a15282, 0x08420128, 0x40852489, 0x00084084, 0x40a16282, 0x0842022a, 0x40852451, 0x00088082,
+        -:  149:        0xc0bf4282, 0xf843f42f, 0x7e85fc21, 0x3e0900bf, 0x00000000, 0x00000004, 0x00000000, 0x000c0180, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+        -:  150:        0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x04000402, 0x41482000, 0x00000000, 0x00000800,
+        -:  151:        0x04000404, 0x4100203c, 0x00000000, 0x00000800, 0xf7df7df0, 0x514bef85, 0xbefbefbe, 0x04513bef, 0x14414500, 0x494a2885, 0xa28a28aa, 0x04510820,
+        -:  152:        0xf44145f0, 0x474a289d, 0xa28a28aa, 0x04510be0, 0x14414510, 0x494a2884, 0xa28a28aa, 0x02910a00, 0xf7df7df0, 0xd14a2f85, 0xbefbe8aa, 0x011f7be0,
+        -:  153:        0x00000000, 0x00400804, 0x20080000, 0x00000000, 0x00000000, 0x00600f84, 0x20080000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+        -:  154:        0xac000000, 0x00000f01, 0x00000000, 0x00000000, 0x24000000, 0x00000f01, 0x00000000, 0x06000000, 0x24000000, 0x00000f01, 0x00000000, 0x09108000,
+        -:  155:        0x24fa28a2, 0x00000f01, 0x00000000, 0x013e0000, 0x2242252a, 0x00000f52, 0x00000000, 0x038a8000, 0x2422222a, 0x00000f29, 0x00000000, 0x010a8000,
+        -:  156:        0x2412252a, 0x00000f01, 0x00000000, 0x010a8000, 0x24fbe8be, 0x00000f01, 0x00000000, 0x0ebe8000, 0xac020000, 0x00000f01, 0x00000000, 0x00048000,
+        -:  157:        0x0003e000, 0x00000f00, 0x00000000, 0x00008000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000038, 0x8443b80e, 0x00203a03,
+        -:  158:        0x02bea080, 0xf0000020, 0xc452208a, 0x04202b02, 0xf8029122, 0x07f0003b, 0xe44b388e, 0x02203a02, 0x081e8a1c, 0x0411e92a, 0xf4420be0, 0x01248202,
+        -:  159:        0xe8140414, 0x05d104ba, 0xe7c3b880, 0x00893a0a, 0x283c0e1c, 0x04500902, 0xc4400080, 0x00448002, 0xe8208422, 0x04500002, 0x80400000, 0x05200002,
+        -:  160:        0x083e8e00, 0x04100002, 0x804003e0, 0x07000042, 0xf8008400, 0x07f00003, 0x80400000, 0x04000022, 0x00000000, 0x00000000, 0x80400000, 0x04000002,
+        -:  161:        0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00800702, 0x1848a0c2, 0x84010000, 0x02920921, 0x01042642, 0x00005121, 0x42023f7f, 0x00291002,
+        -:  162:        0xefc01422, 0x7efdfbf7, 0xefdfa109, 0x03bbbbf7, 0x28440f12, 0x42850a14, 0x20408109, 0x01111010, 0x28440408, 0x42850a14, 0x2040817f, 0x01111010,
+        -:  163:        0xefc78204, 0x7efdfbf7, 0xe7cf8109, 0x011111f3, 0x2850a932, 0x42850a14, 0x2040a109, 0x01111010, 0x2850b840, 0x42850a14, 0xefdfbf79, 0x03bbbbf7,
+        -:  164:        0x001fa020, 0x00000000, 0x00001000, 0x00000000, 0x00002070, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+        -:  165:        0x08022800, 0x00012283, 0x02430802, 0x01010001, 0x8404147c, 0x20000144, 0x80048404, 0x00823f08, 0xdfbf4284, 0x7e03f7ef, 0x142850a1, 0x0000210a,
+        -:  166:        0x50a14684, 0x528a1428, 0x142850a1, 0x03efa17a, 0x50a14a9e, 0x52521428, 0x142850a1, 0x02081f4a, 0x50a15284, 0x4a221428, 0xf42850a1, 0x03efa14b,
+        -:  167:        0x50a16284, 0x4a521428, 0x042850a1, 0x0228a17a, 0xdfbf427c, 0x7e8bf7ef, 0xf7efdfbf, 0x03efbd0b, 0x00000000, 0x04000000, 0x00000000, 0x00000008,
+        -:  168:        0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00200508, 0x00840400, 0x11458122, 0x00014210,
+        -:  169:        0x00514294, 0x51420800, 0x20a22a94, 0x0050a508, 0x00200000, 0x00000000, 0x00050000, 0x08000000, 0xfefbefbe, 0xfbefbefb, 0xfbeb9114, 0x00fbefbe,
+        -:  170:        0x20820820, 0x8a28a20a, 0x8a289114, 0x3e8a28a2, 0xfefbefbe, 0xfbefbe0b, 0x8a289114, 0x008a28a2, 0x228a28a2, 0x08208208, 0x8a289114, 0x088a28a2,
+        -:  171:        0xfefbefbe, 0xfbefbefb, 0xfa2f9114, 0x00fbefbe, 0x00000000, 0x00000040, 0x00000000, 0x00000000, 0x00000000, 0x00000020, 0x00000000, 0x00000000,
+        -:  172:        0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00210100, 0x00000004, 0x00000000, 0x00000000, 0x14508200, 0x00001402, 0x00000000, 0x00000000,
+        -:  173:        0x00000010, 0x00000020, 0x00000000, 0x00000000, 0xa28a28be, 0x00002228, 0x00000000, 0x00000000, 0xa28a28aa, 0x000022e8, 0x00000000, 0x00000000,
+        -:  174:        0xa28a28aa, 0x000022a8, 0x00000000, 0x00000000, 0xa28a28aa, 0x000022e8, 0x00000000, 0x00000000, 0xbefbefbe, 0x00003e2f, 0x00000000, 0x00000000,
+        -:  175:        0x00000004, 0x00002028, 0x00000000, 0x00000000, 0x80000000, 0x00003e0f, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+        -:  176:        0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+        -:  177:        0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+        -:  178:        0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+        -:  179:        0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+        -:  180:        0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+        -:  181:        0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 };
+        -:  182:
+        1:  183:    int charsHeight = 10;
+        1:  184:    int charsDivisor = 1;    // Every char is separated from the consecutive by a 1 pixel divisor, horizontally and vertically
+        -:  185:
+        1:  186:    int charsWidth[224] = { 3, 1, 4, 6, 5, 7, 6, 2, 3, 3, 5, 5, 2, 4, 1, 7, 5, 2, 5, 5, 5, 5, 5, 5, 5, 5, 1, 1, 3, 4, 3, 6,
+        -:  187:                            7, 6, 6, 6, 6, 6, 6, 6, 6, 3, 5, 6, 5, 7, 6, 6, 6, 6, 6, 6, 7, 6, 7, 7, 6, 6, 6, 2, 7, 2, 3, 5,
+        -:  188:                            2, 5, 5, 5, 5, 5, 4, 5, 5, 1, 2, 5, 2, 5, 5, 5, 5, 5, 5, 5, 4, 5, 5, 5, 5, 5, 5, 3, 1, 3, 4, 4,
+        -:  189:                            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+        -:  190:                            1, 1, 5, 5, 5, 7, 1, 5, 3, 7, 3, 5, 4, 1, 7, 4, 3, 5, 3, 3, 2, 5, 6, 1, 2, 2, 3, 5, 6, 6, 6, 6,
+        -:  191:                            6, 6, 6, 6, 6, 6, 7, 6, 6, 6, 6, 6, 3, 3, 3, 3, 7, 6, 6, 6, 6, 6, 6, 5, 6, 6, 6, 6, 6, 6, 4, 6,
+        -:  192:                            5, 5, 5, 5, 5, 5, 9, 5, 5, 5, 5, 5, 2, 2, 3, 3, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 3, 5 };
+        -:  193:
+        -:  194:    // Re-construct image from defaultFontData and generate OpenGL texture
+        -:  195:    //----------------------------------------------------------------------
+        1:  196:    Image imFont = {
+        1:  197:        .data = calloc(128*128, 2),  // 2 bytes per pixel (gray + alpha)
+        -:  198:        .width = 128,
+        -:  199:        .height = 128,
+        -:  200:        .format = PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA,
+        -:  201:        .mipmaps = 1
+        -:  202:    };
+        -:  203:
+        -:  204:    // Fill image.data with defaultFontData (convert from bit to pixel!)
+      513:  205:    for (int i = 0, counter = 0; i < imFont.width*imFont.height; i += 32)
+        1:  205-block  0
+      513:  205-block  1
+branch  0 taken 512
+branch  1 taken 1 (fallthrough)
+        -:  206:    {
+    16896:  207:        for (int j = 31; j >= 0; j--)
+      512:  207-block  0
+    16384:  207-block  1
+    16896:  207-block  2
+branch  0 taken 16384
+branch  1 taken 512 (fallthrough)
+        -:  208:        {
+    16384:  209:            if (BIT_CHECK(defaultFontData[counter], j))
+    16384:  209-block  0
+branch  0 taken 2950 (fallthrough)
+branch  1 taken 13434
+        -:  210:            {
+        -:  211:                // NOTE: We are unreferencing data as short, so,
+        -:  212:                // we must consider data as little-endian order (alpha + gray)
+     2950:  213:                ((unsigned short *)imFont.data)[i + j] = 0xffff;
+     2950:  213-block  0
+        -:  214:            }
+    13434:  215:            else ((unsigned short *)imFont.data)[i + j] = 0x00ff;
+    13434:  215-block  0
+        -:  216:        }
+        -:  217:
+      512:  218:        counter++;
+      512:  218-block  0
+        -:  219:    }
+        -:  220:
+        1:  221:    defaultFont.texture = LoadTextureFromImage(imFont);
+        1:  221-block  0
+call    0 returned 1
+        -:  222:
+        -:  223:    // Reconstruct charSet using charsWidth[], charsHeight, charsDivisor, glyphCount
+        -:  224:    //------------------------------------------------------------------------------
+        -:  225:
+        -:  226:    // Allocate space for our characters info data
+        -:  227:    // NOTE: This memory should be freed at end! --> CloseWindow()
+        1:  228:    defaultFont.glyphs = (GlyphInfo *)RL_MALLOC(defaultFont.glyphCount*sizeof(GlyphInfo));
+        1:  229:    defaultFont.recs = (Rectangle *)RL_MALLOC(defaultFont.glyphCount*sizeof(Rectangle));
+        -:  230:
+        1:  231:    int currentLine = 0;
+        1:  232:    int currentPosX = charsDivisor;
+        1:  233:    int testPosX = charsDivisor;
+        -:  234:
+      225:  235:    for (int i = 0; i < defaultFont.glyphCount; i++)
+      225:  235-block  0
+branch  0 taken 224
+branch  1 taken 1 (fallthrough)
+        -:  236:    {
+      224:  237:        defaultFont.glyphs[i].value = 32 + i;  // First char is 32
+        -:  238:
+      224:  239:        defaultFont.recs[i].x = (float)currentPosX;
+      224:  240:        defaultFont.recs[i].y = (float)(charsDivisor + currentLine*(charsHeight + charsDivisor));
+      224:  241:        defaultFont.recs[i].width = (float)charsWidth[i];
+      224:  242:        defaultFont.recs[i].height = (float)charsHeight;
+        -:  243:
+      224:  244:        testPosX += (int)(defaultFont.recs[i].width + (float)charsDivisor);
+        -:  245:
+      224:  246:        if (testPosX >= defaultFont.texture.width)
+      224:  246-block  0
+branch  0 taken 9 (fallthrough)
+branch  1 taken 215
+        -:  247:        {
+        9:  248:            currentLine++;
+        9:  249:            currentPosX = 2*charsDivisor + charsWidth[i];
+        9:  250:            testPosX = currentPosX;
+        -:  251:
+        9:  252:            defaultFont.recs[i].x = (float)charsDivisor;
+        9:  253:            defaultFont.recs[i].y = (float)(charsDivisor + currentLine*(charsHeight + charsDivisor));
+        9:  253-block  0
+        -:  254:        }
+      215:  255:        else currentPosX = testPosX;
+      215:  255-block  0
+        -:  256:
+        -:  257:        // NOTE: On default font character offsets and xAdvance are not required
+      224:  258:        defaultFont.glyphs[i].offsetX = 0;
+      224:  259:        defaultFont.glyphs[i].offsetY = 0;
+      224:  260:        defaultFont.glyphs[i].advanceX = 0;
+        -:  261:
+        -:  262:        // Fill character image data from fontClear data
+      224:  263:        defaultFont.glyphs[i].image = ImageFromImage(imFont, defaultFont.recs[i]);
+      224:  263-block  0
+call    0 returned 224
+        -:  264:    }
+        -:  265:
+        1:  266:    UnloadImage(imFont);
+        1:  266-block  0
+call    0 returned 1
+        -:  267:
+        1:  268:    defaultFont.baseSize = (int)defaultFont.recs[0].height;
+        -:  269:
+        1:  270:    TRACELOG(LOG_INFO, "FONT: Default font loaded successfully (%i glyphs)", defaultFont.glyphCount);
+call    0 returned 1
+        1:  271:}
+        -:  272:
+        -:  273:// Unload raylib default font
+function UnloadFontDefault called 1 returned 100% blocks executed 100%
+        1:  274:extern void UnloadFontDefault(void)
+        -:  275:{
+      225:  276:    for (int i = 0; i < defaultFont.glyphCount; i++) UnloadImage(defaultFont.glyphs[i].image);
+        1:  276-block  0
+      224:  276-block  1
+call    0 returned 224
+      225:  276-block  2
+branch  1 taken 224
+branch  2 taken 1 (fallthrough)
+        1:  277:    UnloadTexture(defaultFont.texture);
+        1:  277-block  0
+call    0 returned 1
+        1:  278:    RL_FREE(defaultFont.glyphs);
+        1:  279:    RL_FREE(defaultFont.recs);
+        1:  280:}
+        -:  281:#endif      // SUPPORT_DEFAULT_FONT
+        -:  282:
+        -:  283:// Get the default font, useful to be used with extended parameters
+function GetFontDefault called 2 returned 100% blocks executed 100%
+        2:  284:Font GetFontDefault()
+        -:  285:{
+        -:  286:#if defined(SUPPORT_DEFAULT_FONT)
+        2:  287:    return defaultFont;
+        2:  287-block  0
+        -:  288:#else
+        -:  289:    Font font = { 0 };
+        -:  290:    return font;
+        -:  291:#endif
+        -:  292:}
+        -:  293:
+        -:  294:// Load Font from file into GPU memory (VRAM)
+function LoadFont called 0 returned 0% blocks executed 0%
+    #####:  295:Font LoadFont(const char *fileName)
+        -:  296:{
+        -:  297:    // Default values for ttf font generation
+        -:  298:#ifndef FONT_TTF_DEFAULT_SIZE
+        -:  299:    #define FONT_TTF_DEFAULT_SIZE           32      // TTF font generation default char size (char-height)
+        -:  300:#endif
+        -:  301:#ifndef FONT_TTF_DEFAULT_NUMCHARS
+        -:  302:    #define FONT_TTF_DEFAULT_NUMCHARS       95      // TTF font generation default charset: 95 glyphs (ASCII 32..126)
+        -:  303:#endif
+        -:  304:#ifndef FONT_TTF_DEFAULT_FIRST_CHAR
+        -:  305:    #define FONT_TTF_DEFAULT_FIRST_CHAR     32      // TTF font generation default first char for image sprite font (32-Space)
+        -:  306:#endif
+        -:  307:#ifndef FONT_TTF_DEFAULT_CHARS_PADDING
+        -:  308:    #define FONT_TTF_DEFAULT_CHARS_PADDING   4      // TTF font generation default chars padding
+        -:  309:#endif
+        -:  310:
+    #####:  311:    Font font = { 0 };
+        -:  312:
+        -:  313:#if defined(SUPPORT_FILEFORMAT_TTF)
+    #####:  314:    if (IsFileExtension(fileName, ".ttf;.otf")) font = LoadFontEx(fileName, FONT_TTF_DEFAULT_SIZE, NULL, FONT_TTF_DEFAULT_NUMCHARS);
+    %%%%%:  314-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    %%%%%:  314-block  1
+call    3 never executed
+        -:  315:    else
+        -:  316:#endif
+        -:  317:#if defined(SUPPORT_FILEFORMAT_FNT)
+    #####:  318:    if (IsFileExtension(fileName, ".fnt")) font = LoadBMFont(fileName);
+    %%%%%:  318-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    %%%%%:  318-block  1
+call    3 never executed
+        -:  319:    else
+        -:  320:#endif
+        -:  321:    {
+    #####:  322:        Image image = LoadImage(fileName);
+    %%%%%:  322-block  0
+call    0 never executed
+    #####:  323:        if (image.data != NULL) font = LoadFontFromImage(image, MAGENTA, FONT_TTF_DEFAULT_FIRST_CHAR);
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  323-block  0
+call    2 never executed
+    #####:  324:        UnloadImage(image);
+    %%%%%:  324-block  0
+call    0 never executed
+        -:  325:    }
+        -:  326:
+    #####:  327:    if (font.texture.id == 0)
+    %%%%%:  327-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  328:    {
+    #####:  329:        TRACELOG(LOG_WARNING, "FONT: [%s] Failed to load font texture -> Using default font", fileName);
+    %%%%%:  329-block  0
+call    0 never executed
+    #####:  330:        font = GetFontDefault();
+call    0 never executed
+        -:  331:    }
+    #####:  332:    else SetTextureFilter(font.texture, TEXTURE_FILTER_POINT);    // By default we set point filter (best performance)
+    %%%%%:  332-block  0
+call    0 never executed
+        -:  333:
+    #####:  334:    return font;
+    %%%%%:  334-block  0
+        -:  335:}
+        -:  336:
+        -:  337:// Load Font from TTF font file with generation parameters
+        -:  338:// NOTE: You can pass an array with desired characters, those characters should be available in the font
+        -:  339:// if array is NULL, default char set is selected 32..126
+function LoadFontEx called 0 returned 0% blocks executed 0%
+    #####:  340:Font LoadFontEx(const char *fileName, int fontSize, int *fontChars, int glyphCount)
+        -:  341:{
+    #####:  342:    Font font = { 0 };
+        -:  343:
+        -:  344:    // Loading file to memory
+    #####:  345:    unsigned int fileSize = 0;
+    #####:  346:    unsigned char *fileData = LoadFileData(fileName, &fileSize);
+    %%%%%:  346-block  0
+call    0 never executed
+        -:  347:
+    #####:  348:    if (fileData != NULL)
+branch  0 never executed
+branch  1 never executed
+        -:  349:    {
+        -:  350:        // Loading font from memory data
+    #####:  351:        font = LoadFontFromMemory(GetFileExtension(fileName), fileData, fileSize, fontSize, fontChars, glyphCount);
+    %%%%%:  351-block  0
+call    0 never executed
+call    1 never executed
+        -:  352:
+    #####:  353:        RL_FREE(fileData);
+        -:  354:    }
+    #####:  355:    else font = GetFontDefault();
+    %%%%%:  355-block  0
+call    0 never executed
+        -:  356:
+    #####:  357:    return font;
+    %%%%%:  357-block  0
+        -:  358:}
+        -:  359:
+        -:  360:// Load an Image font file (XNA style)
+function LoadFontFromImage called 0 returned 0% blocks executed 0%
+    #####:  361:Font LoadFontFromImage(Image image, Color key, int firstChar)
+        -:  362:{
+        -:  363:#ifndef MAX_GLYPHS_FROM_IMAGE
+        -:  364:    #define MAX_GLYPHS_FROM_IMAGE   256     // Maximum number of glyphs supported on image scan
+        -:  365:#endif
+        -:  366:
+        -:  367:    #define COLOR_EQUAL(col1, col2) ((col1.r == col2.r)&&(col1.g == col2.g)&&(col1.b == col2.b)&&(col1.a == col2.a))
+        -:  368:
+    #####:  369:    int charSpacing = 0;
+    #####:  370:    int lineSpacing = 0;
+        -:  371:
+    #####:  372:    int x = 0;
+    #####:  373:    int y = 0;
+        -:  374:
+        -:  375:    // We allocate a temporal arrays for chars data measures,
+        -:  376:    // once we get the actual number of chars, we copy data to a sized arrays
+        -:  377:    int tempCharValues[MAX_GLYPHS_FROM_IMAGE];
+        -:  378:    Rectangle tempCharRecs[MAX_GLYPHS_FROM_IMAGE];
+        -:  379:
+    #####:  380:    Color *pixels = LoadImageColors(image);
+    %%%%%:  380-block  0
+call    0 never executed
+        -:  381:
+        -:  382:    // Parse image data to get charSpacing and lineSpacing
+    #####:  383:    for (y = 0; y < image.height; y++)
+    %%%%%:  383-block  0
+    %%%%%:  383-block  1
+branch  0 never executed
+branch  1 never executed
+        -:  384:    {
+    #####:  385:        for (x = 0; x < image.width; x++)
+    %%%%%:  385-block  0
+    %%%%%:  385-block  1
+    %%%%%:  385-block  2
+branch  0 never executed
+branch  1 never executed
+        -:  386:        {
+    #####:  387:            if (!COLOR_EQUAL(pixels[y*image.width + x], key)) break;
+    %%%%%:  387-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  387-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  387-block  2
+branch  4 never executed
+branch  5 never executed
+    %%%%%:  387-block  3
+branch  6 never executed
+branch  7 never executed
+        -:  388:        }
+        -:  389:
+    #####:  390:        if (!COLOR_EQUAL(pixels[y*image.width + x], key)) break;
+    %%%%%:  390-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  390-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  390-block  2
+branch  4 never executed
+branch  5 never executed
+    %%%%%:  390-block  3
+branch  6 never executed
+branch  7 never executed
+        -:  391:    }
+        -:  392:
+    #####:  393:    charSpacing = x;
+    #####:  394:    lineSpacing = y;
+        -:  395:
+    #####:  396:    int charHeight = 0;
+    #####:  397:    int j = 0;
+        -:  398:
+    #####:  399:    while (!COLOR_EQUAL(pixels[(lineSpacing + j)*image.width + charSpacing], key)) j++;
+    %%%%%:  399-block  0
+    %%%%%:  399-block  1
+    %%%%%:  399-block  2
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  399-block  3
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  399-block  4
+branch  4 never executed
+branch  5 never executed
+    %%%%%:  399-block  5
+branch  6 never executed
+branch  7 never executed
+        -:  400:
+    #####:  401:    charHeight = j;
+        -:  402:
+        -:  403:    // Check array values to get characters: value, x, y, w, h
+    #####:  404:    int index = 0;
+    #####:  405:    int lineToRead = 0;
+    #####:  406:    int xPosToRead = charSpacing;
+        -:  407:
+        -:  408:    // Parse image data to get rectangle sizes
+    #####:  409:    while ((lineSpacing + lineToRead*(charHeight + lineSpacing)) < image.height)
+    %%%%%:  409-block  0
+    %%%%%:  409-block  1
+branch  0 never executed
+branch  1 never executed
+        -:  410:    {
+    #####:  411:        while ((xPosToRead < image.width) &&
+    %%%%%:  411-block  0
+    %%%%%:  411-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  412:              !COLOR_EQUAL((pixels[(lineSpacing + (charHeight+lineSpacing)*lineToRead)*image.width + xPosToRead]), key))
+    %%%%%:  412-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  412-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  412-block  2
+branch  4 never executed
+branch  5 never executed
+    %%%%%:  412-block  3
+branch  6 never executed
+branch  7 never executed
+        -:  413:        {
+    #####:  414:            tempCharValues[index] = firstChar + index;
+        -:  415:
+    #####:  416:            tempCharRecs[index].x = (float)xPosToRead;
+    #####:  417:            tempCharRecs[index].y = (float)(lineSpacing + lineToRead*(charHeight + lineSpacing));
+    #####:  418:            tempCharRecs[index].height = (float)charHeight;
+        -:  419:
+    #####:  420:            int charWidth = 0;
+        -:  421:
+    #####:  422:            while (!COLOR_EQUAL(pixels[(lineSpacing + (charHeight+lineSpacing)*lineToRead)*image.width + xPosToRead + charWidth], key)) charWidth++;
+    %%%%%:  422-block  0
+    %%%%%:  422-block  1
+    %%%%%:  422-block  2
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  422-block  3
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  422-block  4
+branch  4 never executed
+branch  5 never executed
+    %%%%%:  422-block  5
+branch  6 never executed
+branch  7 never executed
+        -:  423:
+    #####:  424:            tempCharRecs[index].width = (float)charWidth;
+        -:  425:
+    #####:  426:            index++;
+        -:  427:
+    #####:  428:            xPosToRead += (charWidth + charSpacing);
+    %%%%%:  428-block  0
+        -:  429:        }
+        -:  430:
+    #####:  431:        lineToRead++;
+    #####:  432:        xPosToRead = charSpacing;
+    %%%%%:  432-block  0
+        -:  433:    }
+        -:  434:
+        -:  435:    // NOTE: We need to remove key color borders from image to avoid weird
+        -:  436:    // artifacts on texture scaling when using TEXTURE_FILTER_BILINEAR or TEXTURE_FILTER_TRILINEAR
+    #####:  437:    for (int i = 0; i < image.height*image.width; i++) if (COLOR_EQUAL(pixels[i], key)) pixels[i] = BLANK;
+    %%%%%:  437-block  0
+    %%%%%:  437-block  1
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  437-block  2
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  437-block  3
+branch  4 never executed
+branch  5 never executed
+    %%%%%:  437-block  4
+branch  6 never executed
+branch  7 never executed
+    %%%%%:  437-block  5
+    %%%%%:  437-block  6
+    %%%%%:  437-block  7
+branch  8 never executed
+branch  9 never executed
+        -:  438:
+        -:  439:    // Create a new image with the processed color data (key color replaced by BLANK)
+    #####:  440:    Image fontClear = {
+        -:  441:        .data = pixels,
+    #####:  442:        .width = image.width,
+    #####:  443:        .height = image.height,
+        -:  444:        .format = PIXELFORMAT_UNCOMPRESSED_R8G8B8A8,
+        -:  445:        .mipmaps = 1
+        -:  446:    };
+        -:  447:
+        -:  448:    // Create font with all data parsed from image
+    #####:  449:    Font font = { 0 };
+        -:  450:
+    #####:  451:    font.texture = LoadTextureFromImage(fontClear); // Convert processed image to OpenGL texture
+    %%%%%:  451-block  0
+call    0 never executed
+    #####:  452:    font.glyphCount = index;
+    #####:  453:    font.glyphPadding = 0;
+        -:  454:
+        -:  455:    // We got tempCharValues and tempCharsRecs populated with chars data
+        -:  456:    // Now we move temp data to sized charValues and charRecs arrays
+    #####:  457:    font.glyphs = (GlyphInfo *)RL_MALLOC(font.glyphCount*sizeof(GlyphInfo));
+    #####:  458:    font.recs = (Rectangle *)RL_MALLOC(font.glyphCount*sizeof(Rectangle));
+        -:  459:
+    #####:  460:    for (int i = 0; i < font.glyphCount; i++)
+    %%%%%:  460-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  461:    {
+    #####:  462:        font.glyphs[i].value = tempCharValues[i];
+        -:  463:
+        -:  464:        // Get character rectangle in the font atlas texture
+    #####:  465:        font.recs[i] = tempCharRecs[i];
+        -:  466:
+        -:  467:        // NOTE: On image based fonts (XNA style), character offsets and xAdvance are not required (set to 0)
+    #####:  468:        font.glyphs[i].offsetX = 0;
+    #####:  469:        font.glyphs[i].offsetY = 0;
+    #####:  470:        font.glyphs[i].advanceX = 0;
+        -:  471:
+        -:  472:        // Fill character image data from fontClear data
+    #####:  473:        font.glyphs[i].image = ImageFromImage(fontClear, tempCharRecs[i]);
+    %%%%%:  473-block  0
+call    0 never executed
+        -:  474:    }
+        -:  475:
+    #####:  476:    UnloadImage(fontClear);     // Unload processed image once converted to texture
+    %%%%%:  476-block  0
+call    0 never executed
+        -:  477:
+    #####:  478:    font.baseSize = (int)font.recs[0].height;
+        -:  479:
+    #####:  480:    return font;
+        -:  481:}
+        -:  482:
+        -:  483:// Load font from memory buffer, fileType refers to extension: i.e. ".ttf"
+function LoadFontFromMemory called 0 returned 0% blocks executed 0%
+    #####:  484:Font LoadFontFromMemory(const char *fileType, const unsigned char *fileData, int dataSize, int fontSize, int *fontChars, int glyphCount)
+        -:  485:{
+    #####:  486:    Font font = { 0 };
+        -:  487:
+    #####:  488:    char fileExtLower[16] = { 0 };
+    #####:  489:    strcpy(fileExtLower, TextToLower(fileType));
+    %%%%%:  489-block  0
+call    0 never executed
+        -:  490:
+        -:  491:#if defined(SUPPORT_FILEFORMAT_TTF)
+    #####:  492:    if (TextIsEqual(fileExtLower, ".ttf") ||
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+branch  4 never executed
+    #####:  493:        TextIsEqual(fileExtLower, ".otf"))
+    %%%%%:  493-block  0
+call    0 never executed
+        -:  494:    {
+    #####:  495:        font.baseSize = fontSize;
+    #####:  496:        font.glyphCount = (glyphCount > 0)? glyphCount : 95;
+    %%%%%:  496-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  496-block  1
+    %%%%%:  496-block  2
+    #####:  497:        font.glyphPadding = 0;
+    #####:  498:        font.glyphs = LoadFontData(fileData, dataSize, font.baseSize, fontChars, font.glyphCount, FONT_DEFAULT);
+    %%%%%:  498-block  0
+call    0 never executed
+        -:  499:
+    #####:  500:        if (font.glyphs != NULL)
+branch  0 never executed
+branch  1 never executed
+        -:  501:        {
+    #####:  502:            font.glyphPadding = FONT_TTF_DEFAULT_CHARS_PADDING;
+        -:  503:
+    #####:  504:            Image atlas = GenImageFontAtlas(font.glyphs, &font.recs, font.glyphCount, font.baseSize, font.glyphPadding, 0);
+    %%%%%:  504-block  0
+call    0 never executed
+    #####:  505:            font.texture = LoadTextureFromImage(atlas);
+call    0 never executed
+        -:  506:
+        -:  507:            // Update glyphs[i].image to use alpha, required to be used on ImageDrawText()
+    #####:  508:            for (int i = 0; i < font.glyphCount; i++)
+    %%%%%:  508-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  509:            {
+    #####:  510:                UnloadImage(font.glyphs[i].image);
+    %%%%%:  510-block  0
+call    0 never executed
+    #####:  511:                font.glyphs[i].image = ImageFromImage(atlas, font.recs[i]);
+call    0 never executed
+        -:  512:            }
+        -:  513:
+    #####:  514:            UnloadImage(atlas);
+    %%%%%:  514-block  0
+call    0 never executed
+        -:  515:            
+        -:  516:            // TRACELOG(LOG_INFO, "FONT: Font loaded successfully (%i glyphs)", font.glyphCount);
+        -:  517:        }
+    #####:  518:        else font = GetFontDefault();
+    %%%%%:  518-block  0
+call    0 never executed
+        -:  519:    }
+        -:  520:#else
+        -:  521:    font = GetFontDefault();
+        -:  522:#endif
+        -:  523:
+    #####:  524:    return font;
+    %%%%%:  524-block  0
+        -:  525:}
+        -:  526:
+        -:  527:// Load font data for further use
+        -:  528:// NOTE: Requires TTF font memory data and can generate SDF data
+function LoadFontData called 0 returned 0% blocks executed 0%
+    #####:  529:GlyphInfo *LoadFontData(const unsigned char *fileData, int dataSize, int fontSize, int *fontChars, int glyphCount, int type)
+        -:  530:{
+        -:  531:    // NOTE: Using some SDF generation default values,
+        -:  532:    // trades off precision with ability to handle *smaller* sizes
+        -:  533:#ifndef FONT_SDF_CHAR_PADDING
+        -:  534:    #define FONT_SDF_CHAR_PADDING            4      // SDF font generation char padding
+        -:  535:#endif
+        -:  536:#ifndef FONT_SDF_ON_EDGE_VALUE
+        -:  537:    #define FONT_SDF_ON_EDGE_VALUE         128      // SDF font generation on edge value
+        -:  538:#endif
+        -:  539:#ifndef FONT_SDF_PIXEL_DIST_SCALE
+        -:  540:    #define FONT_SDF_PIXEL_DIST_SCALE     64.0f     // SDF font generation pixel distance scale
+        -:  541:#endif
+        -:  542:#ifndef FONT_BITMAP_ALPHA_THRESHOLD
+        -:  543:    #define FONT_BITMAP_ALPHA_THRESHOLD     80      // Bitmap (B&W) font generation alpha threshold
+        -:  544:#endif
+        -:  545:
+    #####:  546:    GlyphInfo *chars = NULL;
+        -:  547:
+        -:  548:#if defined(SUPPORT_FILEFORMAT_TTF)
+        -:  549:    // Load font data (including pixel data) from TTF memory file
+        -:  550:    // NOTE: Loaded information should be enough to generate font image atlas, using any packaging method
+    #####:  551:    if (fileData != NULL)
+    %%%%%:  551-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  552:    {
+    #####:  553:        int genFontChars = false;
+    #####:  554:        stbtt_fontinfo fontInfo = { 0 };
+        -:  555:
+    #####:  556:        if (stbtt_InitFont(&fontInfo, (unsigned char *)fileData, 0))     // Initialize font for data reading
+    %%%%%:  556-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  557:        {
+        -:  558:            // Calculate font scale factor
+    #####:  559:            float scaleFactor = stbtt_ScaleForPixelHeight(&fontInfo, (float)fontSize);
+    %%%%%:  559-block  0
+call    0 never executed
+        -:  560:
+        -:  561:            // Calculate font basic metrics
+        -:  562:            // NOTE: ascent is equivalent to font baseline
+        -:  563:            int ascent, descent, lineGap;
+    #####:  564:            stbtt_GetFontVMetrics(&fontInfo, &ascent, &descent, &lineGap);
+call    0 never executed
+        -:  565:
+        -:  566:            // In case no chars count provided, default to 95
+    #####:  567:            glyphCount = (glyphCount > 0)? glyphCount : 95;
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  567-block  0
+    %%%%%:  567-block  1
+        -:  568:
+        -:  569:            // Fill fontChars in case not provided externally
+        -:  570:            // NOTE: By default we fill glyphCount consecutevely, starting at 32 (Space)
+        -:  571:
+    #####:  572:            if (fontChars == NULL)
+    %%%%%:  572-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  573:            {
+    #####:  574:                fontChars = (int *)RL_MALLOC(glyphCount*sizeof(int));
+    #####:  575:                for (int i = 0; i < glyphCount; i++) fontChars[i] = i + 32;
+    %%%%%:  575-block  0
+    %%%%%:  575-block  1
+    %%%%%:  575-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  576:                genFontChars = true;
+    %%%%%:  576-block  0
+        -:  577:            }
+        -:  578:
+    #####:  579:            chars = (GlyphInfo *)RL_MALLOC(glyphCount*sizeof(GlyphInfo));
+        -:  580:
+        -:  581:            // NOTE: Using simple packaging, one char after another
+    #####:  582:            for (int i = 0; i < glyphCount; i++)
+    %%%%%:  582-block  0
+    %%%%%:  582-block  1
+    %%%%%:  582-block  2
+branch  0 never executed
+branch  1 never executed
+        -:  583:            {
+    #####:  584:                int chw = 0, chh = 0;   // Character width and height (on generation)
+    #####:  585:                int ch = fontChars[i];  // Character value to get info for
+    #####:  586:                chars[i].value = ch;
+        -:  587:
+        -:  588:                //  Render a unicode codepoint to a bitmap
+        -:  589:                //      stbtt_GetCodepointBitmap()           -- allocates and returns a bitmap
+        -:  590:                //      stbtt_GetCodepointBitmapBox()        -- how big the bitmap must be
+        -:  591:                //      stbtt_MakeCodepointBitmap()          -- renders into bitmap you provide
+        -:  592:
+    #####:  593:                if (type != FONT_SDF) chars[i].image.data = stbtt_GetCodepointBitmap(&fontInfo, scaleFactor, scaleFactor, ch, &chw, &chh, &chars[i].offsetX, &chars[i].offsetY);
+    %%%%%:  593-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  593-block  1
+call    2 never executed
+    #####:  594:                else if (ch != 32) chars[i].image.data = stbtt_GetCodepointSDF(&fontInfo, scaleFactor, ch, FONT_SDF_CHAR_PADDING, FONT_SDF_ON_EDGE_VALUE, FONT_SDF_PIXEL_DIST_SCALE, &chw, &chh, &chars[i].offsetX, &chars[i].offsetY);
+    %%%%%:  594-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  594-block  1
+call    2 never executed
+    #####:  595:                else chars[i].image.data = NULL;
+    %%%%%:  595-block  0
+        -:  596:
+    #####:  597:                stbtt_GetCodepointHMetrics(&fontInfo, ch, &chars[i].advanceX, NULL);
+    %%%%%:  597-block  0
+call    0 never executed
+    #####:  598:                chars[i].advanceX = (int)((float)chars[i].advanceX*scaleFactor);
+        -:  599:
+        -:  600:                // Load characters images
+    #####:  601:                chars[i].image.width = chw;
+    #####:  602:                chars[i].image.height = chh;
+    #####:  603:                chars[i].image.mipmaps = 1;
+    #####:  604:                chars[i].image.format = PIXELFORMAT_UNCOMPRESSED_GRAYSCALE;
+        -:  605:
+    #####:  606:                chars[i].offsetY += (int)((float)ascent*scaleFactor);
+        -:  607:
+        -:  608:                // NOTE: We create an empty image for space character, it could be further required for atlas packing
+    #####:  609:                if (ch == 32)
+branch  0 never executed
+branch  1 never executed
+        -:  610:                {
+    #####:  611:                    Image imSpace = {
+    #####:  612:                        .data = calloc(chars[i].advanceX*fontSize, 2),
+    #####:  613:                        .width = chars[i].advanceX,
+        -:  614:                        .height = fontSize,
+        -:  615:                        .format = PIXELFORMAT_UNCOMPRESSED_GRAYSCALE,
+        -:  616:                        .mipmaps = 1
+        -:  617:                    };
+        -:  618:
+    #####:  619:                    chars[i].image = imSpace;
+    %%%%%:  619-block  0
+        -:  620:                }
+        -:  621:
+    #####:  622:                if (type == FONT_BITMAP)
+    %%%%%:  622-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  623:                {
+        -:  624:                    // Aliased bitmap (black & white) font generation, avoiding anti-aliasing
+        -:  625:                    // NOTE: For optimum results, bitmap font should be generated at base pixel size
+    #####:  626:                    for (int p = 0; p < chw*chh; p++)
+    %%%%%:  626-block  0
+    %%%%%:  626-block  1
+    %%%%%:  626-block  2
+branch  0 never executed
+branch  1 never executed
+        -:  627:                    {
+    #####:  628:                        if (((unsigned char *)chars[i].image.data)[p] < FONT_BITMAP_ALPHA_THRESHOLD) ((unsigned char *)chars[i].image.data)[p] = 0;
+    %%%%%:  628-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  628-block  1
+    #####:  629:                        else ((unsigned char *)chars[i].image.data)[p] = 255;
+    %%%%%:  629-block  0
+        -:  630:                    }
+        -:  631:                }
+        -:  632:
+        -:  633:                // Get bounding box for character (may be offset to account for chars that dip above or below the line)
+        -:  634:                /*
+        -:  635:                int chX1, chY1, chX2, chY2;
+        -:  636:                stbtt_GetCodepointBitmapBox(&fontInfo, ch, scaleFactor, scaleFactor, &chX1, &chY1, &chX2, &chY2);
+        -:  637:
+        -:  638:                TRACELOGD("FONT: Character box measures: %i, %i, %i, %i", chX1, chY1, chX2 - chX1, chY2 - chY1);
+        -:  639:                TRACELOGD("FONT: Character offsetY: %i", (int)((float)ascent*scaleFactor) + chY1);
+        -:  640:                */
+        -:  641:            }
+        -:  642:        }
+    #####:  643:        else TRACELOG(LOG_WARNING, "FONT: Failed to process TTF font data");
+    %%%%%:  643-block  0
+call    0 never executed
+        -:  644:
+    #####:  645:        if (genFontChars) RL_FREE(fontChars);
+    %%%%%:  645-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  645-block  1
+        -:  646:    }
+        -:  647:#endif
+        -:  648:
+    #####:  649:    return chars;
+    %%%%%:  649-block  0
+        -:  650:}
+        -:  651:
+        -:  652:// Generate image font atlas using chars info
+        -:  653:// NOTE: Packing method: 0-Default, 1-Skyline
+        -:  654:#if defined(SUPPORT_FILEFORMAT_TTF)
+function GenImageFontAtlas called 0 returned 0% blocks executed 0%
+    #####:  655:Image GenImageFontAtlas(const GlyphInfo *chars, Rectangle **charRecs, int glyphCount, int fontSize, int padding, int packMethod)
+        -:  656:{
+    #####:  657:    Image atlas = { 0 };
+        -:  658:
+    #####:  659:    if (chars == NULL)
+    %%%%%:  659-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  660:    {
+    #####:  661:        TraceLog(LOG_WARNING, "FONT: Provided chars info not valid, returning empty image atlas");
+    %%%%%:  661-block  0
+call    0 never executed
+    #####:  662:        return atlas;
+        -:  663:    }
+        -:  664:
+    #####:  665:    *charRecs = NULL;
+        -:  666:
+        -:  667:    // In case no chars count provided we suppose default of 95
+    #####:  668:    glyphCount = (glyphCount > 0)? glyphCount : 95;
+    %%%%%:  668-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  668-block  1
+    %%%%%:  668-block  2
+        -:  669:
+        -:  670:    // NOTE: Rectangles memory is loaded here!
+    #####:  671:    Rectangle *recs = (Rectangle *)RL_MALLOC(glyphCount*sizeof(Rectangle));
+        -:  672:
+        -:  673:    // Calculate image size based on required pixel area
+        -:  674:    // NOTE 1: Image is forced to be squared and POT... very conservative!
+        -:  675:    // NOTE 2: SDF font characters already contain an internal padding,
+        -:  676:    // so image size would result bigger than default font type
+    #####:  677:    float requiredArea = 0;
+    #####:  678:    for (int i = 0; i < glyphCount; i++) requiredArea += ((chars[i].image.width + 2*padding)*(chars[i].image.height + 2*padding));
+    %%%%%:  678-block  0
+    %%%%%:  678-block  1
+    %%%%%:  678-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  679:    float guessSize = sqrtf(requiredArea)*1.3f;
+    #####:  680:    int imageSize = (int)powf(2, ceilf(logf((float)guessSize)/logf(2)));  // Calculate next POT
+        -:  681:
+    #####:  682:    atlas.width = imageSize;   // Atlas bitmap width
+    #####:  683:    atlas.height = imageSize;  // Atlas bitmap height
+    #####:  684:    atlas.data = (unsigned char *)RL_CALLOC(1, atlas.width*atlas.height);      // Create a bitmap to store characters (8 bpp)
+    #####:  685:    atlas.format = PIXELFORMAT_UNCOMPRESSED_GRAYSCALE;
+    #####:  686:    atlas.mipmaps = 1;
+        -:  687:
+        -:  688:    // DEBUG: We can see padding in the generated image setting a gray background...
+        -:  689:    //for (int i = 0; i < atlas.width*atlas.height; i++) ((unsigned char *)atlas.data)[i] = 100;
+        -:  690:
+    #####:  691:    if (packMethod == 0)   // Use basic packing algorythm
+    %%%%%:  691-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  692:    {
+    #####:  693:        int offsetX = padding;
+    #####:  694:        int offsetY = padding;
+        -:  695:
+        -:  696:        // NOTE: Using simple packaging, one char after another
+    #####:  697:        for (int i = 0; i < glyphCount; i++)
+    %%%%%:  697-block  0
+    %%%%%:  697-block  1
+    %%%%%:  697-block  2
+branch  0 never executed
+branch  1 never executed
+        -:  698:        {
+        -:  699:            // Copy pixel data from fc.data to atlas
+    #####:  700:            for (int y = 0; y < chars[i].image.height; y++)
+    %%%%%:  700-block  0
+    %%%%%:  700-block  1
+    %%%%%:  700-block  2
+branch  0 never executed
+branch  1 never executed
+        -:  701:            {
+    #####:  702:                for (int x = 0; x < chars[i].image.width; x++)
+    %%%%%:  702-block  0
+    %%%%%:  702-block  1
+branch  0 never executed
+branch  1 never executed
+        -:  703:                {
+    #####:  704:                    ((unsigned char *)atlas.data)[(offsetY + y)*atlas.width + (offsetX + x)] = ((unsigned char *)chars[i].image.data)[y*chars[i].image.width + x];
+    %%%%%:  704-block  0
+        -:  705:                }
+        -:  706:            }
+        -:  707:
+        -:  708:            // Fill chars rectangles in atlas info
+    #####:  709:            recs[i].x = (float)offsetX;
+    #####:  710:            recs[i].y = (float)offsetY;
+    #####:  711:            recs[i].width = (float)chars[i].image.width;
+    #####:  712:            recs[i].height = (float)chars[i].image.height;
+        -:  713:
+        -:  714:            // Move atlas position X for next character drawing
+    #####:  715:            offsetX += (chars[i].image.width + 2*padding);
+        -:  716:
+    #####:  717:            if (offsetX >= (atlas.width - chars[i].image.width - 2*padding))
+    %%%%%:  717-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  718:            {
+    #####:  719:                offsetX = padding;
+        -:  720:
+        -:  721:                // NOTE: Be careful on offsetY for SDF fonts, by default SDF
+        -:  722:                // use an internal padding of 4 pixels, it means char rectangle
+        -:  723:                // height is bigger than fontSize, it could be up to (fontSize + 8)
+    #####:  724:                offsetY += (fontSize + 2*padding);
+        -:  725:
+    #####:  726:                if (offsetY > (atlas.height - fontSize - padding)) break;
+    %%%%%:  726-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  726-block  1
+        -:  727:            }
+        -:  728:        }
+        -:  729:    }
+    #####:  730:    else if (packMethod == 1)  // Use Skyline rect packing algorythm (stb_pack_rect)
+    %%%%%:  730-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  731:    {
+    #####:  732:        stbrp_context *context = (stbrp_context *)RL_MALLOC(sizeof(*context));
+    #####:  733:        stbrp_node *nodes = (stbrp_node *)RL_MALLOC(glyphCount*sizeof(*nodes));
+        -:  734:
+    #####:  735:        stbrp_init_target(context, atlas.width, atlas.height, nodes, glyphCount);
+    %%%%%:  735-block  0
+call    0 never executed
+    #####:  736:        stbrp_rect *rects = (stbrp_rect *)RL_MALLOC(glyphCount*sizeof(stbrp_rect));
+        -:  737:
+        -:  738:        // Fill rectangles for packaging
+    #####:  739:        for (int i = 0; i < glyphCount; i++)
+    %%%%%:  739-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  740:        {
+    #####:  741:            rects[i].id = i;
+    #####:  742:            rects[i].w = chars[i].image.width + 2*padding;
+    #####:  743:            rects[i].h = chars[i].image.height + 2*padding;
+    %%%%%:  743-block  0
+        -:  744:        }
+        -:  745:
+        -:  746:        // Package rectangles into atlas
+    #####:  747:        stbrp_pack_rects(context, rects, glyphCount);
+    %%%%%:  747-block  0
+call    0 never executed
+        -:  748:
+    #####:  749:        for (int i = 0; i < glyphCount; i++)
+    %%%%%:  749-block  0
+    %%%%%:  749-block  1
+branch  0 never executed
+branch  1 never executed
+        -:  750:        {
+        -:  751:            // It return char rectangles in atlas
+    #####:  752:            recs[i].x = rects[i].x + (float)padding;
+    #####:  753:            recs[i].y = rects[i].y + (float)padding;
+    #####:  754:            recs[i].width = (float)chars[i].image.width;
+    #####:  755:            recs[i].height = (float)chars[i].image.height;
+        -:  756:
+    #####:  757:            if (rects[i].was_packed)
+    %%%%%:  757-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  758:            {
+        -:  759:                // Copy pixel data from fc.data to atlas
+    #####:  760:                for (int y = 0; y < chars[i].image.height; y++)
+    %%%%%:  760-block  0
+    %%%%%:  760-block  1
+    %%%%%:  760-block  2
+branch  0 never executed
+branch  1 never executed
+        -:  761:                {
+    #####:  762:                    for (int x = 0; x < chars[i].image.width; x++)
+    %%%%%:  762-block  0
+    %%%%%:  762-block  1
+branch  0 never executed
+branch  1 never executed
+        -:  763:                    {
+    #####:  764:                        ((unsigned char *)atlas.data)[(rects[i].y + padding + y)*atlas.width + (rects[i].x + padding + x)] = ((unsigned char *)chars[i].image.data)[y*chars[i].image.width + x];
+    %%%%%:  764-block  0
+        -:  765:                    }
+        -:  766:                }
+        -:  767:            }
+    #####:  768:            else TRACELOG(LOG_WARNING, "FONT: Failed to package character (%i)", i);
+    %%%%%:  768-block  0
+call    0 never executed
+        -:  769:        }
+        -:  770:
+    #####:  771:        RL_FREE(rects);
+    #####:  772:        RL_FREE(nodes);
+    #####:  773:        RL_FREE(context);
+    %%%%%:  773-block  0
+        -:  774:    }
+        -:  775:
+        -:  776:    // TODO: Crop image if required for smaller size
+        -:  777:
+        -:  778:    // Convert image data from GRAYSCALE to GRAY_ALPHA
+    #####:  779:    unsigned char *dataGrayAlpha = (unsigned char *)RL_MALLOC(atlas.width*atlas.height*sizeof(unsigned char)*2); // Two channels
+        -:  780:
+    #####:  781:    for (int i = 0, k = 0; i < atlas.width*atlas.height; i++, k += 2)
+    %%%%%:  781-block  0
+    %%%%%:  781-block  1
+branch  0 never executed
+branch  1 never executed
+        -:  782:    {
+    #####:  783:        dataGrayAlpha[k] = 255;
+    #####:  784:        dataGrayAlpha[k + 1] = ((unsigned char *)atlas.data)[i];
+    %%%%%:  784-block  0
+        -:  785:    }
+        -:  786:
+    #####:  787:    RL_FREE(atlas.data);
+    #####:  788:    atlas.data = dataGrayAlpha;
+    #####:  789:    atlas.format = PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA;
+        -:  790:
+    #####:  791:    *charRecs = recs;
+        -:  792:
+    #####:  793:    return atlas;
+    %%%%%:  793-block  0
+        -:  794:}
+        -:  795:#endif
+        -:  796:
+        -:  797:// Unload font glyphs info data (RAM)
+function UnloadFontData called 0 returned 0% blocks executed 0%
+    #####:  798:void UnloadFontData(GlyphInfo *glyphs, int glyphCount)
+        -:  799:{
+    #####:  800:    for (int i = 0; i < glyphCount; i++) UnloadImage(glyphs[i].image);
+    %%%%%:  800-block  0
+    %%%%%:  800-block  1
+call    0 never executed
+    %%%%%:  800-block  2
+branch  1 never executed
+branch  2 never executed
+        -:  801:
+    #####:  802:    RL_FREE(glyphs);
+    #####:  803:}
+        -:  804:
+        -:  805:// Unload Font from GPU memory (VRAM)
+function UnloadFont called 0 returned 0% blocks executed 0%
+    #####:  806:void UnloadFont(Font font)
+        -:  807:{
+        -:  808:    // NOTE: Make sure font is not default font (fallback)
+    #####:  809:    if (font.texture.id != GetFontDefault().texture.id)
+    %%%%%:  809-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  810:    {
+    #####:  811:        UnloadFontData(font.glyphs, font.glyphCount);
+    %%%%%:  811-block  0
+call    0 never executed
+    #####:  812:        UnloadTexture(font.texture);
+call    0 never executed
+    #####:  813:        RL_FREE(font.recs);
+        -:  814:
+        -:  815:        TRACELOGD("FONT: Unloaded font data from RAM and VRAM");
+        -:  816:    }
+    #####:  817:}
+        -:  818:
+        -:  819:// Draw current FPS
+        -:  820:// NOTE: Uses default font
+function DrawFPS called 0 returned 0% blocks executed 0%
+    #####:  821:void DrawFPS(int posX, int posY)
+        -:  822:{
+    #####:  823:    Color color = LIME; // good fps
+    #####:  824:    int fps = GetFPS();
+    %%%%%:  824-block  0
+call    0 never executed
+        -:  825:
+    #####:  826:    if (fps < 30 && fps >= 15) color = ORANGE;  // warning FPS
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  826-block  0
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  826-block  1
+    #####:  827:    else if (fps < 15) color = RED;    // bad FPS
+    %%%%%:  827-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  827-block  1
+        -:  828:
+    #####:  829:    DrawText(TextFormat("%2i FPS", GetFPS()), posX, posY, 20, color);
+    %%%%%:  829-block  0
+call    0 never executed
+call    1 never executed
+call    2 never executed
+    #####:  830:}
+        -:  831:
+        -:  832:// Draw text (using default font)
+        -:  833:// NOTE: fontSize work like in any drawing program but if fontSize is lower than font-base-size, then font-base-size is used
+        -:  834:// NOTE: chars spacing is proportional to fontSize
+function DrawText called 0 returned 0% blocks executed 0%
+    #####:  835:void DrawText(const char *text, int posX, int posY, int fontSize, Color color)
+        -:  836:{
+        -:  837:    // Check if default font has been loaded
+    #####:  838:    if (GetFontDefault().texture.id != 0)
+    %%%%%:  838-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  839:    {
+    #####:  840:        Vector2 position = { (float)posX, (float)posY };
+        -:  841:
+    #####:  842:        int defaultFontSize = 10;   // Default Font chars height in pixel
+    #####:  843:        if (fontSize < defaultFontSize) fontSize = defaultFontSize;
+    %%%%%:  843-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  843-block  1
+    #####:  844:        int spacing = fontSize/defaultFontSize;
+        -:  845:
+    #####:  846:        DrawTextEx(GetFontDefault(), text, position, (float)fontSize, (float)spacing, color);
+    %%%%%:  846-block  0
+call    0 never executed
+call    1 never executed
+        -:  847:    }
+    #####:  848:}
+        -:  849:
+        -:  850:// Draw text using Font
+        -:  851:// NOTE: chars spacing is NOT proportional to fontSize
+function DrawTextEx called 0 returned 0% blocks executed 0%
+    #####:  852:void DrawTextEx(Font font, const char *text, Vector2 position, float fontSize, float spacing, Color tint)
+        -:  853:{
+    #####:  854:    if (font.texture.id == 0) font = GetFontDefault();  // Security check in case of not valid font
+    %%%%%:  854-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  854-block  1
+call    2 never executed
+        -:  855:
+    #####:  856:    int size = TextLength(text);    // Total size in bytes of the text, scanned by codepoints in loop
+    %%%%%:  856-block  0
+call    0 never executed
+        -:  857:
+    #####:  858:    int textOffsetY = 0;            // Offset between lines (on line break '\n')
+    #####:  859:    float textOffsetX = 0.0f;       // Offset X to next character to draw
+        -:  860:
+    #####:  861:    float scaleFactor = fontSize/font.baseSize;         // Character quad scaling factor
+        -:  862:
+    #####:  863:    for (int i = 0; i < size;)
+    %%%%%:  863-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  864:    {
+        -:  865:        // Get next codepoint from byte string and glyph index in font
+    #####:  866:        int codepointByteCount = 0;
+    #####:  867:        int codepoint = GetCodepoint(&text[i], &codepointByteCount);
+    %%%%%:  867-block  0
+call    0 never executed
+    #####:  868:        int index = GetGlyphIndex(font, codepoint);
+call    0 never executed
+        -:  869:
+        -:  870:        // NOTE: Normally we exit the decoding sequence as soon as a bad byte is found (and return 0x3f)
+        -:  871:        // but we need to draw all of the bad bytes using the '?' symbol moving one byte
+    #####:  872:        if (codepoint == 0x3f) codepointByteCount = 1;
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  872-block  0
+        -:  873:
+    #####:  874:        if (codepoint == '\n')
+    %%%%%:  874-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  875:        {
+        -:  876:            // NOTE: Fixed line spacing of 1.5 line-height
+        -:  877:            // TODO: Support custom line spacing defined by user
+    #####:  878:            textOffsetY += (int)((font.baseSize + font.baseSize/2)*scaleFactor);
+    #####:  879:            textOffsetX = 0.0f;
+    %%%%%:  879-block  0
+        -:  880:        }
+        -:  881:        else
+        -:  882:        {
+    #####:  883:            if ((codepoint != ' ') && (codepoint != '\t'))
+    %%%%%:  883-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  883-block  1
+branch  2 never executed
+branch  3 never executed
+        -:  884:            {
+    #####:  885:                DrawTextCodepoint(font, codepoint, (Vector2){ position.x + textOffsetX, position.y + textOffsetY }, fontSize, tint);
+    %%%%%:  885-block  0
+call    0 never executed
+        -:  886:            }
+        -:  887:
+    #####:  888:            if (font.glyphs[index].advanceX == 0) textOffsetX += ((float)font.recs[index].width*scaleFactor + spacing);
+    %%%%%:  888-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  888-block  1
+    #####:  889:            else textOffsetX += ((float)font.glyphs[index].advanceX*scaleFactor + spacing);
+    %%%%%:  889-block  0
+        -:  890:        }
+        -:  891:
+    #####:  892:        i += codepointByteCount;   // Move text bytes counter to next codepoint
+    %%%%%:  892-block  0
+        -:  893:    }
+    #####:  894:}
+        -:  895:
+        -:  896:// Draw text using Font and pro parameters (rotation)
+function DrawTextPro called 0 returned 0% blocks executed 0%
+    #####:  897:void DrawTextPro(Font font, const char *text, Vector2 position, Vector2 origin, float rotation, float fontSize, float spacing, Color tint)
+        -:  898:{
+    #####:  899:    rlPushMatrix();
+    %%%%%:  899-block  0
+call    0 never executed
+        -:  900:
+    #####:  901:        rlTranslatef(position.x, position.y, 0.0f);
+call    0 never executed
+    #####:  902:        rlRotatef(rotation, 0.0f, 0.0f, 1.0f);
+call    0 never executed
+    #####:  903:        rlTranslatef(-origin.x, -origin.y, 0.0f);
+call    0 never executed
+        -:  904:
+    #####:  905:        DrawTextEx(font, text, (Vector2){ 0.0f, 0.0f }, fontSize, spacing, tint);
+call    0 never executed
+        -:  906:
+    #####:  907:    rlPopMatrix();
+call    0 never executed
+    #####:  908:}
+        -:  909:
+        -:  910:// Draw one character (codepoint)
+function DrawTextCodepoint called 0 returned 0% blocks executed 0%
+    #####:  911:void DrawTextCodepoint(Font font, int codepoint, Vector2 position, float fontSize, Color tint)
+        -:  912:{
+        -:  913:    // Character index position in sprite font
+        -:  914:    // NOTE: In case a codepoint is not available in the font, index returned points to '?'
+    #####:  915:    int index = GetGlyphIndex(font, codepoint);
+    %%%%%:  915-block  0
+call    0 never executed
+    #####:  916:    float scaleFactor = fontSize/font.baseSize;     // Character quad scaling factor
+        -:  917:
+        -:  918:    // Character destination rectangle on screen
+        -:  919:    // NOTE: We consider glyphPadding on drawing
+    #####:  920:    Rectangle dstRec = { position.x + font.glyphs[index].offsetX*scaleFactor - (float)font.glyphPadding*scaleFactor,
+    #####:  921:                      position.y + font.glyphs[index].offsetY*scaleFactor - (float)font.glyphPadding*scaleFactor,
+    #####:  922:                      (font.recs[index].width + 2.0f*font.glyphPadding)*scaleFactor,
+    #####:  923:                      (font.recs[index].height + 2.0f*font.glyphPadding)*scaleFactor };
+        -:  924:
+        -:  925:    // Character source rectangle from font texture atlas
+        -:  926:    // NOTE: We consider chars padding when drawing, it could be required for outline/glow shader effects
+    #####:  927:    Rectangle srcRec = { font.recs[index].x - (float)font.glyphPadding, font.recs[index].y - (float)font.glyphPadding,
+    #####:  928:                         font.recs[index].width + 2.0f*font.glyphPadding, font.recs[index].height + 2.0f*font.glyphPadding };
+        -:  929:
+        -:  930:    // Draw the character texture on the screen
+    #####:  931:    DrawTexturePro(font.texture, srcRec, dstRec, (Vector2){ 0, 0 }, 0.0f, tint);
+call    0 never executed
+    #####:  932:}
+        -:  933:
+        -:  934:// Measure string width for default font
+function MeasureText called 0 returned 0% blocks executed 0%
+    #####:  935:int MeasureText(const char *text, int fontSize)
+        -:  936:{
+    #####:  937:    Vector2 vec = { 0.0f, 0.0f };
+        -:  938:
+        -:  939:    // Check if default font has been loaded
+    #####:  940:    if (GetFontDefault().texture.id != 0)
+    %%%%%:  940-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  941:    {
+    #####:  942:        int defaultFontSize = 10;   // Default Font chars height in pixel
+    #####:  943:        if (fontSize < defaultFontSize) fontSize = defaultFontSize;
+    %%%%%:  943-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  943-block  1
+    #####:  944:        int spacing = fontSize/defaultFontSize;
+        -:  945:
+    #####:  946:        vec = MeasureTextEx(GetFontDefault(), text, (float)fontSize, (float)spacing);
+    %%%%%:  946-block  0
+call    0 never executed
+call    1 never executed
+        -:  947:    }
+        -:  948:
+    #####:  949:    return (int)vec.x;
+    %%%%%:  949-block  0
+        -:  950:}
+        -:  951:
+        -:  952:// Measure string size for Font
+function MeasureTextEx called 0 returned 0% blocks executed 0%
+    #####:  953:Vector2 MeasureTextEx(Font font, const char *text, float fontSize, float spacing)
+        -:  954:{
+    #####:  955:    int size = TextLength(text);    // Get size in bytes of text
+    %%%%%:  955-block  0
+call    0 never executed
+    #####:  956:    int tempByteCounter = 0;        // Used to count longer text line num chars
+    #####:  957:    int byteCounter = 0;
+        -:  958:
+    #####:  959:    float textWidth = 0.0f;
+    #####:  960:    float tempTextWidth = 0.0f;     // Used to count longer text line width
+        -:  961:
+    #####:  962:    float textHeight = (float)font.baseSize;
+    #####:  963:    float scaleFactor = fontSize/(float)font.baseSize;
+        -:  964:
+    #####:  965:    int letter = 0;                 // Current character
+    #####:  966:    int index = 0;                  // Index position in sprite font
+        -:  967:
+    #####:  968:    for (int i = 0; i < size; i++)
+    %%%%%:  968-block  0
+    %%%%%:  968-block  1
+branch  0 never executed
+branch  1 never executed
+        -:  969:    {
+    #####:  970:        byteCounter++;
+        -:  971:
+    #####:  972:        int next = 0;
+    #####:  973:        letter = GetCodepoint(&text[i], &next);
+    %%%%%:  973-block  0
+call    0 never executed
+    #####:  974:        index = GetGlyphIndex(font, letter);
+call    0 never executed
+        -:  975:
+        -:  976:        // NOTE: normally we exit the decoding sequence as soon as a bad byte is found (and return 0x3f)
+        -:  977:        // but we need to draw all of the bad bytes using the '?' symbol so to not skip any we set next = 1
+    #####:  978:        if (letter == 0x3f) next = 1;
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  978-block  0
+    #####:  979:        i += next - 1;
+        -:  980:
+    #####:  981:        if (letter != '\n')
+    %%%%%:  981-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  982:        {
+    #####:  983:            if (font.glyphs[index].advanceX != 0) textWidth += font.glyphs[index].advanceX;
+    %%%%%:  983-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  983-block  1
+    #####:  984:            else textWidth += (font.recs[index].width + font.glyphs[index].offsetX);
+    %%%%%:  984-block  0
+        -:  985:        }
+        -:  986:        else
+        -:  987:        {
+    #####:  988:            if (tempTextWidth < textWidth) tempTextWidth = textWidth;
+    %%%%%:  988-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  988-block  1
+    #####:  989:            byteCounter = 0;
+    #####:  990:            textWidth = 0;
+    #####:  991:            textHeight += ((float)font.baseSize*1.5f); // NOTE: Fixed line spacing of 1.5 lines
+    %%%%%:  991-block  0
+        -:  992:        }
+        -:  993:
+    #####:  994:        if (tempByteCounter < byteCounter) tempByteCounter = byteCounter;
+    %%%%%:  994-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  994-block  1
+        -:  995:    }
+        -:  996:
+    #####:  997:    if (tempTextWidth < textWidth) tempTextWidth = textWidth;
+    %%%%%:  997-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  997-block  1
+        -:  998:
+    #####:  999:    Vector2 vec = { 0 };
+    #####: 1000:    vec.x = tempTextWidth*scaleFactor + (float)((tempByteCounter - 1)*spacing); // Adds chars spacing to measure
+    #####: 1001:    vec.y = textHeight*scaleFactor;
+        -: 1002:
+    #####: 1003:    return vec;
+    %%%%%: 1003-block  0
+        -: 1004:}
+        -: 1005:
+        -: 1006:// Get index position for a unicode character on font
+        -: 1007:// NOTE: If codepoint is not found in the font it fallbacks to '?'
+function GetGlyphIndex called 0 returned 0% blocks executed 0%
+    #####: 1008:int GetGlyphIndex(Font font, int codepoint)
+        -: 1009:{
+        -: 1010:#ifndef GLYPH_NOTFOUND_CHAR_FALLBACK
+        -: 1011:    #define GLYPH_NOTFOUND_CHAR_FALLBACK     63      // Character used if requested codepoint is not found: '?'
+        -: 1012:#endif
+        -: 1013:
+        -: 1014:// Support charsets with any characters order
+        -: 1015:#define SUPPORT_UNORDERED_CHARSET
+        -: 1016:#if defined(SUPPORT_UNORDERED_CHARSET)
+    #####: 1017:    int index = GLYPH_NOTFOUND_CHAR_FALLBACK;
+        -: 1018:
+    #####: 1019:    for (int i = 0; i < font.glyphCount; i++)
+    %%%%%: 1019-block  0
+    %%%%%: 1019-block  1
+    %%%%%: 1019-block  2
+branch  0 never executed
+branch  1 never executed
+        -: 1020:    {
+    #####: 1021:        if (font.glyphs[i].value == codepoint)
+    %%%%%: 1021-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1022:        {
+    #####: 1023:            index = i;
+    #####: 1024:            break;
+    %%%%%: 1024-block  0
+        -: 1025:        }
+        -: 1026:    }
+        -: 1027:
+    #####: 1028:    return index;
+    %%%%%: 1028-block  0
+        -: 1029:#else
+        -: 1030:    return (codepoint - 32);
+        -: 1031:#endif
+        -: 1032:}
+        -: 1033:
+        -: 1034:// Get glyph font info data for a codepoint (unicode character)
+        -: 1035:// NOTE: If codepoint is not found in the font it fallbacks to '?'
+function GetGlyphInfo called 0 returned 0% blocks executed 0%
+    #####: 1036:GlyphInfo GetGlyphInfo(Font font, int codepoint)
+        -: 1037:{
+    #####: 1038:    GlyphInfo info = { 0 };
+        -: 1039:
+    #####: 1040:    info = font.glyphs[GetGlyphIndex(font, codepoint)];
+    %%%%%: 1040-block  0
+call    0 never executed
+        -: 1041:
+    #####: 1042:    return info;
+        -: 1043:}
+        -: 1044:
+        -: 1045:// Get glyph rectangle in font atlas for a codepoint (unicode character)
+        -: 1046:// NOTE: If codepoint is not found in the font it fallbacks to '?'
+function GetGlyphAtlasRec called 0 returned 0% blocks executed 0%
+    #####: 1047:Rectangle GetGlyphAtlasRec(Font font, int codepoint)
+        -: 1048:{
+    #####: 1049:    Rectangle rec = { 0 };
+        -: 1050:
+    #####: 1051:    rec = font.recs[GetGlyphIndex(font, codepoint)];
+    %%%%%: 1051-block  0
+call    0 never executed
+        -: 1052:
+    #####: 1053:    return rec;
+        -: 1054:}
+        -: 1055:
+        -: 1056://----------------------------------------------------------------------------------
+        -: 1057:// Text strings management functions
+        -: 1058://----------------------------------------------------------------------------------
+        -: 1059:// Get text length in bytes, check for \0 character
+function TextLength called 0 returned 0% blocks executed 0%
+    #####: 1060:unsigned int TextLength(const char *text)
+        -: 1061:{
+    #####: 1062:    unsigned int length = 0; //strlen(text)
+        -: 1063:
+    #####: 1064:    if (text != NULL)
+    %%%%%: 1064-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1065:    {
+    #####: 1066:        while (*text++) length++;
+    %%%%%: 1066-block  0
+    %%%%%: 1066-block  1
+    %%%%%: 1066-block  2
+branch  0 never executed
+branch  1 never executed
+        -: 1067:    }
+        -: 1068:
+    #####: 1069:    return length;
+    %%%%%: 1069-block  0
+        -: 1070:}
+        -: 1071:
+        -: 1072:// Formatting of text with variables to 'embed'
+        -: 1073:// WARNING: String returned will expire after this function is called MAX_TEXTFORMAT_BUFFERS times
+function TextFormat called 0 returned 0% blocks executed 0%
+    #####: 1074:const char *TextFormat(const char *text, ...)
+        -: 1075:{
+        -: 1076:#ifndef MAX_TEXTFORMAT_BUFFERS
+        -: 1077:    #define MAX_TEXTFORMAT_BUFFERS 4        // Maximum number of static buffers for text formatting
+        -: 1078:#endif
+        -: 1079:
+        -: 1080:    // We create an array of buffers so strings don't expire until MAX_TEXTFORMAT_BUFFERS invocations
+        -: 1081:    static char buffers[MAX_TEXTFORMAT_BUFFERS][MAX_TEXT_BUFFER_LENGTH] = { 0 };
+        -: 1082:    static int index = 0;
+        -: 1083:
+    #####: 1084:    char *currentBuffer = buffers[index];
+    #####: 1085:    memset(currentBuffer, 0, MAX_TEXT_BUFFER_LENGTH);   // Clear buffer before using
+        -: 1086:
+        -: 1087:    va_list args;
+    #####: 1088:    va_start(args, text);
+    #####: 1089:    vsnprintf(currentBuffer, MAX_TEXT_BUFFER_LENGTH, text, args);
+    %%%%%: 1089-block  0
+call    0 never executed
+    #####: 1090:    va_end(args);
+        -: 1091:
+    #####: 1092:    index += 1;     // Move to next buffer for next function call
+    #####: 1093:    if (index >= MAX_TEXTFORMAT_BUFFERS) index = 0;
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1093-block  0
+        -: 1094:
+    #####: 1095:    return currentBuffer;
+    %%%%%: 1095-block  0
+        -: 1096:}
+        -: 1097:
+        -: 1098:// Get integer value from text
+        -: 1099:// NOTE: This function replaces atoi() [stdlib.h]
+function TextToInteger called 0 returned 0% blocks executed 0%
+    #####: 1100:int TextToInteger(const char *text)
+        -: 1101:{
+    #####: 1102:    int value = 0;
+    #####: 1103:    int sign = 1;
+        -: 1104:
+    #####: 1105:    if ((text[0] == '+') || (text[0] == '-'))
+    %%%%%: 1105-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1105-block  1
+branch  2 never executed
+branch  3 never executed
+        -: 1106:    {
+    #####: 1107:        if (text[0] == '-') sign = -1;
+    %%%%%: 1107-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1107-block  1
+    #####: 1108:        text++;
+    %%%%%: 1108-block  0
+        -: 1109:    }
+        -: 1110:
+    #####: 1111:    for (int i = 0; ((text[i] >= '0') && (text[i] <= '9')); ++i) value = value*10 + (int)(text[i] - '0');
+    %%%%%: 1111-block  0
+    %%%%%: 1111-block  1
+    %%%%%: 1111-block  2
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1111-block  3
+branch  2 never executed
+branch  3 never executed
+        -: 1112:
+    #####: 1113:    return value*sign;
+    %%%%%: 1113-block  0
+        -: 1114:}
+        -: 1115:
+        -: 1116:#if defined(SUPPORT_TEXT_MANIPULATION)
+        -: 1117:// Copy one string to another, returns bytes copied
+function TextCopy called 0 returned 0% blocks executed 0%
+    #####: 1118:int TextCopy(char *dst, const char *src)
+        -: 1119:{
+    #####: 1120:    int bytes = 0;
+        -: 1121:
+    #####: 1122:    if (dst != NULL)
+    %%%%%: 1122-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1123:    {
+    #####: 1124:        while (*src != '\0')
+    %%%%%: 1124-block  0
+    %%%%%: 1124-block  1
+branch  0 never executed
+branch  1 never executed
+        -: 1125:        {
+    #####: 1126:            *dst = *src;
+    #####: 1127:            dst++;
+    #####: 1128:            src++;
+        -: 1129:
+    #####: 1130:            bytes++;
+    %%%%%: 1130-block  0
+        -: 1131:        }
+        -: 1132:
+    #####: 1133:        *dst = '\0';
+    %%%%%: 1133-block  0
+        -: 1134:    }
+        -: 1135:
+    #####: 1136:    return bytes;
+    %%%%%: 1136-block  0
+        -: 1137:}
+        -: 1138:
+        -: 1139:// Check if two text string are equal
+        -: 1140:// REQUIRES: strcmp()
+function TextIsEqual called 0 returned 0% blocks executed 0%
+    #####: 1141:bool TextIsEqual(const char *text1, const char *text2)
+        -: 1142:{
+    #####: 1143:    bool result = false;
+        -: 1144:
+    #####: 1145:    if (strcmp(text1, text2) == 0) result = true;
+    %%%%%: 1145-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1145-block  1
+        -: 1146:
+    #####: 1147:    return result;
+    %%%%%: 1147-block  0
+        -: 1148:}
+        -: 1149:
+        -: 1150:// Get a piece of a text string
+function TextSubtext called 0 returned 0% blocks executed 0%
+    #####: 1151:const char *TextSubtext(const char *text, int position, int length)
+        -: 1152:{
+        -: 1153:    static char buffer[MAX_TEXT_BUFFER_LENGTH] = { 0 };
+        -: 1154:
+    #####: 1155:    int textLength = TextLength(text);
+    %%%%%: 1155-block  0
+call    0 never executed
+        -: 1156:
+    #####: 1157:    if (position >= textLength)
+branch  0 never executed
+branch  1 never executed
+        -: 1158:    {
+    #####: 1159:        position = textLength - 1;
+    #####: 1160:        length = 0;
+    %%%%%: 1160-block  0
+        -: 1161:    }
+        -: 1162:
+    #####: 1163:    if (length >= textLength) length = textLength;
+    %%%%%: 1163-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1163-block  1
+        -: 1164:
+    #####: 1165:    for (int c = 0 ; c < length ; c++)
+    %%%%%: 1165-block  0
+    %%%%%: 1165-block  1
+branch  0 never executed
+branch  1 never executed
+        -: 1166:    {
+    #####: 1167:        *(buffer + c) = *(text + position);
+    #####: 1168:        text++;
+    %%%%%: 1168-block  0
+        -: 1169:    }
+        -: 1170:
+    #####: 1171:    *(buffer + length) = '\0';
+        -: 1172:
+    #####: 1173:    return buffer;
+    %%%%%: 1173-block  0
+        -: 1174:}
+        -: 1175:
+        -: 1176:// Replace text string
+        -: 1177:// REQUIRES: strstr(), strncpy(), strcpy()
+        -: 1178:// WARNING: Returned buffer must be freed by the user (if return != NULL)
+function TextReplace called 0 returned 0% blocks executed 0%
+    #####: 1179:char *TextReplace(char *text, const char *replace, const char *by)
+        -: 1180:{
+        -: 1181:    // Sanity checks and initialization
+    #####: 1182:    if (!text || !replace || !by) return NULL;
+    %%%%%: 1182-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1182-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%: 1182-block  2
+branch  4 never executed
+branch  5 never executed
+    %%%%%: 1182-block  3
+        -: 1183:
+        -: 1184:    char *result;
+        -: 1185:
+        -: 1186:    char *insertPoint;      // Next insert point
+        -: 1187:    char *temp;             // Temp pointer
+        -: 1188:    int replaceLen;         // Replace string length of (the string to remove)
+        -: 1189:    int byLen;              // Replacement length (the string to replace replace by)
+        -: 1190:    int lastReplacePos;     // Distance between replace and end of last replace
+        -: 1191:    int count;              // Number of replacements
+        -: 1192:
+    #####: 1193:    replaceLen = TextLength(replace);
+    %%%%%: 1193-block  0
+call    0 never executed
+    #####: 1194:    if (replaceLen == 0) return NULL;  // Empty replace causes infinite loop during count
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1194-block  0
+        -: 1195:
+    #####: 1196:    byLen = TextLength(by);
+    %%%%%: 1196-block  0
+call    0 never executed
+        -: 1197:
+        -: 1198:    // Count the number of replacements needed
+    #####: 1199:    insertPoint = text;
+    #####: 1200:    for (count = 0; (temp = strstr(insertPoint, replace)); count++) insertPoint = temp + replaceLen;
+    %%%%%: 1200-block  0
+    %%%%%: 1200-block  1
+branch  0 never executed
+branch  1 never executed
+        -: 1201:
+        -: 1202:    // Allocate returning string and point temp to it
+    #####: 1203:    temp = result = (char *)RL_MALLOC(TextLength(text) + (byLen - replaceLen)*count + 1);
+    %%%%%: 1203-block  0
+call    0 never executed
+        -: 1204:
+    #####: 1205:    if (!result) return NULL;   // Memory could not be allocated
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1205-block  0
+        -: 1206:
+        -: 1207:    // First time through the loop, all the variable are set correctly from here on,
+        -: 1208:    //  - 'temp' points to the end of the result string
+        -: 1209:    //  - 'insertPoint' points to the next occurrence of replace in text
+        -: 1210:    //  - 'text' points to the remainder of text after "end of replace"
+    #####: 1211:    while (count--)
+    %%%%%: 1211-block  0
+    %%%%%: 1211-block  1
+branch  0 never executed
+branch  1 never executed
+        -: 1212:    {
+    #####: 1213:        insertPoint = strstr(text, replace);
+    #####: 1214:        lastReplacePos = (int)(insertPoint - text);
+    #####: 1215:        temp = strncpy(temp, text, lastReplacePos) + lastReplacePos;
+    #####: 1216:        temp = strcpy(temp, by) + byLen;
+    #####: 1217:        text += lastReplacePos + replaceLen; // Move to next "end of replace"
+    %%%%%: 1217-block  0
+        -: 1218:    }
+        -: 1219:
+        -: 1220:    // Copy remaind text part after replacement to result (pointed by moving temp)
+    #####: 1221:    strcpy(temp, text);
+        -: 1222:
+    #####: 1223:    return result;
+    %%%%%: 1223-block  0
+        -: 1224:}
+        -: 1225:
+        -: 1226:// Insert text in a specific position, moves all text forward
+        -: 1227:// WARNING: Allocated memory should be manually freed
+function TextInsert called 0 returned 0% blocks executed 0%
+    #####: 1228:char *TextInsert(const char *text, const char *insert, int position)
+        -: 1229:{
+    #####: 1230:    int textLen = TextLength(text);
+    %%%%%: 1230-block  0
+call    0 never executed
+    #####: 1231:    int insertLen = TextLength(insert);
+call    0 never executed
+        -: 1232:
+    #####: 1233:    char *result = (char *)RL_MALLOC(textLen + insertLen + 1);
+        -: 1234:
+    #####: 1235:    for (int i = 0; i < position; i++) result[i] = text[i];
+    %%%%%: 1235-block  0
+    %%%%%: 1235-block  1
+branch  0 never executed
+branch  1 never executed
+    #####: 1236:    for (int i = position; i < insertLen + position; i++) result[i] = insert[i];
+    %%%%%: 1236-block  0
+    %%%%%: 1236-block  1
+    %%%%%: 1236-block  2
+branch  0 never executed
+branch  1 never executed
+    #####: 1237:    for (int i = (insertLen + position); i < (textLen + insertLen); i++) result[i] = text[i];
+    %%%%%: 1237-block  0
+    %%%%%: 1237-block  1
+    %%%%%: 1237-block  2
+branch  0 never executed
+branch  1 never executed
+        -: 1238:
+    #####: 1239:    result[textLen + insertLen] = '\0';     // Make sure text string is valid!
+        -: 1240:
+    #####: 1241:    return result;
+    %%%%%: 1241-block  0
+        -: 1242:}
+        -: 1243:
+        -: 1244:// Join text strings with delimiter
+        -: 1245:// REQUIRES: memset(), memcpy()
+function TextJoin called 0 returned 0% blocks executed 0%
+    #####: 1246:const char *TextJoin(const char **textList, int count, const char *delimiter)
+        -: 1247:{
+        -: 1248:    static char text[MAX_TEXT_BUFFER_LENGTH] = { 0 };
+    #####: 1249:    memset(text, 0, MAX_TEXT_BUFFER_LENGTH);
+    #####: 1250:    char *textPtr = text;
+        -: 1251:
+    #####: 1252:    int totalLength = 0;
+    #####: 1253:    int delimiterLen = TextLength(delimiter);
+    %%%%%: 1253-block  0
+call    0 never executed
+        -: 1254:
+    #####: 1255:    for (int i = 0; i < count; i++)
+    %%%%%: 1255-block  0
+    %%%%%: 1255-block  1
+branch  0 never executed
+branch  1 never executed
+        -: 1256:    {
+    #####: 1257:        int textLength = TextLength(textList[i]);
+    %%%%%: 1257-block  0
+call    0 never executed
+        -: 1258:
+        -: 1259:        // Make sure joined text could fit inside MAX_TEXT_BUFFER_LENGTH
+    #####: 1260:        if ((totalLength + textLength) < MAX_TEXT_BUFFER_LENGTH)
+branch  0 never executed
+branch  1 never executed
+        -: 1261:        {
+    #####: 1262:            memcpy(textPtr, textList[i], textLength);
+    #####: 1263:            totalLength += textLength;
+    #####: 1264:            textPtr += textLength;
+        -: 1265:
+    #####: 1266:            if ((delimiterLen > 0) && (i < (count - 1)))
+    %%%%%: 1266-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1266-block  1
+branch  2 never executed
+branch  3 never executed
+        -: 1267:            {
+    #####: 1268:                memcpy(textPtr, delimiter, delimiterLen);
+    #####: 1269:                totalLength += delimiterLen;
+    #####: 1270:                textPtr += delimiterLen;
+    %%%%%: 1270-block  0
+        -: 1271:            }
+        -: 1272:        }
+        -: 1273:    }
+        -: 1274:
+    #####: 1275:    return text;
+    %%%%%: 1275-block  0
+        -: 1276:}
+        -: 1277:
+        -: 1278:// Split string into multiple strings
+        -: 1279:// REQUIRES: memset()
+function TextSplit called 0 returned 0% blocks executed 0%
+    #####: 1280:const char **TextSplit(const char *text, char delimiter, int *count)
+        -: 1281:{
+        -: 1282:    // NOTE: Current implementation returns a copy of the provided string with '\0' (string end delimiter)
+        -: 1283:    // inserted between strings defined by "delimiter" parameter. No memory is dynamically allocated,
+        -: 1284:    // all used memory is static... it has some limitations:
+        -: 1285:    //      1. Maximum number of possible split strings is set by MAX_TEXTSPLIT_COUNT
+        -: 1286:    //      2. Maximum size of text to split is MAX_TEXT_BUFFER_LENGTH
+        -: 1287:
+        -: 1288:    static const char *result[MAX_TEXTSPLIT_COUNT] = { NULL };
+        -: 1289:    static char buffer[MAX_TEXT_BUFFER_LENGTH] = { 0 };
+    #####: 1290:    memset(buffer, 0, MAX_TEXT_BUFFER_LENGTH);
+        -: 1291:
+    #####: 1292:    result[0] = buffer;
+    #####: 1293:    int counter = 0;
+        -: 1294:
+    #####: 1295:    if (text != NULL)
+    %%%%%: 1295-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1296:    {
+    #####: 1297:        counter = 1;
+        -: 1298:
+        -: 1299:        // Count how many substrings we have on text and point to every one
+    #####: 1300:        for (int i = 0; i < MAX_TEXT_BUFFER_LENGTH; i++)
+    %%%%%: 1300-block  0
+    %%%%%: 1300-block  1
+    %%%%%: 1300-block  2
+branch  0 never executed
+branch  1 never executed
+        -: 1301:        {
+    #####: 1302:            buffer[i] = text[i];
+    #####: 1303:            if (buffer[i] == '\0') break;
+    %%%%%: 1303-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1303-block  1
+    #####: 1304:            else if (buffer[i] == delimiter)
+    %%%%%: 1304-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1305:            {
+    #####: 1306:                buffer[i] = '\0';   // Set an end of string at this point
+    #####: 1307:                result[counter] = buffer + i + 1;
+    #####: 1308:                counter++;
+        -: 1309:
+    #####: 1310:                if (counter == MAX_TEXTSPLIT_COUNT) break;
+    %%%%%: 1310-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1310-block  1
+        -: 1311:            }
+        -: 1312:        }
+        -: 1313:    }
+        -: 1314:
+    #####: 1315:    *count = counter;
+    #####: 1316:    return result;
+    %%%%%: 1316-block  0
+        -: 1317:}
+        -: 1318:
+        -: 1319:// Append text at specific position and move cursor!
+        -: 1320:// REQUIRES: strcpy()
+function TextAppend called 0 returned 0% blocks executed 0%
+    #####: 1321:void TextAppend(char *text, const char *append, int *position)
+        -: 1322:{
+    #####: 1323:    strcpy(text + *position, append);
+    #####: 1324:    *position += TextLength(append);
+    %%%%%: 1324-block  0
+call    0 never executed
+    #####: 1325:}
+        -: 1326:
+        -: 1327:// Find first text occurrence within a string
+        -: 1328:// REQUIRES: strstr()
+function TextFindIndex called 0 returned 0% blocks executed 0%
+    #####: 1329:int TextFindIndex(const char *text, const char *find)
+        -: 1330:{
+    #####: 1331:    int position = -1;
+        -: 1332:
+    #####: 1333:    char *ptr = strstr(text, find);
+        -: 1334:
+    #####: 1335:    if (ptr != NULL) position = (int)(ptr - text);
+    %%%%%: 1335-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1335-block  1
+        -: 1336:
+    #####: 1337:    return position;
+    %%%%%: 1337-block  0
+        -: 1338:}
+        -: 1339:
+        -: 1340:// Get upper case version of provided string
+        -: 1341:// REQUIRES: toupper()
+function TextToUpper called 0 returned 0% blocks executed 0%
+    #####: 1342:const char *TextToUpper(const char *text)
+        -: 1343:{
+        -: 1344:    static char buffer[MAX_TEXT_BUFFER_LENGTH] = { 0 };
+        -: 1345:
+    #####: 1346:    for (int i = 0; i < MAX_TEXT_BUFFER_LENGTH; i++)
+    %%%%%: 1346-block  0
+    %%%%%: 1346-block  1
+    %%%%%: 1346-block  2
+branch  0 never executed
+branch  1 never executed
+        -: 1347:    {
+    #####: 1348:        if (text[i] != '\0')
+    %%%%%: 1348-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1349:        {
+    #####: 1350:            buffer[i] = (char)toupper(text[i]);
+    %%%%%: 1350-block  0
+        -: 1351:            //if ((text[i] >= 'a') && (text[i] <= 'z')) buffer[i] = text[i] - 32;
+        -: 1352:
+        -: 1353:            // TODO: Support UTF-8 diacritics!
+        -: 1354:            //if ((text[i] >= 'à') && (text[i] <= 'ý')) buffer[i] = text[i] - 32;
+        -: 1355:        }
+    #####: 1356:        else { buffer[i] = '\0'; break; }
+    %%%%%: 1356-block  0
+        -: 1357:    }
+        -: 1358:
+    #####: 1359:    return buffer;
+    %%%%%: 1359-block  0
+        -: 1360:}
+        -: 1361:
+        -: 1362:// Get lower case version of provided string
+        -: 1363:// REQUIRES: tolower()
+function TextToLower called 0 returned 0% blocks executed 0%
+    #####: 1364:const char *TextToLower(const char *text)
+        -: 1365:{
+        -: 1366:    static char buffer[MAX_TEXT_BUFFER_LENGTH] = { 0 };
+        -: 1367:
+    #####: 1368:    for (int i = 0; i < MAX_TEXT_BUFFER_LENGTH; i++)
+    %%%%%: 1368-block  0
+    %%%%%: 1368-block  1
+    %%%%%: 1368-block  2
+branch  0 never executed
+branch  1 never executed
+        -: 1369:    {
+    #####: 1370:        if (text[i] != '\0')
+    %%%%%: 1370-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1371:        {
+    #####: 1372:            buffer[i] = (char)tolower(text[i]);
+    %%%%%: 1372-block  0
+        -: 1373:            //if ((text[i] >= 'A') && (text[i] <= 'Z')) buffer[i] = text[i] + 32;
+        -: 1374:        }
+    #####: 1375:        else { buffer[i] = '\0'; break; }
+    %%%%%: 1375-block  0
+        -: 1376:    }
+        -: 1377:
+    #####: 1378:    return buffer;
+    %%%%%: 1378-block  0
+        -: 1379:}
+        -: 1380:
+        -: 1381:// Get Pascal case notation version of provided string
+        -: 1382:// REQUIRES: toupper()
+function TextToPascal called 0 returned 0% blocks executed 0%
+    #####: 1383:const char *TextToPascal(const char *text)
+        -: 1384:{
+        -: 1385:    static char buffer[MAX_TEXT_BUFFER_LENGTH] = { 0 };
+        -: 1386:
+    #####: 1387:    buffer[0] = (char)toupper(text[0]);
+        -: 1388:
+    #####: 1389:    for (int i = 1, j = 1; i < MAX_TEXT_BUFFER_LENGTH; i++, j++)
+    %%%%%: 1389-block  0
+    %%%%%: 1389-block  1
+    %%%%%: 1389-block  2
+branch  0 never executed
+branch  1 never executed
+        -: 1390:    {
+    #####: 1391:        if (text[j] != '\0')
+    %%%%%: 1391-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1392:        {
+    #####: 1393:            if (text[j] != '_') buffer[i] = text[j];
+    %%%%%: 1393-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1393-block  1
+        -: 1394:            else
+        -: 1395:            {
+    #####: 1396:                j++;
+    #####: 1397:                buffer[i] = (char)toupper(text[j]);
+    %%%%%: 1397-block  0
+        -: 1398:            }
+        -: 1399:        }
+    #####: 1400:        else { buffer[i] = '\0'; break; }
+    %%%%%: 1400-block  0
+        -: 1401:    }
+        -: 1402:
+    #####: 1403:    return buffer;
+    %%%%%: 1403-block  0
+        -: 1404:}
+        -: 1405:
+        -: 1406:// Encode text codepoint into UTF-8 text
+        -: 1407:// REQUIRES: memcpy()
+        -: 1408:// WARNING: Allocated memory should be manually freed
+function TextCodepointsToUTF8 called 0 returned 0% blocks executed 0%
+    #####: 1409:char *TextCodepointsToUTF8(int *codepoints, int length)
+        -: 1410:{
+        -: 1411:    // We allocate enough memory fo fit all possible codepoints
+        -: 1412:    // NOTE: 5 bytes for every codepoint should be enough
+    #####: 1413:    char *text = (char *)RL_CALLOC(length*5, 1);
+    #####: 1414:    const char *utf8 = NULL;
+    #####: 1415:    int size = 0;
+        -: 1416:
+    #####: 1417:    for (int i = 0, bytes = 0; i < length; i++)
+    %%%%%: 1417-block  0
+    %%%%%: 1417-block  1
+branch  0 never executed
+branch  1 never executed
+        -: 1418:    {
+    #####: 1419:        utf8 = CodepointToUTF8(codepoints[i], &bytes);
+    %%%%%: 1419-block  0
+call    0 never executed
+    #####: 1420:        memcpy(text + size, utf8, bytes);
+    #####: 1421:        size += bytes;
+        -: 1422:    }
+        -: 1423:
+        -: 1424:    // Resize memory to text length + string NULL terminator
+    #####: 1425:    void *ptr = RL_REALLOC(text, size + 1);
+        -: 1426:
+    #####: 1427:    if (ptr != NULL) text = (char *)ptr;
+    %%%%%: 1427-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1427-block  1
+        -: 1428:
+    #####: 1429:    return text;
+    %%%%%: 1429-block  0
+        -: 1430:}
+        -: 1431:
+        -: 1432:// Encode codepoint into utf8 text (char array length returned as parameter)
+        -: 1433:// NOTE: It uses a static array to store UTF-8 bytes
+function CodepointToUTF8 called 0 returned 0% blocks executed 0%
+    #####: 1434:RLAPI const char *CodepointToUTF8(int codepoint, int *byteSize)
+        -: 1435:{
+        -: 1436:    static char utf8[6] = { 0 };
+    #####: 1437:    int size = 0;   // Byte size of codepoint
+        -: 1438:
+    #####: 1439:    if (codepoint <= 0x7f)
+    %%%%%: 1439-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1440:    {
+    #####: 1441:        utf8[0] = (char)codepoint;
+    #####: 1442:        size = 1;
+    %%%%%: 1442-block  0
+        -: 1443:    }
+    #####: 1444:    else if (codepoint <= 0x7ff)
+    %%%%%: 1444-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1445:    {
+    #####: 1446:        utf8[0] = (char)(((codepoint >> 6) & 0x1f) | 0xc0);
+    #####: 1447:        utf8[1] = (char)((codepoint & 0x3f) | 0x80);
+    #####: 1448:        size = 2;
+    %%%%%: 1448-block  0
+        -: 1449:    }
+    #####: 1450:    else if (codepoint <= 0xffff)
+    %%%%%: 1450-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1451:    {
+    #####: 1452:        utf8[0] = (char)(((codepoint >> 12) & 0x0f) | 0xe0);
+    #####: 1453:        utf8[1] = (char)(((codepoint >>  6) & 0x3f) | 0x80);
+    #####: 1454:        utf8[2] = (char)((codepoint & 0x3f) | 0x80);
+    #####: 1455:        size = 3;
+    %%%%%: 1455-block  0
+        -: 1456:    }
+    #####: 1457:    else if (codepoint <= 0x10ffff)
+    %%%%%: 1457-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1458:    {
+    #####: 1459:        utf8[0] = (char)(((codepoint >> 18) & 0x07) | 0xf0);
+    #####: 1460:        utf8[1] = (char)(((codepoint >> 12) & 0x3f) | 0x80);
+    #####: 1461:        utf8[2] = (char)(((codepoint >>  6) & 0x3f) | 0x80);
+    #####: 1462:        utf8[3] = (char)((codepoint & 0x3f) | 0x80);
+    #####: 1463:        size = 4;
+    %%%%%: 1463-block  0
+        -: 1464:    }
+        -: 1465:
+    #####: 1466:    *byteSize = size;
+        -: 1467:
+    #####: 1468:    return utf8;
+    %%%%%: 1468-block  0
+        -: 1469:}
+        -: 1470:
+        -: 1471:// Load all codepoints from a UTF-8 text string, codepoints count returned by parameter
+function LoadCodepoints called 0 returned 0% blocks executed 0%
+    #####: 1472:int *LoadCodepoints(const char *text, int *count)
+        -: 1473:{
+    #####: 1474:    int textLength = TextLength(text);
+    %%%%%: 1474-block  0
+call    0 never executed
+        -: 1475:
+    #####: 1476:    int bytesProcessed = 0;
+    #####: 1477:    int codepointCount = 0;
+        -: 1478:
+        -: 1479:    // Allocate a big enough buffer to store as many codepoints as text bytes
+    #####: 1480:    int *codepoints = RL_CALLOC(textLength, sizeof(int));
+        -: 1481:
+    #####: 1482:    for (int i = 0; i < textLength; codepointCount++)
+    %%%%%: 1482-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1483:    {
+    #####: 1484:        codepoints[codepointCount] = GetCodepoint(text + i, &bytesProcessed);
+    %%%%%: 1484-block  0
+call    0 never executed
+    #####: 1485:        i += bytesProcessed;
+        -: 1486:    }
+        -: 1487:
+        -: 1488:    // Re-allocate buffer to the actual number of codepoints loaded
+    #####: 1489:    void *temp = RL_REALLOC(codepoints, codepointCount*sizeof(int));
+    #####: 1490:    if (temp != NULL) codepoints = temp;
+    %%%%%: 1490-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1490-block  1
+        -: 1491:
+    #####: 1492:    *count = codepointCount;
+        -: 1493:
+    #####: 1494:    return codepoints;
+    %%%%%: 1494-block  0
+        -: 1495:}
+        -: 1496:
+        -: 1497:// Unload codepoints data from memory
+function UnloadCodepoints called 0 returned 0% blocks executed 0%
+    #####: 1498:void UnloadCodepoints(int *codepoints)
+        -: 1499:{
+    #####: 1500:    RL_FREE(codepoints);
+    #####: 1501:}
+        -: 1502:
+        -: 1503:// Get total number of characters(codepoints) in a UTF-8 encoded text, until '\0' is found
+        -: 1504:// NOTE: If an invalid UTF-8 sequence is encountered a '?'(0x3f) codepoint is counted instead
+function GetCodepointCount called 0 returned 0% blocks executed 0%
+    #####: 1505:int GetCodepointCount(const char *text)
+        -: 1506:{
+    #####: 1507:    unsigned int length = 0;
+    #####: 1508:    char *ptr = (char *)&text[0];
+        -: 1509:
+    #####: 1510:    while (*ptr != '\0')
+    %%%%%: 1510-block  0
+    %%%%%: 1510-block  1
+branch  0 never executed
+branch  1 never executed
+        -: 1511:    {
+    #####: 1512:        int next = 0;
+    #####: 1513:        int letter = GetCodepoint(ptr, &next);
+    %%%%%: 1513-block  0
+call    0 never executed
+        -: 1514:
+    #####: 1515:        if (letter == 0x3f) ptr += 1;
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1515-block  0
+    #####: 1516:        else ptr += next;
+    %%%%%: 1516-block  0
+        -: 1517:
+    #####: 1518:        length++;
+    %%%%%: 1518-block  0
+        -: 1519:    }
+        -: 1520:
+    #####: 1521:    return length;
+    %%%%%: 1521-block  0
+        -: 1522:}
+        -: 1523:#endif      // SUPPORT_TEXT_MANIPULATION
+        -: 1524:
+        -: 1525:// Get next codepoint in a UTF-8 encoded text, scanning until '\0' is found
+        -: 1526:// When a invalid UTF-8 byte is encountered we exit as soon as possible and a '?'(0x3f) codepoint is returned
+        -: 1527:// Total number of bytes processed are returned as a parameter
+        -: 1528:// NOTE: the standard says U+FFFD should be returned in case of errors
+        -: 1529:// but that character is not supported by the default font in raylib
+        -: 1530:// TODO: Optimize this code for speed!!
+function GetCodepoint called 0 returned 0% blocks executed 0%
+    #####: 1531:int GetCodepoint(const char *text, int *bytesProcessed)
+        -: 1532:{
+        -: 1533:/*
+        -: 1534:    UTF-8 specs from https://www.ietf.org/rfc/rfc3629.txt
+        -: 1535:
+        -: 1536:    Char. number range  |        UTF-8 octet sequence
+        -: 1537:      (hexadecimal)    |              (binary)
+        -: 1538:    --------------------+---------------------------------------------
+        -: 1539:    0000 0000-0000 007F | 0xxxxxxx
+        -: 1540:    0000 0080-0000 07FF | 110xxxxx 10xxxxxx
+        -: 1541:    0000 0800-0000 FFFF | 1110xxxx 10xxxxxx 10xxxxxx
+        -: 1542:    0001 0000-0010 FFFF | 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+        -: 1543:*/
+        -: 1544:    // NOTE: on decode errors we return as soon as possible
+        -: 1545:
+    #####: 1546:    int code = 0x3f;   // Codepoint (defaults to '?')
+    #####: 1547:    int octet = (unsigned char)(text[0]); // The first UTF8 octet
+    #####: 1548:    *bytesProcessed = 1;
+        -: 1549:
+    #####: 1550:    if (octet <= 0x7f)
+    %%%%%: 1550-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1551:    {
+        -: 1552:        // Only one octet (ASCII range x00-7F)
+    #####: 1553:        code = text[0];
+    %%%%%: 1553-block  0
+        -: 1554:    }
+    #####: 1555:    else if ((octet & 0xe0) == 0xc0)
+    %%%%%: 1555-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1556:    {
+        -: 1557:        // Two octets
+        -: 1558:
+        -: 1559:        // [0]xC2-DF    [1]UTF8-tail(x80-BF)
+    #####: 1560:        unsigned char octet1 = text[1];
+        -: 1561:
+    #####: 1562:        if ((octet1 == '\0') || ((octet1 >> 6) != 2)) { *bytesProcessed = 2; return code; } // Unexpected sequence
+    %%%%%: 1562-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1562-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%: 1562-block  2
+        -: 1563:
+    #####: 1564:        if ((octet >= 0xc2) && (octet <= 0xdf))
+    %%%%%: 1564-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1564-block  1
+branch  2 never executed
+branch  3 never executed
+        -: 1565:        {
+    #####: 1566:            code = ((octet & 0x1f) << 6) | (octet1 & 0x3f);
+    #####: 1567:            *bytesProcessed = 2;
+    %%%%%: 1567-block  0
+        -: 1568:        }
+        -: 1569:    }
+    #####: 1570:    else if ((octet & 0xf0) == 0xe0)
+    %%%%%: 1570-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1571:    {
+        -: 1572:        // Three octets
+    #####: 1573:        unsigned char octet1 = text[1];
+    #####: 1574:        unsigned char octet2 = '\0';
+        -: 1575:
+    #####: 1576:        if ((octet1 == '\0') || ((octet1 >> 6) != 2)) { *bytesProcessed = 2; return code; } // Unexpected sequence
+    %%%%%: 1576-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1576-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%: 1576-block  2
+        -: 1577:
+    #####: 1578:        octet2 = text[2];
+        -: 1579:
+    #####: 1580:        if ((octet2 == '\0') || ((octet2 >> 6) != 2)) { *bytesProcessed = 3; return code; } // Unexpected sequence
+    %%%%%: 1580-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1580-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%: 1580-block  2
+        -: 1581:
+        -: 1582:        // [0]xE0    [1]xA0-BF       [2]UTF8-tail(x80-BF)
+        -: 1583:        // [0]xE1-EC [1]UTF8-tail    [2]UTF8-tail(x80-BF)
+        -: 1584:        // [0]xED    [1]x80-9F       [2]UTF8-tail(x80-BF)
+        -: 1585:        // [0]xEE-EF [1]UTF8-tail    [2]UTF8-tail(x80-BF)
+        -: 1586:
+    #####: 1587:        if (((octet == 0xe0) && !((octet1 >= 0xa0) && (octet1 <= 0xbf))) ||
+    %%%%%: 1587-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1587-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%: 1587-block  2
+branch  4 never executed
+branch  5 never executed
+    %%%%%: 1587-block  3
+branch  6 never executed
+branch  7 never executed
+    #####: 1588:            ((octet == 0xed) && !((octet1 >= 0x80) && (octet1 <= 0x9f)))) { *bytesProcessed = 2; return code; }
+    %%%%%: 1588-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1588-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%: 1588-block  2
+        -: 1589:
+    #####: 1590:        if ((octet >= 0xe0) && (0 <= 0xef))
+    %%%%%: 1590-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1591:        {
+    #####: 1592:            code = ((octet & 0xf) << 12) | ((octet1 & 0x3f) << 6) | (octet2 & 0x3f);
+    #####: 1593:            *bytesProcessed = 3;
+    %%%%%: 1593-block  0
+        -: 1594:        }
+        -: 1595:    }
+    #####: 1596:    else if ((octet & 0xf8) == 0xf0)
+    %%%%%: 1596-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1597:    {
+        -: 1598:        // Four octets
+    #####: 1599:        if (octet > 0xf4) return code;
+    %%%%%: 1599-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1599-block  1
+        -: 1600:
+    #####: 1601:        unsigned char octet1 = text[1];
+    #####: 1602:        unsigned char octet2 = '\0';
+    #####: 1603:        unsigned char octet3 = '\0';
+        -: 1604:
+    #####: 1605:        if ((octet1 == '\0') || ((octet1 >> 6) != 2)) { *bytesProcessed = 2; return code; }  // Unexpected sequence
+    %%%%%: 1605-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1605-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%: 1605-block  2
+        -: 1606:
+    #####: 1607:        octet2 = text[2];
+        -: 1608:
+    #####: 1609:        if ((octet2 == '\0') || ((octet2 >> 6) != 2)) { *bytesProcessed = 3; return code; }  // Unexpected sequence
+    %%%%%: 1609-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1609-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%: 1609-block  2
+        -: 1610:
+    #####: 1611:        octet3 = text[3];
+        -: 1612:
+    #####: 1613:        if ((octet3 == '\0') || ((octet3 >> 6) != 2)) { *bytesProcessed = 4; return code; }  // Unexpected sequence
+    %%%%%: 1613-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1613-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%: 1613-block  2
+        -: 1614:
+        -: 1615:        // [0]xF0       [1]x90-BF       [2]UTF8-tail  [3]UTF8-tail
+        -: 1616:        // [0]xF1-F3    [1]UTF8-tail    [2]UTF8-tail  [3]UTF8-tail
+        -: 1617:        // [0]xF4       [1]x80-8F       [2]UTF8-tail  [3]UTF8-tail
+        -: 1618:
+    #####: 1619:        if (((octet == 0xf0) && !((octet1 >= 0x90) && (octet1 <= 0xbf))) ||
+    %%%%%: 1619-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1619-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%: 1619-block  2
+branch  4 never executed
+branch  5 never executed
+    %%%%%: 1619-block  3
+branch  6 never executed
+branch  7 never executed
+    #####: 1620:            ((octet == 0xf4) && !((octet1 >= 0x80) && (octet1 <= 0x8f)))) { *bytesProcessed = 2; return code; } // Unexpected sequence
+    %%%%%: 1620-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1620-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%: 1620-block  2
+        -: 1621:
+    #####: 1622:        if (octet >= 0xf0)
+    %%%%%: 1622-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1623:        {
+    #####: 1624:            code = ((octet & 0x7) << 18) | ((octet1 & 0x3f) << 12) | ((octet2 & 0x3f) << 6) | (octet3 & 0x3f);
+    #####: 1625:            *bytesProcessed = 4;
+    %%%%%: 1625-block  0
+        -: 1626:        }
+        -: 1627:    }
+        -: 1628:
+    #####: 1629:    if (code > 0x10ffff) code = 0x3f;     // Codepoints after U+10ffff are invalid
+    %%%%%: 1629-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1629-block  1
+        -: 1630:
+    #####: 1631:    return code;
+    %%%%%: 1631-block  0
+        -: 1632:}
+        -: 1633:
+        -: 1634://----------------------------------------------------------------------------------
+        -: 1635:// Module specific Functions Definition
+        -: 1636://----------------------------------------------------------------------------------
+        -: 1637:#if defined(SUPPORT_FILEFORMAT_FNT)
+        -: 1638:
+        -: 1639:// Read a line from memory
+        -: 1640:// REQUIRES: memcpy()
+        -: 1641:// NOTE: Returns the number of bytes read
+function GetLine called 0 returned 0% blocks executed 0%
+    #####: 1642:static int GetLine(const char *origin, char *buffer, int maxLength)
+        -: 1643:{
+    #####: 1644:    int count = 0;
+    #####: 1645:    for (; count < maxLength; count++) if (origin[count] == '\n') break;
+    %%%%%: 1645-block  0
+    %%%%%: 1645-block  1
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1645-block  2
+    %%%%%: 1645-block  3
+    %%%%%: 1645-block  4
+branch  2 never executed
+branch  3 never executed
+    #####: 1646:    memcpy(buffer, origin, count);
+    #####: 1647:    return count;
+    %%%%%: 1647-block  0
+        -: 1648:}
+        -: 1649:
+        -: 1650:// Load a BMFont file (AngelCode font file)
+        -: 1651:// REQUIRES: strstr(), sscanf(), strrchr(), memcpy()
+function LoadBMFont called 0 returned 0% blocks executed 0%
+    #####: 1652:static Font LoadBMFont(const char *fileName)
+        -: 1653:{
+        -: 1654:    #define MAX_BUFFER_SIZE     256
+        -: 1655:
+    #####: 1656:    Font font = { 0 };
+        -: 1657:
+    #####: 1658:    char buffer[MAX_BUFFER_SIZE] = { 0 };
+    #####: 1659:    char *searchPoint = NULL;
+        -: 1660:
+    #####: 1661:    int fontSize = 0;
+    #####: 1662:    int glyphCount = 0;
+        -: 1663:
+    #####: 1664:    int imWidth = 0;
+    #####: 1665:    int imHeight = 0;
+        -: 1666:    char imFileName[129];
+        -: 1667:
+    #####: 1668:    int base = 0;   // Useless data
+        -: 1669:
+    #####: 1670:    char *fileText = LoadFileText(fileName);
+    %%%%%: 1670-block  0
+call    0 never executed
+        -: 1671:
+    #####: 1672:    if (fileText == NULL) return font;
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1672-block  0
+        -: 1673:
+    #####: 1674:    char *fileTextPtr = fileText;
+        -: 1675:
+        -: 1676:    // NOTE: We skip first line, it contains no useful information
+    #####: 1677:    int lineBytes = GetLine(fileTextPtr, buffer, MAX_BUFFER_SIZE);
+    %%%%%: 1677-block  0
+call    0 never executed
+    #####: 1678:    fileTextPtr += (lineBytes + 1);
+        -: 1679:
+        -: 1680:    // Read line data
+    #####: 1681:    lineBytes = GetLine(fileTextPtr, buffer, MAX_BUFFER_SIZE);
+call    0 never executed
+    #####: 1682:    searchPoint = strstr(buffer, "lineHeight");
+    #####: 1683:    sscanf(searchPoint, "lineHeight=%i base=%i scaleW=%i scaleH=%i", &fontSize, &base, &imWidth, &imHeight);
+call    0 never executed
+    #####: 1684:    fileTextPtr += (lineBytes + 1);
+        -: 1685:
+        -: 1686:    TRACELOGD("FONT: [%s] Loaded font info:", fileName);
+        -: 1687:    TRACELOGD("    > Base size: %i", fontSize);
+        -: 1688:    TRACELOGD("    > Texture scale: %ix%i", imWidth, imHeight);
+        -: 1689:
+    #####: 1690:    lineBytes = GetLine(fileTextPtr, buffer, MAX_BUFFER_SIZE);
+call    0 never executed
+    #####: 1691:    searchPoint = strstr(buffer, "file");
+    #####: 1692:    sscanf(searchPoint, "file=\"%128[^\"]\"", imFileName);
+call    0 never executed
+    #####: 1693:    fileTextPtr += (lineBytes + 1);
+        -: 1694:
+        -: 1695:    TRACELOGD("    > Texture filename: %s", imFileName);
+        -: 1696:
+    #####: 1697:    lineBytes = GetLine(fileTextPtr, buffer, MAX_BUFFER_SIZE);
+call    0 never executed
+    #####: 1698:    searchPoint = strstr(buffer, "count");
+    #####: 1699:    sscanf(searchPoint, "count=%i", &glyphCount);
+call    0 never executed
+    #####: 1700:    fileTextPtr += (lineBytes + 1);
+        -: 1701:
+        -: 1702:    TRACELOGD("    > Chars count: %i", glyphCount);
+        -: 1703:
+        -: 1704:    // Compose correct path using route of .fnt file (fileName) and imFileName
+    #####: 1705:    char *imPath = NULL;
+    #####: 1706:    char *lastSlash = NULL;
+        -: 1707:
+    #####: 1708:    lastSlash = strrchr(fileName, '/');
+    #####: 1709:    if (lastSlash == NULL) lastSlash = strrchr(fileName, '\\');
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1709-block  0
+        -: 1710:
+    #####: 1711:    if (lastSlash != NULL)
+    %%%%%: 1711-block  0
+branch  0 never executed
+branch  1 never executed
+        -: 1712:    {
+        -: 1713:        // NOTE: We need some extra space to avoid memory corruption on next allocations!
+    #####: 1714:        imPath = RL_CALLOC(TextLength(fileName) - TextLength(lastSlash) + TextLength(imFileName) + 4, 1);
+    %%%%%: 1714-block  0
+call    0 never executed
+call    1 never executed
+call    2 never executed
+    #####: 1715:        memcpy(imPath, fileName, TextLength(fileName) - TextLength(lastSlash) + 1);
+call    0 never executed
+call    1 never executed
+    #####: 1716:        memcpy(imPath + TextLength(fileName) - TextLength(lastSlash) + 1, imFileName, TextLength(imFileName));
+call    0 never executed
+call    1 never executed
+call    2 never executed
+        -: 1717:    }
+    #####: 1718:    else imPath = imFileName;
+    %%%%%: 1718-block  0
+        -: 1719:
+        -: 1720:    TRACELOGD("    > Image loading path: %s", imPath);
+        -: 1721:
+    #####: 1722:    Image imFont = LoadImage(imPath);
+    %%%%%: 1722-block  0
+call    0 never executed
+        -: 1723:
+    #####: 1724:    if (imFont.format == PIXELFORMAT_UNCOMPRESSED_GRAYSCALE)
+branch  0 never executed
+branch  1 never executed
+        -: 1725:    {
+        -: 1726:        // Convert image to GRAYSCALE + ALPHA, using the mask as the alpha channel
+    #####: 1727:        Image imFontAlpha = {
+    #####: 1728:            .data = calloc(imFont.width*imFont.height, 2),
+    #####: 1729:            .width = imFont.width,
+    #####: 1730:            .height = imFont.height,
+        -: 1731:            .format = PIXELFORMAT_UNCOMPRESSED_GRAY_ALPHA,
+        -: 1732:            .mipmaps = 1
+        -: 1733:        };
+        -: 1734:
+    #####: 1735:        for (int p = 0, i = 0; p < (imFont.width*imFont.height*2); p += 2, i++)
+    %%%%%: 1735-block  0
+    %%%%%: 1735-block  1
+branch  0 never executed
+branch  1 never executed
+        -: 1736:        {
+    #####: 1737:            ((unsigned char *)(imFontAlpha.data))[p] = 0xff;
+    #####: 1738:            ((unsigned char *)(imFontAlpha.data))[p + 1] = ((unsigned char *)imFont.data)[i];
+    %%%%%: 1738-block  0
+        -: 1739:        }
+        -: 1740:
+    #####: 1741:        UnloadImage(imFont);
+    %%%%%: 1741-block  0
+call    0 never executed
+    #####: 1742:        imFont = imFontAlpha;
+        -: 1743:    }
+        -: 1744:
+    #####: 1745:    font.texture = LoadTextureFromImage(imFont);
+    %%%%%: 1745-block  0
+call    0 never executed
+        -: 1746:
+    #####: 1747:    if (lastSlash != NULL) RL_FREE(imPath);
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1747-block  0
+        -: 1748:
+        -: 1749:    // Fill font characters info data
+    #####: 1750:    font.baseSize = fontSize;
+    #####: 1751:    font.glyphCount = glyphCount;
+    #####: 1752:    font.glyphPadding = 0;
+    #####: 1753:    font.glyphs = (GlyphInfo *)RL_MALLOC(glyphCount*sizeof(GlyphInfo));
+    #####: 1754:    font.recs = (Rectangle *)RL_MALLOC(glyphCount*sizeof(Rectangle));
+        -: 1755:
+        -: 1756:    int charId, charX, charY, charWidth, charHeight, charOffsetX, charOffsetY, charAdvanceX;
+        -: 1757:
+    #####: 1758:    for (int i = 0; i < glyphCount; i++)
+    %%%%%: 1758-block  0
+    %%%%%: 1758-block  1
+branch  0 never executed
+branch  1 never executed
+        -: 1759:    {
+    #####: 1760:        lineBytes = GetLine(fileTextPtr, buffer, MAX_BUFFER_SIZE);
+    %%%%%: 1760-block  0
+call    0 never executed
+    #####: 1761:        sscanf(buffer, "char id=%i x=%i y=%i width=%i height=%i xoffset=%i yoffset=%i xadvance=%i",
+call    0 never executed
+        -: 1762:                       &charId, &charX, &charY, &charWidth, &charHeight, &charOffsetX, &charOffsetY, &charAdvanceX);
+    #####: 1763:        fileTextPtr += (lineBytes + 1);
+        -: 1764:
+        -: 1765:        // Get character rectangle in the font atlas texture
+    #####: 1766:        font.recs[i] = (Rectangle){ (float)charX, (float)charY, (float)charWidth, (float)charHeight };
+        -: 1767:
+        -: 1768:        // Save data properly in sprite font
+    #####: 1769:        font.glyphs[i].value = charId;
+    #####: 1770:        font.glyphs[i].offsetX = charOffsetX;
+    #####: 1771:        font.glyphs[i].offsetY = charOffsetY;
+    #####: 1772:        font.glyphs[i].advanceX = charAdvanceX;
+        -: 1773:
+        -: 1774:        // Fill character image data from imFont data
+    #####: 1775:        font.glyphs[i].image = ImageFromImage(imFont, font.recs[i]);
+call    0 never executed
+        -: 1776:    }
+        -: 1777:
+    #####: 1778:    UnloadImage(imFont);
+    %%%%%: 1778-block  0
+call    0 never executed
+    #####: 1779:    UnloadFileText(fileText);
+call    0 never executed
+        -: 1780:
+    #####: 1781:    if (font.texture.id == 0)
+branch  0 never executed
+branch  1 never executed
+        -: 1782:    {
+    #####: 1783:        UnloadFont(font);
+    %%%%%: 1783-block  0
+call    0 never executed
+    #####: 1784:        font = GetFontDefault();
+call    0 never executed
+    #####: 1785:        TRACELOG(LOG_WARNING, "FONT: [%s] Failed to load texture, reverted to default font", fileName);
+call    0 never executed
+        -: 1786:    }
+    #####: 1787:    else TRACELOG(LOG_INFO, "FONT: [%s] Font loaded successfully (%i glyphs)", fileName, font.glyphCount);
+    %%%%%: 1787-block  0
+call    0 never executed
+        -: 1788:
+    #####: 1789:    return font;
+    %%%%%: 1789-block  0
+        -: 1790:}
+        -: 1791:#endif

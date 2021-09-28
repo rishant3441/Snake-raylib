@@ -1,0 +1,2926 @@
+        -:    0:Source:C:/Dev/CLionProjects/Snake-raylib/cmake-build-debug-coverage/_deps/raylib-src/src/external/stb_image_write.h
+        -:    0:Graph:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\CMakeFiles\raylib.dir\textures.c.gcno
+        -:    0:Data:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\CMakeFiles\raylib.dir\textures.c.gcda
+        -:    0:Runs:1
+        -:    1:/* stb_image_write - v1.15 - public domain - http://nothings.org/stb
+        -:    2:   writes out PNG/BMP/TGA/JPEG/HDR images to C stdio - Sean Barrett 2010-2015
+        -:    3:                                     no warranty implied; use at your own risk
+        -:    4:
+        -:    5:   Before #including,
+        -:    6:
+        -:    7:       #define STB_IMAGE_WRITE_IMPLEMENTATION
+        -:    8:
+        -:    9:   in the file that you want to have the implementation.
+        -:   10:
+        -:   11:   Will probably not work correctly with strict-aliasing optimizations.
+        -:   12:
+        -:   13:ABOUT:
+        -:   14:
+        -:   15:   This header file is a library for writing images to C stdio or a callback.
+        -:   16:
+        -:   17:   The PNG output is not optimal; it is 20-50% larger than the file
+        -:   18:   written by a decent optimizing implementation; though providing a custom
+        -:   19:   zlib compress function (see STBIW_ZLIB_COMPRESS) can mitigate that.
+        -:   20:   This library is designed for source code compactness and simplicity,
+        -:   21:   not optimal image file size or run-time performance.
+        -:   22:
+        -:   23:BUILDING:
+        -:   24:
+        -:   25:   You can #define STBIW_ASSERT(x) before the #include to avoid using assert.h.
+        -:   26:   You can #define STBIW_MALLOC(), STBIW_REALLOC(), and STBIW_FREE() to replace
+        -:   27:   malloc,realloc,free.
+        -:   28:   You can #define STBIW_MEMMOVE() to replace memmove()
+        -:   29:   You can #define STBIW_ZLIB_COMPRESS to use a custom zlib-style compress function
+        -:   30:   for PNG compression (instead of the builtin one), it must have the following signature:
+        -:   31:   unsigned char * my_compress(unsigned char *data, int data_len, int *out_len, int quality);
+        -:   32:   The returned data will be freed with STBIW_FREE() (free() by default),
+        -:   33:   so it must be heap allocated with STBIW_MALLOC() (malloc() by default),
+        -:   34:
+        -:   35:UNICODE:
+        -:   36:
+        -:   37:   If compiling for Windows and you wish to use Unicode filenames, compile
+        -:   38:   with
+        -:   39:       #define STBIW_WINDOWS_UTF8
+        -:   40:   and pass utf8-encoded filenames. Call stbiw_convert_wchar_to_utf8 to convert
+        -:   41:   Windows wchar_t filenames to utf8.
+        -:   42:
+        -:   43:USAGE:
+        -:   44:
+        -:   45:   There are five functions, one for each image file format:
+        -:   46:
+        -:   47:     int stbi_write_png(char const *filename, int w, int h, int comp, const void *data, int stride_in_bytes);
+        -:   48:     int stbi_write_bmp(char const *filename, int w, int h, int comp, const void *data);
+        -:   49:     int stbi_write_tga(char const *filename, int w, int h, int comp, const void *data);
+        -:   50:     int stbi_write_jpg(char const *filename, int w, int h, int comp, const void *data, int quality);
+        -:   51:     int stbi_write_hdr(char const *filename, int w, int h, int comp, const float *data);
+        -:   52:
+        -:   53:     void stbi_flip_vertically_on_write(int flag); // flag is non-zero to flip data vertically
+        -:   54:
+        -:   55:   There are also five equivalent functions that use an arbitrary write function. You are
+        -:   56:   expected to open/close your file-equivalent before and after calling these:
+        -:   57:
+        -:   58:     int stbi_write_png_to_func(stbi_write_func *func, void *context, int w, int h, int comp, const void  *data, int stride_in_bytes);
+        -:   59:     int stbi_write_bmp_to_func(stbi_write_func *func, void *context, int w, int h, int comp, const void  *data);
+        -:   60:     int stbi_write_tga_to_func(stbi_write_func *func, void *context, int w, int h, int comp, const void  *data);
+        -:   61:     int stbi_write_hdr_to_func(stbi_write_func *func, void *context, int w, int h, int comp, const float *data);
+        -:   62:     int stbi_write_jpg_to_func(stbi_write_func *func, void *context, int x, int y, int comp, const void *data, int quality);
+        -:   63:
+        -:   64:   where the callback is:
+        -:   65:      void stbi_write_func(void *context, void *data, int size);
+        -:   66:
+        -:   67:   You can configure it with these global variables:
+        -:   68:      int stbi_write_tga_with_rle;             // defaults to true; set to 0 to disable RLE
+        -:   69:      int stbi_write_png_compression_level;    // defaults to 8; set to higher for more compression
+        -:   70:      int stbi_write_force_png_filter;         // defaults to -1; set to 0..5 to force a filter mode
+        -:   71:
+        -:   72:
+        -:   73:   You can define STBI_WRITE_NO_STDIO to disable the file variant of these
+        -:   74:   functions, so the library will not use stdio.h at all. However, this will
+        -:   75:   also disable HDR writing, because it requires stdio for formatted output.
+        -:   76:
+        -:   77:   Each function returns 0 on failure and non-0 on success.
+        -:   78:
+        -:   79:   The functions create an image file defined by the parameters. The image
+        -:   80:   is a rectangle of pixels stored from left-to-right, top-to-bottom.
+        -:   81:   Each pixel contains 'comp' channels of data stored interleaved with 8-bits
+        -:   82:   per channel, in the following order: 1=Y, 2=YA, 3=RGB, 4=RGBA. (Y is
+        -:   83:   monochrome color.) The rectangle is 'w' pixels wide and 'h' pixels tall.
+        -:   84:   The *data pointer points to the first byte of the top-left-most pixel.
+        -:   85:   For PNG, "stride_in_bytes" is the distance in bytes from the first byte of
+        -:   86:   a row of pixels to the first byte of the next row of pixels.
+        -:   87:
+        -:   88:   PNG creates output files with the same number of components as the input.
+        -:   89:   The BMP format expands Y to RGB in the file format and does not
+        -:   90:   output alpha.
+        -:   91:
+        -:   92:   PNG supports writing rectangles of data even when the bytes storing rows of
+        -:   93:   data are not consecutive in memory (e.g. sub-rectangles of a larger image),
+        -:   94:   by supplying the stride between the beginning of adjacent rows. The other
+        -:   95:   formats do not. (Thus you cannot write a native-format BMP through the BMP
+        -:   96:   writer, both because it is in BGR order and because it may have padding
+        -:   97:   at the end of the line.)
+        -:   98:
+        -:   99:   PNG allows you to set the deflate compression level by setting the global
+        -:  100:   variable 'stbi_write_png_compression_level' (it defaults to 8).
+        -:  101:
+        -:  102:   HDR expects linear float data. Since the format is always 32-bit rgb(e)
+        -:  103:   data, alpha (if provided) is discarded, and for monochrome data it is
+        -:  104:   replicated across all three channels.
+        -:  105:
+        -:  106:   TGA supports RLE or non-RLE compressed data. To use non-RLE-compressed
+        -:  107:   data, set the global variable 'stbi_write_tga_with_rle' to 0.
+        -:  108:
+        -:  109:   JPEG does ignore alpha channels in input data; quality is between 1 and 100.
+        -:  110:   Higher quality looks better but results in a bigger image.
+        -:  111:   JPEG baseline (no JPEG progressive).
+        -:  112:
+        -:  113:CREDITS:
+        -:  114:
+        -:  115:
+        -:  116:   Sean Barrett           -    PNG/BMP/TGA
+        -:  117:   Baldur Karlsson        -    HDR
+        -:  118:   Jean-Sebastien Guay    -    TGA monochrome
+        -:  119:   Tim Kelsey             -    misc enhancements
+        -:  120:   Alan Hickman           -    TGA RLE
+        -:  121:   Emmanuel Julien        -    initial file IO callback implementation
+        -:  122:   Jon Olick              -    original jo_jpeg.cpp code
+        -:  123:   Daniel Gibson          -    integrate JPEG, allow external zlib
+        -:  124:   Aarni Koskela          -    allow choosing PNG filter
+        -:  125:
+        -:  126:   bugfixes:
+        -:  127:      github:Chribba
+        -:  128:      Guillaume Chereau
+        -:  129:      github:jry2
+        -:  130:      github:romigrou
+        -:  131:      Sergio Gonzalez
+        -:  132:      Jonas Karlsson
+        -:  133:      Filip Wasil
+        -:  134:      Thatcher Ulrich
+        -:  135:      github:poppolopoppo
+        -:  136:      Patrick Boettcher
+        -:  137:      github:xeekworx
+        -:  138:      Cap Petschulat
+        -:  139:      Simon Rodriguez
+        -:  140:      Ivan Tikhonov
+        -:  141:      github:ignotion
+        -:  142:      Adam Schackart
+        -:  143:
+        -:  144:LICENSE
+        -:  145:
+        -:  146:  See end of file for license information.
+        -:  147:
+        -:  148:*/
+        -:  149:
+        -:  150:#ifndef INCLUDE_STB_IMAGE_WRITE_H
+        -:  151:#define INCLUDE_STB_IMAGE_WRITE_H
+        -:  152:
+        -:  153:#include <stdlib.h>
+        -:  154:
+        -:  155:// if STB_IMAGE_WRITE_STATIC causes problems, try defining STBIWDEF to 'inline' or 'static inline'
+        -:  156:#ifndef STBIWDEF
+        -:  157:#ifdef STB_IMAGE_WRITE_STATIC
+        -:  158:#define STBIWDEF  static
+        -:  159:#else
+        -:  160:#ifdef __cplusplus
+        -:  161:#define STBIWDEF  extern "C"
+        -:  162:#else
+        -:  163:#define STBIWDEF  extern
+        -:  164:#endif
+        -:  165:#endif
+        -:  166:#endif
+        -:  167:
+        -:  168:#ifndef STB_IMAGE_WRITE_STATIC  // C++ forbids static forward declarations
+        -:  169:extern int stbi_write_tga_with_rle;
+        -:  170:extern int stbi_write_png_compression_level;
+        -:  171:extern int stbi_write_force_png_filter;
+        -:  172:#endif
+        -:  173:
+        -:  174:#ifndef STBI_WRITE_NO_STDIO
+        -:  175:STBIWDEF int stbi_write_png(char const *filename, int w, int h, int comp, const void  *data, int stride_in_bytes);
+        -:  176:STBIWDEF int stbi_write_bmp(char const *filename, int w, int h, int comp, const void  *data);
+        -:  177:STBIWDEF int stbi_write_tga(char const *filename, int w, int h, int comp, const void  *data);
+        -:  178:STBIWDEF int stbi_write_hdr(char const *filename, int w, int h, int comp, const float *data);
+        -:  179:STBIWDEF int stbi_write_jpg(char const *filename, int x, int y, int comp, const void  *data, int quality);
+        -:  180:
+        -:  181:#ifdef STBI_WINDOWS_UTF8
+        -:  182:STBIWDEF int stbiw_convert_wchar_to_utf8(char *buffer, size_t bufferlen, const wchar_t* input);
+        -:  183:#endif
+        -:  184:#endif
+        -:  185:
+        -:  186:typedef void stbi_write_func(void *context, void *data, int size);
+        -:  187:
+        -:  188:STBIWDEF int stbi_write_png_to_func(stbi_write_func *func, void *context, int w, int h, int comp, const void  *data, int stride_in_bytes);
+        -:  189:STBIWDEF int stbi_write_bmp_to_func(stbi_write_func *func, void *context, int w, int h, int comp, const void  *data);
+        -:  190:STBIWDEF int stbi_write_tga_to_func(stbi_write_func *func, void *context, int w, int h, int comp, const void  *data);
+        -:  191:STBIWDEF int stbi_write_hdr_to_func(stbi_write_func *func, void *context, int w, int h, int comp, const float *data);
+        -:  192:STBIWDEF int stbi_write_jpg_to_func(stbi_write_func *func, void *context, int x, int y, int comp, const void  *data, int quality);
+        -:  193:
+        -:  194:STBIWDEF void stbi_flip_vertically_on_write(int flip_boolean);
+        -:  195:
+        -:  196:#endif//INCLUDE_STB_IMAGE_WRITE_H
+        -:  197:
+        -:  198:#ifdef STB_IMAGE_WRITE_IMPLEMENTATION
+        -:  199:
+        -:  200:#ifdef _WIN32
+        -:  201:   #ifndef _CRT_SECURE_NO_WARNINGS
+        -:  202:   #define _CRT_SECURE_NO_WARNINGS
+        -:  203:   #endif
+        -:  204:   #ifndef _CRT_NONSTDC_NO_DEPRECATE
+        -:  205:   #define _CRT_NONSTDC_NO_DEPRECATE
+        -:  206:   #endif
+        -:  207:#endif
+        -:  208:
+        -:  209:#ifndef STBI_WRITE_NO_STDIO
+        -:  210:#include <stdio.h>
+        -:  211:#endif // STBI_WRITE_NO_STDIO
+        -:  212:
+        -:  213:#include <stdarg.h>
+        -:  214:#include <stdlib.h>
+        -:  215:#include <string.h>
+        -:  216:#include <math.h>
+        -:  217:
+        -:  218:#if defined(STBIW_MALLOC) && defined(STBIW_FREE) && (defined(STBIW_REALLOC) || defined(STBIW_REALLOC_SIZED))
+        -:  219:// ok
+        -:  220:#elif !defined(STBIW_MALLOC) && !defined(STBIW_FREE) && !defined(STBIW_REALLOC) && !defined(STBIW_REALLOC_SIZED)
+        -:  221:// ok
+        -:  222:#else
+        -:  223:#error "Must define all or none of STBIW_MALLOC, STBIW_FREE, and STBIW_REALLOC (or STBIW_REALLOC_SIZED)."
+        -:  224:#endif
+        -:  225:
+        -:  226:#ifndef STBIW_MALLOC
+        -:  227:#define STBIW_MALLOC(sz)        malloc(sz)
+        -:  228:#define STBIW_REALLOC(p,newsz)  realloc(p,newsz)
+        -:  229:#define STBIW_FREE(p)           free(p)
+        -:  230:#endif
+        -:  231:
+        -:  232:#ifndef STBIW_REALLOC_SIZED
+        -:  233:#define STBIW_REALLOC_SIZED(p,oldsz,newsz) STBIW_REALLOC(p,newsz)
+        -:  234:#endif
+        -:  235:
+        -:  236:
+        -:  237:#ifndef STBIW_MEMMOVE
+        -:  238:#define STBIW_MEMMOVE(a,b,sz) memmove(a,b,sz)
+        -:  239:#endif
+        -:  240:
+        -:  241:
+        -:  242:#ifndef STBIW_ASSERT
+        -:  243:#include <assert.h>
+        -:  244:#define STBIW_ASSERT(x) assert(x)
+        -:  245:#endif
+        -:  246:
+        -:  247:#define STBIW_UCHAR(x) (unsigned char) ((x) & 0xff)
+        -:  248:
+        -:  249:#ifdef STB_IMAGE_WRITE_STATIC
+        -:  250:static int stbi_write_png_compression_level = 8;
+        -:  251:static int stbi_write_tga_with_rle = 1;
+        -:  252:static int stbi_write_force_png_filter = -1;
+        -:  253:#else
+        -:  254:int stbi_write_png_compression_level = 8;
+        -:  255:int stbi_write_tga_with_rle = 1;
+        -:  256:int stbi_write_force_png_filter = -1;
+        -:  257:#endif
+        -:  258:
+        -:  259:static int stbi__flip_vertically_on_write = 0;
+        -:  260:
+function stbi_flip_vertically_on_write called 0 returned 0% blocks executed 0%
+    #####:  261:STBIWDEF void stbi_flip_vertically_on_write(int flag)
+        -:  262:{
+    #####:  263:   stbi__flip_vertically_on_write = flag;
+    #####:  264:}
+        -:  265:
+        -:  266:typedef struct
+        -:  267:{
+        -:  268:   stbi_write_func *func;
+        -:  269:   void *context;
+        -:  270:   unsigned char buffer[64];
+        -:  271:   int buf_used;
+        -:  272:} stbi__write_context;
+        -:  273:
+        -:  274:// initialize a callback-based context
+function stbi__start_write_callbacks called 0 returned 0% blocks executed 0%
+    #####:  275:static void stbi__start_write_callbacks(stbi__write_context *s, stbi_write_func *c, void *context)
+        -:  276:{
+    #####:  277:   s->func    = c;
+    #####:  278:   s->context = context;
+    #####:  279:}
+        -:  280:
+        -:  281:#ifndef STBI_WRITE_NO_STDIO
+        -:  282:
+function stbi__stdio_write called 0 returned 0% blocks executed 0%
+    #####:  283:static void stbi__stdio_write(void *context, void *data, int size)
+        -:  284:{
+    #####:  285:   fwrite(data,1,size,(FILE*) context);
+    %%%%%:  285-block  0
+call    0 never executed
+    #####:  286:}
+        -:  287:
+        -:  288:#if defined(_MSC_VER) && defined(STBI_WINDOWS_UTF8)
+        -:  289:#ifdef __cplusplus
+        -:  290:#define STBIW_EXTERN extern "C"
+        -:  291:#else
+        -:  292:#define STBIW_EXTERN extern
+        -:  293:#endif
+        -:  294:STBIW_EXTERN __declspec(dllimport) int __stdcall MultiByteToWideChar(unsigned int cp, unsigned long flags, const char *str, int cbmb, wchar_t *widestr, int cchwide);
+        -:  295:STBIW_EXTERN __declspec(dllimport) int __stdcall WideCharToMultiByte(unsigned int cp, unsigned long flags, const wchar_t *widestr, int cchwide, char *str, int cbmb, const char *defchar, int *used_default);
+        -:  296:
+        -:  297:STBIWDEF int stbiw_convert_wchar_to_utf8(char *buffer, size_t bufferlen, const wchar_t* input)
+        -:  298:{
+        -:  299:	return WideCharToMultiByte(65001 /* UTF8 */, 0, input, -1, buffer, (int) bufferlen, NULL, NULL);
+        -:  300:}
+        -:  301:#endif
+        -:  302:
+function stbiw__fopen called 0 returned 0% blocks executed 0%
+    #####:  303:static FILE *stbiw__fopen(char const *filename, char const *mode)
+        -:  304:{
+        -:  305:   FILE *f;
+        -:  306:#if defined(_MSC_VER) && defined(STBI_WINDOWS_UTF8)
+        -:  307:   wchar_t wMode[64];
+        -:  308:   wchar_t wFilename[1024];
+        -:  309:	if (0 == MultiByteToWideChar(65001 /* UTF8 */, 0, filename, -1, wFilename, sizeof(wFilename)))
+        -:  310:      return 0;
+        -:  311:
+        -:  312:	if (0 == MultiByteToWideChar(65001 /* UTF8 */, 0, mode, -1, wMode, sizeof(wMode)))
+        -:  313:      return 0;
+        -:  314:
+        -:  315:#if _MSC_VER >= 1400
+        -:  316:	if (0 != _wfopen_s(&f, wFilename, wMode))
+        -:  317:		f = 0;
+        -:  318:#else
+        -:  319:   f = _wfopen(wFilename, wMode);
+        -:  320:#endif
+        -:  321:
+        -:  322:#elif defined(_MSC_VER) && _MSC_VER >= 1400
+        -:  323:   if (0 != fopen_s(&f, filename, mode))
+        -:  324:      f=0;
+        -:  325:#else
+    #####:  326:   f = fopen(filename, mode);
+    %%%%%:  326-block  0
+call    0 never executed
+        -:  327:#endif
+    #####:  328:   return f;
+        -:  329:}
+        -:  330:
+function stbi__start_write_file called 0 returned 0% blocks executed 0%
+    #####:  331:static int stbi__start_write_file(stbi__write_context *s, const char *filename)
+        -:  332:{
+    #####:  333:   FILE *f = stbiw__fopen(filename, "wb");
+    %%%%%:  333-block  0
+call    0 never executed
+    #####:  334:   stbi__start_write_callbacks(s, stbi__stdio_write, (void *) f);
+call    0 never executed
+    #####:  335:   return f != NULL;
+        -:  336:}
+        -:  337:
+function stbi__end_write_file called 0 returned 0% blocks executed 0%
+    #####:  338:static void stbi__end_write_file(stbi__write_context *s)
+        -:  339:{
+    #####:  340:   fclose((FILE *)s->context);
+    %%%%%:  340-block  0
+call    0 never executed
+    #####:  341:}
+        -:  342:
+        -:  343:#endif // !STBI_WRITE_NO_STDIO
+        -:  344:
+        -:  345:typedef unsigned int stbiw_uint32;
+        -:  346:typedef int stb_image_write_test[sizeof(stbiw_uint32)==4 ? 1 : -1];
+        -:  347:
+function stbiw__writefv called 0 returned 0% blocks executed 0%
+    #####:  348:static void stbiw__writefv(stbi__write_context *s, const char *fmt, va_list v)
+        -:  349:{
+    #####:  350:   while (*fmt) {
+    %%%%%:  350-block  0
+    %%%%%:  350-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  351:      switch (*fmt++) {
+    %%%%%:  351-block  0
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+branch  4 never executed
+    #####:  352:         case ' ': break;
+    %%%%%:  352-block  0
+    #####:  353:         case '1': { unsigned char x = STBIW_UCHAR(va_arg(v, int));
+    %%%%%:  353-block  0
+call    0 never executed
+    #####:  354:                     s->func(s->context,&x,1);
+call    0 never executed
+    #####:  355:                     break; }
+    #####:  356:         case '2': { int x = va_arg(v,int);
+    %%%%%:  356-block  0
+call    0 never executed
+        -:  357:                     unsigned char b[2];
+    #####:  358:                     b[0] = STBIW_UCHAR(x);
+    #####:  359:                     b[1] = STBIW_UCHAR(x>>8);
+    #####:  360:                     s->func(s->context,b,2);
+call    0 never executed
+    #####:  361:                     break; }
+    #####:  362:         case '4': { stbiw_uint32 x = va_arg(v,int);
+    %%%%%:  362-block  0
+call    0 never executed
+        -:  363:                     unsigned char b[4];
+    #####:  364:                     b[0]=STBIW_UCHAR(x);
+    #####:  365:                     b[1]=STBIW_UCHAR(x>>8);
+    #####:  366:                     b[2]=STBIW_UCHAR(x>>16);
+    #####:  367:                     b[3]=STBIW_UCHAR(x>>24);
+    #####:  368:                     s->func(s->context,b,4);
+call    0 never executed
+    #####:  369:                     break; }
+    #####:  370:         default:
+    #####:  371:            STBIW_ASSERT(0);
+    %%%%%:  371-block  0
+call    0 never executed
+    #####:  372:            return;
+        -:  373:      }
+        -:  374:   }
+        -:  375:}
+        -:  376:
+function stbiw__writef called 0 returned 0% blocks executed 0%
+    #####:  377:static void stbiw__writef(stbi__write_context *s, const char *fmt, ...)
+        -:  378:{
+        -:  379:   va_list v;
+    #####:  380:   va_start(v, fmt);
+    #####:  381:   stbiw__writefv(s, fmt, v);
+    %%%%%:  381-block  0
+call    0 never executed
+    #####:  382:   va_end(v);
+    #####:  383:}
+        -:  384:
+function stbiw__write_flush called 0 returned 0% blocks executed 0%
+    #####:  385:static void stbiw__write_flush(stbi__write_context *s)
+        -:  386:{
+    #####:  387:   if (s->buf_used) {
+    %%%%%:  387-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  388:      s->func(s->context, &s->buffer, s->buf_used);
+    %%%%%:  388-block  0
+call    0 never executed
+    #####:  389:      s->buf_used = 0;
+        -:  390:   }
+    #####:  391:}
+        -:  392:
+function stbiw__putc called 0 returned 0% blocks executed 0%
+    #####:  393:static void stbiw__putc(stbi__write_context *s, unsigned char c)
+        -:  394:{
+    #####:  395:   s->func(s->context, &c, 1);
+    %%%%%:  395-block  0
+call    0 never executed
+    #####:  396:}
+        -:  397:
+function stbiw__write1 called 0 returned 0% blocks executed 0%
+    #####:  398:static void stbiw__write1(stbi__write_context *s, unsigned char a)
+        -:  399:{
+    #####:  400:   if (s->buf_used + 1 > sizeof(s->buffer))
+    %%%%%:  400-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  401:      stbiw__write_flush(s);
+    %%%%%:  401-block  0
+call    0 never executed
+    #####:  402:   s->buffer[s->buf_used++] = a;
+    #####:  403:}
+        -:  404:
+function stbiw__write3 called 0 returned 0% blocks executed 0%
+    #####:  405:static void stbiw__write3(stbi__write_context *s, unsigned char a, unsigned char b, unsigned char c)
+        -:  406:{
+        -:  407:   int n;
+    #####:  408:   if (s->buf_used + 3 > sizeof(s->buffer))
+    %%%%%:  408-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  409:      stbiw__write_flush(s);
+    %%%%%:  409-block  0
+call    0 never executed
+    #####:  410:   n = s->buf_used;
+    #####:  411:   s->buf_used = n+3;
+    #####:  412:   s->buffer[n+0] = a;
+    #####:  413:   s->buffer[n+1] = b;
+    #####:  414:   s->buffer[n+2] = c;
+    #####:  415:}
+        -:  416:
+function stbiw__write_pixel called 0 returned 0% blocks executed 0%
+    #####:  417:static void stbiw__write_pixel(stbi__write_context *s, int rgb_dir, int comp, int write_alpha, int expand_mono, unsigned char *d)
+        -:  418:{
+    #####:  419:   unsigned char bg[3] = { 255, 0, 255}, px[3];
+        -:  420:   int k;
+        -:  421:
+    #####:  422:   if (write_alpha < 0)
+    %%%%%:  422-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  423:      stbiw__write1(s, d[comp - 1]);
+    %%%%%:  423-block  0
+call    0 never executed
+        -:  424:
+    #####:  425:   switch (comp) {
+    %%%%%:  425-block  0
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+    #####:  426:      case 2: // 2 pixels = mono + alpha, alpha is written separately, so same as 1-channel case
+        -:  427:      case 1:
+    #####:  428:         if (expand_mono)
+    %%%%%:  428-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  429:            stbiw__write3(s, d[0], d[0], d[0]); // monochrome bmp
+    %%%%%:  429-block  0
+call    0 never executed
+        -:  430:         else
+    #####:  431:            stbiw__write1(s, d[0]);  // monochrome TGA
+    %%%%%:  431-block  0
+call    0 never executed
+    #####:  432:         break;
+    %%%%%:  432-block  0
+    #####:  433:      case 4:
+    #####:  434:         if (!write_alpha) {
+    %%%%%:  434-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  435:            // composite against pink background
+    #####:  436:            for (k = 0; k < 3; ++k)
+    %%%%%:  436-block  0
+    %%%%%:  436-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  437:               px[k] = bg[k] + ((d[k] - bg[k]) * d[3]) / 255;
+    %%%%%:  437-block  0
+    #####:  438:            stbiw__write3(s, px[1 - rgb_dir], px[1], px[1 + rgb_dir]);
+    %%%%%:  438-block  0
+call    0 never executed
+    #####:  439:            break;
+        -:  440:         }
+        -:  441:         /* FALLTHROUGH */
+        -:  442:      case 3:
+    #####:  443:         stbiw__write3(s, d[1 - rgb_dir], d[1], d[1 + rgb_dir]);
+    %%%%%:  443-block  0
+call    0 never executed
+    #####:  444:         break;
+        -:  445:   }
+    #####:  446:   if (write_alpha > 0)
+    %%%%%:  446-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  447:      stbiw__write1(s, d[comp - 1]);
+    %%%%%:  447-block  0
+call    0 never executed
+    #####:  448:}
+        -:  449:
+function stbiw__write_pixels called 0 returned 0% blocks executed 0%
+    #####:  450:static void stbiw__write_pixels(stbi__write_context *s, int rgb_dir, int vdir, int x, int y, int comp, void *data, int write_alpha, int scanline_pad, int expand_mono)
+        -:  451:{
+    #####:  452:   stbiw_uint32 zero = 0;
+        -:  453:   int i,j, j_end;
+        -:  454:
+    #####:  455:   if (y <= 0)
+    %%%%%:  455-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  456:      return;
+    %%%%%:  456-block  0
+        -:  457:
+    #####:  458:   if (stbi__flip_vertically_on_write)
+    %%%%%:  458-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  459:      vdir *= -1;
+    %%%%%:  459-block  0
+        -:  460:
+    #####:  461:   if (vdir < 0) {
+    %%%%%:  461-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  462:      j_end = -1; j = y-1;
+    %%%%%:  462-block  0
+        -:  463:   } else {
+    #####:  464:      j_end =  y; j = 0;
+    %%%%%:  464-block  0
+        -:  465:   }
+        -:  466:
+    #####:  467:   for (; j != j_end; j += vdir) {
+    %%%%%:  467-block  0
+    %%%%%:  467-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  468:      for (i=0; i < x; ++i) {
+    %%%%%:  468-block  0
+    %%%%%:  468-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  469:         unsigned char *d = (unsigned char *) data + (j*x+i)*comp;
+    #####:  470:         stbiw__write_pixel(s, rgb_dir, comp, write_alpha, expand_mono, d);
+    %%%%%:  470-block  0
+call    0 never executed
+        -:  471:      }
+    #####:  472:      stbiw__write_flush(s);
+    %%%%%:  472-block  0
+call    0 never executed
+    #####:  473:      s->func(s->context, &zero, scanline_pad);
+call    0 never executed
+        -:  474:   }
+        -:  475:}
+        -:  476:
+function stbiw__outfile called 0 returned 0% blocks executed 0%
+    #####:  477:static int stbiw__outfile(stbi__write_context *s, int rgb_dir, int vdir, int x, int y, int comp, int expand_mono, void *data, int alpha, int pad, const char *fmt, ...)
+        -:  478:{
+    #####:  479:   if (y < 0 || x < 0) {
+    %%%%%:  479-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  479-block  1
+branch  2 never executed
+branch  3 never executed
+    #####:  480:      return 0;
+    %%%%%:  480-block  0
+        -:  481:   } else {
+        -:  482:      va_list v;
+    #####:  483:      va_start(v, fmt);
+    #####:  484:      stbiw__writefv(s, fmt, v);
+    %%%%%:  484-block  0
+call    0 never executed
+    #####:  485:      va_end(v);
+    #####:  486:      stbiw__write_pixels(s,rgb_dir,vdir,x,y,comp,data,alpha,pad, expand_mono);
+call    0 never executed
+    #####:  487:      return 1;
+        -:  488:   }
+        -:  489:}
+        -:  490:
+function stbi_write_bmp_core called 0 returned 0% blocks executed 0%
+    #####:  491:static int stbi_write_bmp_core(stbi__write_context *s, int x, int y, int comp, const void *data)
+        -:  492:{
+    #####:  493:   int pad = (-x*3) & 3;
+    #####:  494:   return stbiw__outfile(s,-1,-1,x,y,comp,1,(void *) data,0,pad,
+        -:  495:           "11 4 22 4" "4 44 22 444444",
+    #####:  496:           'B', 'M', 14+40+(x*3+pad)*y, 0,0, 14+40,  // file header
+    %%%%%:  496-block  0
+call    0 never executed
+        -:  497:            40, x,y, 1,24, 0,0,0,0,0,0);             // bitmap header
+        -:  498:}
+        -:  499:
+function stbi_write_bmp_to_func called 0 returned 0% blocks executed 0%
+    #####:  500:STBIWDEF int stbi_write_bmp_to_func(stbi_write_func *func, void *context, int x, int y, int comp, const void *data)
+        -:  501:{
+    #####:  502:   stbi__write_context s = { 0 };
+    #####:  503:   stbi__start_write_callbacks(&s, func, context);
+    %%%%%:  503-block  0
+call    0 never executed
+    #####:  504:   return stbi_write_bmp_core(&s, x, y, comp, data);
+call    0 never executed
+        -:  505:}
+        -:  506:
+        -:  507:#ifndef STBI_WRITE_NO_STDIO
+function stbi_write_bmp called 0 returned 0% blocks executed 0%
+    #####:  508:STBIWDEF int stbi_write_bmp(char const *filename, int x, int y, int comp, const void *data)
+        -:  509:{
+    #####:  510:   stbi__write_context s = { 0 };
+    #####:  511:   if (stbi__start_write_file(&s,filename)) {
+    %%%%%:  511-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####:  512:      int r = stbi_write_bmp_core(&s, x, y, comp, data);
+    %%%%%:  512-block  0
+call    0 never executed
+    #####:  513:      stbi__end_write_file(&s);
+call    0 never executed
+    #####:  514:      return r;
+        -:  515:   } else
+    #####:  516:      return 0;
+    %%%%%:  516-block  0
+        -:  517:}
+        -:  518:#endif //!STBI_WRITE_NO_STDIO
+        -:  519:
+function stbi_write_tga_core called 0 returned 0% blocks executed 0%
+    #####:  520:static int stbi_write_tga_core(stbi__write_context *s, int x, int y, int comp, void *data)
+        -:  521:{
+    #####:  522:   int has_alpha = (comp == 2 || comp == 4);
+    %%%%%:  522-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  522-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  522-block  2
+    %%%%%:  522-block  3
+    #####:  523:   int colorbytes = has_alpha ? comp-1 : comp;
+    %%%%%:  523-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  523-block  1
+    %%%%%:  523-block  2
+    #####:  524:   int format = colorbytes < 2 ? 3 : 2; // 3 color channels (RGB/RGBA) = 2, 1 color channel (Y/YA) = 3
+    %%%%%:  524-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  524-block  1
+    %%%%%:  524-block  2
+        -:  525:
+    #####:  526:   if (y < 0 || x < 0)
+    %%%%%:  526-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  526-block  1
+branch  2 never executed
+branch  3 never executed
+    #####:  527:      return 0;
+    %%%%%:  527-block  0
+        -:  528:
+    #####:  529:   if (!stbi_write_tga_with_rle) {
+    %%%%%:  529-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  530:      return stbiw__outfile(s, -1, -1, x, y, comp, 0, (void *) data, has_alpha, 0,
+    #####:  531:         "111 221 2222 11", 0, 0, format, 0, 0, 0, 0, 0, x, y, (colorbytes + has_alpha) * 8, has_alpha * 8);
+    %%%%%:  531-block  0
+call    0 never executed
+        -:  532:   } else {
+        -:  533:      int i,j,k;
+        -:  534:      int jend, jdir;
+        -:  535:
+    #####:  536:      stbiw__writef(s, "111 221 2222 11", 0,0,format+8, 0,0,0, 0,0,x,y, (colorbytes + has_alpha) * 8, has_alpha * 8);
+    %%%%%:  536-block  0
+call    0 never executed
+        -:  537:
+    #####:  538:      if (stbi__flip_vertically_on_write) {
+branch  0 never executed
+branch  1 never executed
+    #####:  539:         j = 0;
+    #####:  540:         jend = y;
+    #####:  541:         jdir = 1;
+    %%%%%:  541-block  0
+        -:  542:      } else {
+    #####:  543:         j = y-1;
+    #####:  544:         jend = -1;
+    #####:  545:         jdir = -1;
+    %%%%%:  545-block  0
+        -:  546:      }
+    #####:  547:      for (; j != jend; j += jdir) {
+    %%%%%:  547-block  0
+    %%%%%:  547-block  1
+    %%%%%:  547-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  548:         unsigned char *row = (unsigned char *) data + j * x * comp;
+        -:  549:         int len;
+        -:  550:
+    #####:  551:         for (i = 0; i < x; i += len) {
+    %%%%%:  551-block  0
+    %%%%%:  551-block  1
+    %%%%%:  551-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  552:            unsigned char *begin = row + i * comp;
+    #####:  553:            int diff = 1;
+    #####:  554:            len = 1;
+        -:  555:
+    #####:  556:            if (i < x - 1) {
+    %%%%%:  556-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  557:               ++len;
+    #####:  558:               diff = memcmp(begin, row + (i + 1) * comp, comp);
+    #####:  559:               if (diff) {
+    %%%%%:  559-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  560:                  const unsigned char *prev = begin;
+    #####:  561:                  for (k = i + 2; k < x && len < 128; ++k) {
+    %%%%%:  561-block  0
+    %%%%%:  561-block  1
+    %%%%%:  561-block  2
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  561-block  3
+branch  2 never executed
+branch  3 never executed
+    #####:  562:                     if (memcmp(prev, row + k * comp, comp)) {
+    %%%%%:  562-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  563:                        prev += comp;
+    #####:  564:                        ++len;
+    %%%%%:  564-block  0
+        -:  565:                     } else {
+    #####:  566:                        --len;
+    #####:  567:                        break;
+    %%%%%:  567-block  0
+        -:  568:                     }
+        -:  569:                  }
+        -:  570:               } else {
+    #####:  571:                  for (k = i + 2; k < x && len < 128; ++k) {
+    %%%%%:  571-block  0
+    %%%%%:  571-block  1
+    %%%%%:  571-block  2
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  571-block  3
+branch  2 never executed
+branch  3 never executed
+    #####:  572:                     if (!memcmp(begin, row + k * comp, comp)) {
+    %%%%%:  572-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  573:                        ++len;
+    %%%%%:  573-block  0
+        -:  574:                     } else {
+    #####:  575:                        break;
+    %%%%%:  575-block  0
+        -:  576:                     }
+        -:  577:                  }
+        -:  578:               }
+        -:  579:            }
+        -:  580:
+    #####:  581:            if (diff) {
+    %%%%%:  581-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  582:               unsigned char header = STBIW_UCHAR(len - 1);
+    #####:  583:               stbiw__write1(s, header);
+    %%%%%:  583-block  0
+call    0 never executed
+    #####:  584:               for (k = 0; k < len; ++k) {
+    %%%%%:  584-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  585:                  stbiw__write_pixel(s, -1, comp, has_alpha, 0, begin + k * comp);
+    %%%%%:  585-block  0
+call    0 never executed
+        -:  586:               }
+        -:  587:            } else {
+    #####:  588:               unsigned char header = STBIW_UCHAR(len - 129);
+    #####:  589:               stbiw__write1(s, header);
+    %%%%%:  589-block  0
+call    0 never executed
+    #####:  590:               stbiw__write_pixel(s, -1, comp, has_alpha, 0, begin);
+call    0 never executed
+        -:  591:            }
+        -:  592:         }
+        -:  593:      }
+    #####:  594:      stbiw__write_flush(s);
+    %%%%%:  594-block  0
+call    0 never executed
+        -:  595:   }
+    #####:  596:   return 1;
+        -:  597:}
+        -:  598:
+function stbi_write_tga_to_func called 0 returned 0% blocks executed 0%
+    #####:  599:STBIWDEF int stbi_write_tga_to_func(stbi_write_func *func, void *context, int x, int y, int comp, const void *data)
+        -:  600:{
+    #####:  601:   stbi__write_context s = { 0 };
+    #####:  602:   stbi__start_write_callbacks(&s, func, context);
+    %%%%%:  602-block  0
+call    0 never executed
+    #####:  603:   return stbi_write_tga_core(&s, x, y, comp, (void *) data);
+call    0 never executed
+        -:  604:}
+        -:  605:
+        -:  606:#ifndef STBI_WRITE_NO_STDIO
+function stbi_write_tga called 0 returned 0% blocks executed 0%
+    #####:  607:STBIWDEF int stbi_write_tga(char const *filename, int x, int y, int comp, const void *data)
+        -:  608:{
+    #####:  609:   stbi__write_context s = { 0 };
+    #####:  610:   if (stbi__start_write_file(&s,filename)) {
+    %%%%%:  610-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####:  611:      int r = stbi_write_tga_core(&s, x, y, comp, (void *) data);
+    %%%%%:  611-block  0
+call    0 never executed
+    #####:  612:      stbi__end_write_file(&s);
+call    0 never executed
+    #####:  613:      return r;
+        -:  614:   } else
+    #####:  615:      return 0;
+    %%%%%:  615-block  0
+        -:  616:}
+        -:  617:#endif
+        -:  618:
+        -:  619:// *************************************************************************************************
+        -:  620:// Radiance RGBE HDR writer
+        -:  621:// by Baldur Karlsson
+        -:  622:
+        -:  623:#define stbiw__max(a, b)  ((a) > (b) ? (a) : (b))
+        -:  624:
+function stbiw__linear_to_rgbe called 0 returned 0% blocks executed 0%
+    #####:  625:static void stbiw__linear_to_rgbe(unsigned char *rgbe, float *linear)
+        -:  626:{
+        -:  627:   int exponent;
+    #####:  628:   float maxcomp = stbiw__max(linear[0], stbiw__max(linear[1], linear[2]));
+    %%%%%:  628-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  628-block  1
+    %%%%%:  628-block  2
+    %%%%%:  628-block  3
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  628-block  4
+    %%%%%:  628-block  5
+branch  4 never executed
+branch  5 never executed
+    %%%%%:  628-block  6
+    %%%%%:  628-block  7
+    %%%%%:  628-block  8
+        -:  629:
+    #####:  630:   if (maxcomp < 1e-32f) {
+    %%%%%:  630-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  631:      rgbe[0] = rgbe[1] = rgbe[2] = rgbe[3] = 0;
+    %%%%%:  631-block  0
+        -:  632:   } else {
+    #####:  633:      float normalize = (float) frexp(maxcomp, &exponent) * 256.0f/maxcomp;
+        -:  634:
+    #####:  635:      rgbe[0] = (unsigned char)(linear[0] * normalize);
+    #####:  636:      rgbe[1] = (unsigned char)(linear[1] * normalize);
+    #####:  637:      rgbe[2] = (unsigned char)(linear[2] * normalize);
+    #####:  638:      rgbe[3] = (unsigned char)(exponent + 128);
+    %%%%%:  638-block  0
+        -:  639:   }
+    #####:  640:}
+        -:  641:
+function stbiw__write_run_data called 0 returned 0% blocks executed 0%
+    #####:  642:static void stbiw__write_run_data(stbi__write_context *s, int length, unsigned char databyte)
+        -:  643:{
+    #####:  644:   unsigned char lengthbyte = STBIW_UCHAR(length+128);
+    #####:  645:   STBIW_ASSERT(length+128 <= 255);
+    %%%%%:  645-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  645-block  1
+call    2 never executed
+    %%%%%:  645-block  2
+    #####:  646:   s->func(s->context, &lengthbyte, 1);
+    %%%%%:  646-block  0
+call    0 never executed
+    #####:  647:   s->func(s->context, &databyte, 1);
+call    0 never executed
+    #####:  648:}
+        -:  649:
+function stbiw__write_dump_data called 0 returned 0% blocks executed 0%
+    #####:  650:static void stbiw__write_dump_data(stbi__write_context *s, int length, unsigned char *data)
+        -:  651:{
+    #####:  652:   unsigned char lengthbyte = STBIW_UCHAR(length);
+    #####:  653:   STBIW_ASSERT(length <= 128); // inconsistent with spec but consistent with official code
+    %%%%%:  653-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  653-block  1
+call    2 never executed
+    %%%%%:  653-block  2
+    #####:  654:   s->func(s->context, &lengthbyte, 1);
+    %%%%%:  654-block  0
+call    0 never executed
+    #####:  655:   s->func(s->context, data, length);
+call    0 never executed
+    #####:  656:}
+        -:  657:
+function stbiw__write_hdr_scanline called 0 returned 0% blocks executed 0%
+    #####:  658:static void stbiw__write_hdr_scanline(stbi__write_context *s, int width, int ncomp, unsigned char *scratch, float *scanline)
+        -:  659:{
+    #####:  660:   unsigned char scanlineheader[4] = { 2, 2, 0, 0 };
+        -:  661:   unsigned char rgbe[4];
+        -:  662:   float linear[3];
+        -:  663:   int x;
+        -:  664:
+    #####:  665:   scanlineheader[2] = (width&0xff00)>>8;
+    #####:  666:   scanlineheader[3] = (width&0x00ff);
+        -:  667:
+        -:  668:   /* skip RLE for images too small or large */
+    #####:  669:   if (width < 8 || width >= 32768) {
+    %%%%%:  669-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  669-block  1
+branch  2 never executed
+branch  3 never executed
+    #####:  670:      for (x=0; x < width; x++) {
+    %%%%%:  670-block  0
+    %%%%%:  670-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  671:         switch (ncomp) {
+    %%%%%:  671-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  672:            case 4: /* fallthrough */
+    #####:  673:            case 3: linear[2] = scanline[x*ncomp + 2];
+    #####:  674:                    linear[1] = scanline[x*ncomp + 1];
+    #####:  675:                    linear[0] = scanline[x*ncomp + 0];
+    #####:  676:                    break;
+    %%%%%:  676-block  0
+    #####:  677:            default:
+    #####:  678:                    linear[0] = linear[1] = linear[2] = scanline[x*ncomp + 0];
+    #####:  679:                    break;
+    %%%%%:  679-block  0
+        -:  680:         }
+    #####:  681:         stbiw__linear_to_rgbe(rgbe, linear);
+    %%%%%:  681-block  0
+call    0 never executed
+    #####:  682:         s->func(s->context, rgbe, 4);
+call    0 never executed
+        -:  683:      }
+        -:  684:   } else {
+        -:  685:      int c,r;
+        -:  686:      /* encode into scratch buffer */
+    #####:  687:      for (x=0; x < width; x++) {
+    %%%%%:  687-block  0
+    %%%%%:  687-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  688:         switch(ncomp) {
+    %%%%%:  688-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  689:            case 4: /* fallthrough */
+    #####:  690:            case 3: linear[2] = scanline[x*ncomp + 2];
+    #####:  691:                    linear[1] = scanline[x*ncomp + 1];
+    #####:  692:                    linear[0] = scanline[x*ncomp + 0];
+    #####:  693:                    break;
+    %%%%%:  693-block  0
+    #####:  694:            default:
+    #####:  695:                    linear[0] = linear[1] = linear[2] = scanline[x*ncomp + 0];
+    #####:  696:                    break;
+    %%%%%:  696-block  0
+        -:  697:         }
+    #####:  698:         stbiw__linear_to_rgbe(rgbe, linear);
+    %%%%%:  698-block  0
+call    0 never executed
+    #####:  699:         scratch[x + width*0] = rgbe[0];
+    #####:  700:         scratch[x + width*1] = rgbe[1];
+    #####:  701:         scratch[x + width*2] = rgbe[2];
+    #####:  702:         scratch[x + width*3] = rgbe[3];
+        -:  703:      }
+        -:  704:
+    #####:  705:      s->func(s->context, scanlineheader, 4);
+    %%%%%:  705-block  0
+call    0 never executed
+        -:  706:
+        -:  707:      /* RLE each component separately */
+    #####:  708:      for (c=0; c < 4; c++) {
+    %%%%%:  708-block  0
+    %%%%%:  708-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  709:         unsigned char *comp = &scratch[width*c];
+        -:  710:
+    #####:  711:         x = 0;
+    #####:  712:         while (x < width) {
+    %%%%%:  712-block  0
+    %%%%%:  712-block  1
+branch  0 never executed
+branch  1 never executed
+        -:  713:            // find first run
+    #####:  714:            r = x;
+    #####:  715:            while (r+2 < width) {
+    %%%%%:  715-block  0
+    %%%%%:  715-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  716:               if (comp[r] == comp[r+1] && comp[r] == comp[r+2])
+    %%%%%:  716-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  716-block  1
+branch  2 never executed
+branch  3 never executed
+    #####:  717:                  break;
+    %%%%%:  717-block  0
+    #####:  718:               ++r;
+    %%%%%:  718-block  0
+        -:  719:            }
+    #####:  720:            if (r+2 >= width)
+    %%%%%:  720-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  721:               r = width;
+    %%%%%:  721-block  0
+        -:  722:            // dump up to first run
+    #####:  723:            while (x < r) {
+    %%%%%:  723-block  0
+    %%%%%:  723-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  724:               int len = r-x;
+    #####:  725:               if (len > 128) len = 128;
+    %%%%%:  725-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  725-block  1
+    #####:  726:               stbiw__write_dump_data(s, len, &comp[x]);
+    %%%%%:  726-block  0
+call    0 never executed
+    #####:  727:               x += len;
+        -:  728:            }
+        -:  729:            // if there's a run, output it
+    #####:  730:            if (r+2 < width) { // same test as what we break out of in search loop, so only true if we break'd
+    %%%%%:  730-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  731:               // find next byte after run
+    #####:  732:               while (r < width && comp[r] == comp[x])
+    %%%%%:  732-block  0
+    %%%%%:  732-block  1
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  732-block  2
+branch  2 never executed
+branch  3 never executed
+    #####:  733:                  ++r;
+    %%%%%:  733-block  0
+        -:  734:               // output run up to r
+    #####:  735:               while (x < r) {
+    %%%%%:  735-block  0
+    %%%%%:  735-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  736:                  int len = r-x;
+    #####:  737:                  if (len > 127) len = 127;
+    %%%%%:  737-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  737-block  1
+    #####:  738:                  stbiw__write_run_data(s, len, comp[x]);
+    %%%%%:  738-block  0
+call    0 never executed
+    #####:  739:                  x += len;
+        -:  740:               }
+        -:  741:            }
+        -:  742:         }
+        -:  743:      }
+        -:  744:   }
+    #####:  745:}
+        -:  746:
+function stbi_write_hdr_core called 0 returned 0% blocks executed 0%
+    #####:  747:static int stbi_write_hdr_core(stbi__write_context *s, int x, int y, int comp, float *data)
+        -:  748:{
+    #####:  749:   if (y <= 0 || x <= 0 || data == NULL)
+    %%%%%:  749-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  749-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  749-block  2
+branch  4 never executed
+branch  5 never executed
+    #####:  750:      return 0;
+    %%%%%:  750-block  0
+        -:  751:   else {
+        -:  752:      // Each component is stored separately. Allocate scratch space for full output scanline.
+    #####:  753:      unsigned char *scratch = (unsigned char *) STBIW_MALLOC(x*4);
+        -:  754:      int i, len;
+        -:  755:      char buffer[128];
+    #####:  756:      char header[] = "#?RADIANCE\n# Written by stb_image_write.h\nFORMAT=32-bit_rle_rgbe\n";
+    #####:  757:      s->func(s->context, header, sizeof(header)-1);
+    %%%%%:  757-block  0
+call    0 never executed
+        -:  758:
+        -:  759:#ifdef __STDC_WANT_SECURE_LIB__
+        -:  760:      len = sprintf_s(buffer, sizeof(buffer), "EXPOSURE=          1.0000000000000\n\n-Y %d +X %d\n", y, x);
+        -:  761:#else
+    #####:  762:      len = sprintf(buffer, "EXPOSURE=          1.0000000000000\n\n-Y %d +X %d\n", y, x);
+call    0 never executed
+        -:  763:#endif
+    #####:  764:      s->func(s->context, buffer, len);
+call    0 never executed
+        -:  765:
+    #####:  766:      for(i=0; i < y; i++)
+    %%%%%:  766-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  767:         stbiw__write_hdr_scanline(s, x, comp, scratch, data + comp*x*(stbi__flip_vertically_on_write ? y-1-i : i));
+    %%%%%:  767-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  767-block  1
+    %%%%%:  767-block  2
+    %%%%%:  767-block  3
+call    2 never executed
+    #####:  768:      STBIW_FREE(scratch);
+    #####:  769:      return 1;
+    %%%%%:  769-block  0
+        -:  770:   }
+        -:  771:}
+        -:  772:
+function stbi_write_hdr_to_func called 0 returned 0% blocks executed 0%
+    #####:  773:STBIWDEF int stbi_write_hdr_to_func(stbi_write_func *func, void *context, int x, int y, int comp, const float *data)
+        -:  774:{
+    #####:  775:   stbi__write_context s = { 0 };
+    #####:  776:   stbi__start_write_callbacks(&s, func, context);
+    %%%%%:  776-block  0
+call    0 never executed
+    #####:  777:   return stbi_write_hdr_core(&s, x, y, comp, (float *) data);
+call    0 never executed
+        -:  778:}
+        -:  779:
+        -:  780:#ifndef STBI_WRITE_NO_STDIO
+function stbi_write_hdr called 0 returned 0% blocks executed 0%
+    #####:  781:STBIWDEF int stbi_write_hdr(char const *filename, int x, int y, int comp, const float *data)
+        -:  782:{
+    #####:  783:   stbi__write_context s = { 0 };
+    #####:  784:   if (stbi__start_write_file(&s,filename)) {
+    %%%%%:  784-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####:  785:      int r = stbi_write_hdr_core(&s, x, y, comp, (float *) data);
+    %%%%%:  785-block  0
+call    0 never executed
+    #####:  786:      stbi__end_write_file(&s);
+call    0 never executed
+    #####:  787:      return r;
+        -:  788:   } else
+    #####:  789:      return 0;
+    %%%%%:  789-block  0
+        -:  790:}
+        -:  791:#endif // STBI_WRITE_NO_STDIO
+        -:  792:
+        -:  793:
+        -:  794://////////////////////////////////////////////////////////////////////////////
+        -:  795://
+        -:  796:// PNG writer
+        -:  797://
+        -:  798:
+        -:  799:#ifndef STBIW_ZLIB_COMPRESS
+        -:  800:// stretchy buffer; stbiw__sbpush() == vector<>::push_back() -- stbiw__sbcount() == vector<>::size()
+        -:  801:#define stbiw__sbraw(a) ((int *) (void *) (a) - 2)
+        -:  802:#define stbiw__sbm(a)   stbiw__sbraw(a)[0]
+        -:  803:#define stbiw__sbn(a)   stbiw__sbraw(a)[1]
+        -:  804:
+        -:  805:#define stbiw__sbneedgrow(a,n)  ((a)==0 || stbiw__sbn(a)+n >= stbiw__sbm(a))
+        -:  806:#define stbiw__sbmaybegrow(a,n) (stbiw__sbneedgrow(a,(n)) ? stbiw__sbgrow(a,n) : 0)
+        -:  807:#define stbiw__sbgrow(a,n)  stbiw__sbgrowf((void **) &(a), (n), sizeof(*(a)))
+        -:  808:
+        -:  809:#define stbiw__sbpush(a, v)      (stbiw__sbmaybegrow(a,1), (a)[stbiw__sbn(a)++] = (v))
+        -:  810:#define stbiw__sbcount(a)        ((a) ? stbiw__sbn(a) : 0)
+        -:  811:#define stbiw__sbfree(a)         ((a) ? STBIW_FREE(stbiw__sbraw(a)),0 : 0)
+        -:  812:
+function stbiw__sbgrowf called 0 returned 0% blocks executed 0%
+    #####:  813:static void *stbiw__sbgrowf(void **arr, int increment, int itemsize)
+        -:  814:{
+    #####:  815:   int m = *arr ? 2*stbiw__sbm(*arr)+increment : increment+1;
+    %%%%%:  815-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  815-block  1
+    %%%%%:  815-block  2
+    #####:  816:   void *p = STBIW_REALLOC_SIZED(*arr ? stbiw__sbraw(*arr) : 0, *arr ? (stbiw__sbm(*arr)*itemsize + sizeof(int)*2) : 0, itemsize * m + sizeof(int)*2);
+    %%%%%:  816-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  816-block  1
+    %%%%%:  816-block  2
+    #####:  817:   STBIW_ASSERT(p);
+    %%%%%:  817-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  817-block  1
+call    2 never executed
+    %%%%%:  817-block  2
+    #####:  818:   if (p) {
+    %%%%%:  818-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  819:      if (!*arr) ((int *) p)[1] = 0;
+    %%%%%:  819-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  819-block  1
+    #####:  820:      *arr = (void *) ((int *) p + 2);
+    #####:  821:      stbiw__sbm(*arr) = m;
+    %%%%%:  821-block  0
+        -:  822:   }
+    #####:  823:   return *arr;
+    %%%%%:  823-block  0
+        -:  824:}
+        -:  825:
+function stbiw__zlib_flushf called 0 returned 0% blocks executed 0%
+    #####:  826:static unsigned char *stbiw__zlib_flushf(unsigned char *data, unsigned int *bitbuffer, int *bitcount)
+        -:  827:{
+    #####:  828:   while (*bitcount >= 8) {
+    %%%%%:  828-block  0
+    %%%%%:  828-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  829:      stbiw__sbpush(data, STBIW_UCHAR(*bitbuffer));
+    %%%%%:  829-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  829-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  829-block  2
+call    4 never executed
+    %%%%%:  829-block  3
+    #####:  830:      *bitbuffer >>= 8;
+    #####:  831:      *bitcount -= 8;
+    %%%%%:  831-block  0
+        -:  832:   }
+    #####:  833:   return data;
+    %%%%%:  833-block  0
+        -:  834:}
+        -:  835:
+function stbiw__zlib_bitrev called 0 returned 0% blocks executed 0%
+    #####:  836:static int stbiw__zlib_bitrev(int code, int codebits)
+        -:  837:{
+    #####:  838:   int res=0;
+    #####:  839:   while (codebits--) {
+    %%%%%:  839-block  0
+    %%%%%:  839-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  840:      res = (res << 1) | (code & 1);
+    #####:  841:      code >>= 1;
+    %%%%%:  841-block  0
+        -:  842:   }
+    #####:  843:   return res;
+    %%%%%:  843-block  0
+        -:  844:}
+        -:  845:
+function stbiw__zlib_countm called 0 returned 0% blocks executed 0%
+    #####:  846:static unsigned int stbiw__zlib_countm(unsigned char *a, unsigned char *b, int limit)
+        -:  847:{
+        -:  848:   int i;
+    #####:  849:   for (i=0; i < limit && i < 258; ++i)
+    %%%%%:  849-block  0
+    %%%%%:  849-block  1
+    %%%%%:  849-block  2
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  849-block  3
+branch  2 never executed
+branch  3 never executed
+    #####:  850:      if (a[i] != b[i]) break;
+    %%%%%:  850-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  850-block  1
+    #####:  851:   return i;
+    %%%%%:  851-block  0
+        -:  852:}
+        -:  853:
+function stbiw__zhash called 0 returned 0% blocks executed 0%
+    #####:  854:static unsigned int stbiw__zhash(unsigned char *data)
+        -:  855:{
+    #####:  856:   stbiw_uint32 hash = data[0] + (data[1] << 8) + (data[2] << 16);
+    #####:  857:   hash ^= hash << 3;
+    #####:  858:   hash += hash >> 5;
+    #####:  859:   hash ^= hash << 4;
+    #####:  860:   hash += hash >> 17;
+    #####:  861:   hash ^= hash << 25;
+    #####:  862:   hash += hash >> 6;
+    #####:  863:   return hash;
+    %%%%%:  863-block  0
+        -:  864:}
+        -:  865:
+        -:  866:#define stbiw__zlib_flush() (out = stbiw__zlib_flushf(out, &bitbuf, &bitcount))
+        -:  867:#define stbiw__zlib_add(code,codebits) \
+        -:  868:      (bitbuf |= (code) << bitcount, bitcount += (codebits), stbiw__zlib_flush())
+        -:  869:#define stbiw__zlib_huffa(b,c)  stbiw__zlib_add(stbiw__zlib_bitrev(b,c),c)
+        -:  870:// default huffman tables
+        -:  871:#define stbiw__zlib_huff1(n)  stbiw__zlib_huffa(0x30 + (n), 8)
+        -:  872:#define stbiw__zlib_huff2(n)  stbiw__zlib_huffa(0x190 + (n)-144, 9)
+        -:  873:#define stbiw__zlib_huff3(n)  stbiw__zlib_huffa(0 + (n)-256,7)
+        -:  874:#define stbiw__zlib_huff4(n)  stbiw__zlib_huffa(0xc0 + (n)-280,8)
+        -:  875:#define stbiw__zlib_huff(n)  ((n) <= 143 ? stbiw__zlib_huff1(n) : (n) <= 255 ? stbiw__zlib_huff2(n) : (n) <= 279 ? stbiw__zlib_huff3(n) : stbiw__zlib_huff4(n))
+        -:  876:#define stbiw__zlib_huffb(n) ((n) <= 143 ? stbiw__zlib_huff1(n) : stbiw__zlib_huff2(n))
+        -:  877:
+        -:  878:#define stbiw__ZHASH   16384
+        -:  879:
+        -:  880:#endif // STBIW_ZLIB_COMPRESS
+        -:  881:
+function stbi_zlib_compress called 0 returned 0% blocks executed 0%
+    #####:  882:STBIWDEF unsigned char * stbi_zlib_compress(unsigned char *data, int data_len, int *out_len, int quality)
+        -:  883:{
+        -:  884:#ifdef STBIW_ZLIB_COMPRESS
+        -:  885:   // user provided a zlib compress implementation, use that
+        -:  886:   return STBIW_ZLIB_COMPRESS(data, data_len, out_len, quality);
+        -:  887:#else // use builtin
+        -:  888:   static unsigned short lengthc[] = { 3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,51,59,67,83,99,115,131,163,195,227,258, 259 };
+        -:  889:   static unsigned char  lengtheb[]= { 0,0,0,0,0,0,0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4,  4,  5,  5,  5,  5,  0 };
+        -:  890:   static unsigned short distc[]   = { 1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577, 32768 };
+        -:  891:   static unsigned char  disteb[]  = { 0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13 };
+    #####:  892:   unsigned int bitbuf=0;
+    #####:  893:   int i,j, bitcount=0;
+    #####:  894:   unsigned char *out = NULL;
+    #####:  895:   unsigned char ***hash_table = (unsigned char***) STBIW_MALLOC(stbiw__ZHASH * sizeof(unsigned char**));
+    #####:  896:   if (hash_table == NULL)
+    %%%%%:  896-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  897:      return NULL;
+    %%%%%:  897-block  0
+    #####:  898:   if (quality < 5) quality = 5;
+    %%%%%:  898-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  898-block  1
+        -:  899:
+    #####:  900:   stbiw__sbpush(out, 0x78);   // DEFLATE 32K window
+    %%%%%:  900-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  900-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  900-block  2
+call    4 never executed
+    %%%%%:  900-block  3
+    #####:  901:   stbiw__sbpush(out, 0x5e);   // FLEVEL = 1
+    %%%%%:  901-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  901-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  901-block  2
+call    4 never executed
+    %%%%%:  901-block  3
+    #####:  902:   stbiw__zlib_add(1,1);  // BFINAL = 1
+    %%%%%:  902-block  0
+call    0 never executed
+    #####:  903:   stbiw__zlib_add(1,2);  // BTYPE = 1 -- fixed huffman
+call    0 never executed
+        -:  904:
+    #####:  905:   for (i=0; i < stbiw__ZHASH; ++i)
+    %%%%%:  905-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  906:      hash_table[i] = NULL;
+    %%%%%:  906-block  0
+        -:  907:
+    #####:  908:   i=0;
+    #####:  909:   while (i < data_len-3) {
+    %%%%%:  909-block  0
+    %%%%%:  909-block  1
+branch  0 never executed
+branch  1 never executed
+        -:  910:      // hash next 3 bytes of data to be compressed
+    #####:  911:      int h = stbiw__zhash(data+i)&(stbiw__ZHASH-1), best=3;
+    %%%%%:  911-block  0
+call    0 never executed
+    #####:  912:      unsigned char *bestloc = 0;
+    #####:  913:      unsigned char **hlist = hash_table[h];
+    #####:  914:      int n = stbiw__sbcount(hlist);
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  914-block  0
+    %%%%%:  914-block  1
+    #####:  915:      for (j=0; j < n; ++j) {
+    %%%%%:  915-block  0
+    %%%%%:  915-block  1
+    %%%%%:  915-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  916:         if (hlist[j]-data > i-32768) { // if entry lies within window
+    %%%%%:  916-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  917:            int d = stbiw__zlib_countm(hlist[j], data+i, data_len-i);
+    %%%%%:  917-block  0
+call    0 never executed
+    #####:  918:            if (d >= best) { best=d; bestloc=hlist[j]; }
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  918-block  0
+        -:  919:         }
+        -:  920:      }
+        -:  921:      // when hash table entry is too long, delete half the entries
+    #####:  922:      if (hash_table[h] && stbiw__sbn(hash_table[h]) == 2*quality) {
+    %%%%%:  922-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  922-block  1
+branch  2 never executed
+branch  3 never executed
+    #####:  923:         STBIW_MEMMOVE(hash_table[h], hash_table[h]+quality, sizeof(hash_table[h][0])*quality);
+    #####:  924:         stbiw__sbn(hash_table[h]) = quality;
+    %%%%%:  924-block  0
+        -:  925:      }
+    #####:  926:      stbiw__sbpush(hash_table[h],data+i);
+    %%%%%:  926-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  926-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  926-block  2
+call    4 never executed
+    %%%%%:  926-block  3
+        -:  927:
+    #####:  928:      if (bestloc) {
+    %%%%%:  928-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  929:         // "lazy matching" - check match at *next* byte, and if it's better, do cur byte as literal
+    #####:  930:         h = stbiw__zhash(data+i+1)&(stbiw__ZHASH-1);
+    %%%%%:  930-block  0
+call    0 never executed
+    #####:  931:         hlist = hash_table[h];
+    #####:  932:         n = stbiw__sbcount(hlist);
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  932-block  0
+    %%%%%:  932-block  1
+    #####:  933:         for (j=0; j < n; ++j) {
+    %%%%%:  933-block  0
+    %%%%%:  933-block  1
+    %%%%%:  933-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  934:            if (hlist[j]-data > i-32767) {
+    %%%%%:  934-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  935:               int e = stbiw__zlib_countm(hlist[j], data+i+1, data_len-i-1);
+    %%%%%:  935-block  0
+call    0 never executed
+    #####:  936:               if (e > best) { // if next match is better, bail on current match
+branch  0 never executed
+branch  1 never executed
+    #####:  937:                  bestloc = NULL;
+    #####:  938:                  break;
+    %%%%%:  938-block  0
+        -:  939:               }
+        -:  940:            }
+        -:  941:         }
+        -:  942:      }
+        -:  943:
+    #####:  944:      if (bestloc) {
+    %%%%%:  944-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  945:         int d = (int) (data+i - bestloc); // distance back
+    #####:  946:         STBIW_ASSERT(d <= 32767 && best <= 258);
+    %%%%%:  946-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  946-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  946-block  2
+call    4 never executed
+    %%%%%:  946-block  3
+    #####:  947:         for (j=0; best > lengthc[j+1]-1; ++j);
+    %%%%%:  947-block  0
+    %%%%%:  947-block  1
+    %%%%%:  947-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  948:         stbiw__zlib_huff(j+257);
+    %%%%%:  948-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  948-block  1
+call    2 never executed
+call    3 never executed
+    %%%%%:  948-block  2
+branch  4 never executed
+branch  5 never executed
+    %%%%%:  948-block  3
+call    6 never executed
+call    7 never executed
+    %%%%%:  948-block  4
+branch  8 never executed
+branch  9 never executed
+    %%%%%:  948-block  5
+call   10 never executed
+call   11 never executed
+    %%%%%:  948-block  6
+call   12 never executed
+call   13 never executed
+    %%%%%:  948-block  7
+    %%%%%:  948-block  8
+    #####:  949:         if (lengtheb[j]) stbiw__zlib_add(best - lengthc[j], lengtheb[j]);
+    %%%%%:  949-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  949-block  1
+call    2 never executed
+    #####:  950:         for (j=0; d > distc[j+1]-1; ++j);
+    %%%%%:  950-block  0
+    %%%%%:  950-block  1
+    %%%%%:  950-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  951:         stbiw__zlib_add(stbiw__zlib_bitrev(j,5),5);
+    %%%%%:  951-block  0
+call    0 never executed
+call    1 never executed
+    #####:  952:         if (disteb[j]) stbiw__zlib_add(d - distc[j], disteb[j]);
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  952-block  0
+call    2 never executed
+    #####:  953:         i += best;
+    %%%%%:  953-block  0
+        -:  954:      } else {
+    #####:  955:         stbiw__zlib_huffb(data[i]);
+    %%%%%:  955-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  955-block  1
+call    2 never executed
+call    3 never executed
+    %%%%%:  955-block  2
+call    4 never executed
+call    5 never executed
+    #####:  956:         ++i;
+    %%%%%:  956-block  0
+        -:  957:      }
+        -:  958:   }
+        -:  959:   // write out final bytes
+    #####:  960:   for (;i < data_len; ++i)
+    %%%%%:  960-block  0
+    %%%%%:  960-block  1
+    %%%%%:  960-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  961:      stbiw__zlib_huffb(data[i]);
+    %%%%%:  961-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  961-block  1
+call    2 never executed
+call    3 never executed
+    %%%%%:  961-block  2
+call    4 never executed
+call    5 never executed
+    #####:  962:   stbiw__zlib_huff(256); // end of block
+    %%%%%:  962-block  0
+call    0 never executed
+call    1 never executed
+        -:  963:   // pad with 0 bits to byte boundary
+    #####:  964:   while (bitcount)
+    %%%%%:  964-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  965:      stbiw__zlib_add(0,1);
+    %%%%%:  965-block  0
+call    0 never executed
+        -:  966:
+    #####:  967:   for (i=0; i < stbiw__ZHASH; ++i)
+    %%%%%:  967-block  0
+    %%%%%:  967-block  1
+    %%%%%:  967-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  968:      (void) stbiw__sbfree(hash_table[i]);
+    %%%%%:  968-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  968-block  1
+    #####:  969:   STBIW_FREE(hash_table);
+        -:  970:
+        -:  971:   {
+        -:  972:      // compute adler32 on input
+    #####:  973:      unsigned int s1=1, s2=0;
+    #####:  974:      int blocklen = (int) (data_len % 5552);
+    #####:  975:      j=0;
+    #####:  976:      while (j < data_len) {
+    %%%%%:  976-block  0
+    %%%%%:  976-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  977:         for (i=0; i < blocklen; ++i) { s1 += data[j+i]; s2 += s1; }
+    %%%%%:  977-block  0
+    %%%%%:  977-block  1
+    %%%%%:  977-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  978:         s1 %= 65521; s2 %= 65521;
+    #####:  979:         j += blocklen;
+    #####:  980:         blocklen = 5552;
+    %%%%%:  980-block  0
+        -:  981:      }
+    #####:  982:      stbiw__sbpush(out, STBIW_UCHAR(s2 >> 8));
+    %%%%%:  982-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  982-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  982-block  2
+call    4 never executed
+    %%%%%:  982-block  3
+    #####:  983:      stbiw__sbpush(out, STBIW_UCHAR(s2));
+    %%%%%:  983-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  983-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  983-block  2
+call    4 never executed
+    %%%%%:  983-block  3
+    #####:  984:      stbiw__sbpush(out, STBIW_UCHAR(s1 >> 8));
+    %%%%%:  984-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  984-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  984-block  2
+call    4 never executed
+    %%%%%:  984-block  3
+    #####:  985:      stbiw__sbpush(out, STBIW_UCHAR(s1));
+    %%%%%:  985-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  985-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  985-block  2
+call    4 never executed
+    %%%%%:  985-block  3
+        -:  986:   }
+    #####:  987:   *out_len = stbiw__sbn(out);
+        -:  988:   // make returned pointer freeable
+    #####:  989:   STBIW_MEMMOVE(stbiw__sbraw(out), out, *out_len);
+    #####:  990:   return (unsigned char *) stbiw__sbraw(out);
+    %%%%%:  990-block  0
+        -:  991:#endif // STBIW_ZLIB_COMPRESS
+        -:  992:}
+        -:  993:
+function stbiw__crc32 called 0 returned 0% blocks executed 0%
+    #####:  994:static unsigned int stbiw__crc32(unsigned char *buffer, int len)
+        -:  995:{
+        -:  996:#ifdef STBIW_CRC32
+        -:  997:    return STBIW_CRC32(buffer, len);
+        -:  998:#else
+        -:  999:   static unsigned int crc_table[256] =
+        -: 1000:   {
+        -: 1001:      0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F, 0xE963A535, 0x9E6495A3,
+        -: 1002:      0x0eDB8832, 0x79DCB8A4, 0xE0D5E91E, 0x97D2D988, 0x09B64C2B, 0x7EB17CBD, 0xE7B82D07, 0x90BF1D91,
+        -: 1003:      0x1DB71064, 0x6AB020F2, 0xF3B97148, 0x84BE41DE, 0x1ADAD47D, 0x6DDDE4EB, 0xF4D4B551, 0x83D385C7,
+        -: 1004:      0x136C9856, 0x646BA8C0, 0xFD62F97A, 0x8A65C9EC, 0x14015C4F, 0x63066CD9, 0xFA0F3D63, 0x8D080DF5,
+        -: 1005:      0x3B6E20C8, 0x4C69105E, 0xD56041E4, 0xA2677172, 0x3C03E4D1, 0x4B04D447, 0xD20D85FD, 0xA50AB56B,
+        -: 1006:      0x35B5A8FA, 0x42B2986C, 0xDBBBC9D6, 0xACBCF940, 0x32D86CE3, 0x45DF5C75, 0xDCD60DCF, 0xABD13D59,
+        -: 1007:      0x26D930AC, 0x51DE003A, 0xC8D75180, 0xBFD06116, 0x21B4F4B5, 0x56B3C423, 0xCFBA9599, 0xB8BDA50F,
+        -: 1008:      0x2802B89E, 0x5F058808, 0xC60CD9B2, 0xB10BE924, 0x2F6F7C87, 0x58684C11, 0xC1611DAB, 0xB6662D3D,
+        -: 1009:      0x76DC4190, 0x01DB7106, 0x98D220BC, 0xEFD5102A, 0x71B18589, 0x06B6B51F, 0x9FBFE4A5, 0xE8B8D433,
+        -: 1010:      0x7807C9A2, 0x0F00F934, 0x9609A88E, 0xE10E9818, 0x7F6A0DBB, 0x086D3D2D, 0x91646C97, 0xE6635C01,
+        -: 1011:      0x6B6B51F4, 0x1C6C6162, 0x856530D8, 0xF262004E, 0x6C0695ED, 0x1B01A57B, 0x8208F4C1, 0xF50FC457,
+        -: 1012:      0x65B0D9C6, 0x12B7E950, 0x8BBEB8EA, 0xFCB9887C, 0x62DD1DDF, 0x15DA2D49, 0x8CD37CF3, 0xFBD44C65,
+        -: 1013:      0x4DB26158, 0x3AB551CE, 0xA3BC0074, 0xD4BB30E2, 0x4ADFA541, 0x3DD895D7, 0xA4D1C46D, 0xD3D6F4FB,
+        -: 1014:      0x4369E96A, 0x346ED9FC, 0xAD678846, 0xDA60B8D0, 0x44042D73, 0x33031DE5, 0xAA0A4C5F, 0xDD0D7CC9,
+        -: 1015:      0x5005713C, 0x270241AA, 0xBE0B1010, 0xC90C2086, 0x5768B525, 0x206F85B3, 0xB966D409, 0xCE61E49F,
+        -: 1016:      0x5EDEF90E, 0x29D9C998, 0xB0D09822, 0xC7D7A8B4, 0x59B33D17, 0x2EB40D81, 0xB7BD5C3B, 0xC0BA6CAD,
+        -: 1017:      0xEDB88320, 0x9ABFB3B6, 0x03B6E20C, 0x74B1D29A, 0xEAD54739, 0x9DD277AF, 0x04DB2615, 0x73DC1683,
+        -: 1018:      0xE3630B12, 0x94643B84, 0x0D6D6A3E, 0x7A6A5AA8, 0xE40ECF0B, 0x9309FF9D, 0x0A00AE27, 0x7D079EB1,
+        -: 1019:      0xF00F9344, 0x8708A3D2, 0x1E01F268, 0x6906C2FE, 0xF762575D, 0x806567CB, 0x196C3671, 0x6E6B06E7,
+        -: 1020:      0xFED41B76, 0x89D32BE0, 0x10DA7A5A, 0x67DD4ACC, 0xF9B9DF6F, 0x8EBEEFF9, 0x17B7BE43, 0x60B08ED5,
+        -: 1021:      0xD6D6A3E8, 0xA1D1937E, 0x38D8C2C4, 0x4FDFF252, 0xD1BB67F1, 0xA6BC5767, 0x3FB506DD, 0x48B2364B,
+        -: 1022:      0xD80D2BDA, 0xAF0A1B4C, 0x36034AF6, 0x41047A60, 0xDF60EFC3, 0xA867DF55, 0x316E8EEF, 0x4669BE79,
+        -: 1023:      0xCB61B38C, 0xBC66831A, 0x256FD2A0, 0x5268E236, 0xCC0C7795, 0xBB0B4703, 0x220216B9, 0x5505262F,
+        -: 1024:      0xC5BA3BBE, 0xB2BD0B28, 0x2BB45A92, 0x5CB36A04, 0xC2D7FFA7, 0xB5D0CF31, 0x2CD99E8B, 0x5BDEAE1D,
+        -: 1025:      0x9B64C2B0, 0xEC63F226, 0x756AA39C, 0x026D930A, 0x9C0906A9, 0xEB0E363F, 0x72076785, 0x05005713,
+        -: 1026:      0x95BF4A82, 0xE2B87A14, 0x7BB12BAE, 0x0CB61B38, 0x92D28E9B, 0xE5D5BE0D, 0x7CDCEFB7, 0x0BDBDF21,
+        -: 1027:      0x86D3D2D4, 0xF1D4E242, 0x68DDB3F8, 0x1FDA836E, 0x81BE16CD, 0xF6B9265B, 0x6FB077E1, 0x18B74777,
+        -: 1028:      0x88085AE6, 0xFF0F6A70, 0x66063BCA, 0x11010B5C, 0x8F659EFF, 0xF862AE69, 0x616BFFD3, 0x166CCF45,
+        -: 1029:      0xA00AE278, 0xD70DD2EE, 0x4E048354, 0x3903B3C2, 0xA7672661, 0xD06016F7, 0x4969474D, 0x3E6E77DB,
+        -: 1030:      0xAED16A4A, 0xD9D65ADC, 0x40DF0B66, 0x37D83BF0, 0xA9BCAE53, 0xDEBB9EC5, 0x47B2CF7F, 0x30B5FFE9,
+        -: 1031:      0xBDBDF21C, 0xCABAC28A, 0x53B39330, 0x24B4A3A6, 0xBAD03605, 0xCDD70693, 0x54DE5729, 0x23D967BF,
+        -: 1032:      0xB3667A2E, 0xC4614AB8, 0x5D681B02, 0x2A6F2B94, 0xB40BBE37, 0xC30C8EA1, 0x5A05DF1B, 0x2D02EF8D
+        -: 1033:   };
+        -: 1034:
+    #####: 1035:   unsigned int crc = ~0u;
+        -: 1036:   int i;
+    #####: 1037:   for (i=0; i < len; ++i)
+    %%%%%: 1037-block  0
+    %%%%%: 1037-block  1
+branch  0 never executed
+branch  1 never executed
+    #####: 1038:      crc = (crc >> 8) ^ crc_table[buffer[i] ^ (crc & 0xff)];
+    %%%%%: 1038-block  0
+    #####: 1039:   return ~crc;
+    %%%%%: 1039-block  0
+        -: 1040:#endif
+        -: 1041:}
+        -: 1042:
+        -: 1043:#define stbiw__wpng4(o,a,b,c,d) ((o)[0]=STBIW_UCHAR(a),(o)[1]=STBIW_UCHAR(b),(o)[2]=STBIW_UCHAR(c),(o)[3]=STBIW_UCHAR(d),(o)+=4)
+        -: 1044:#define stbiw__wp32(data,v) stbiw__wpng4(data, (v)>>24,(v)>>16,(v)>>8,(v));
+        -: 1045:#define stbiw__wptag(data,s) stbiw__wpng4(data, s[0],s[1],s[2],s[3])
+        -: 1046:
+function stbiw__wpcrc called 0 returned 0% blocks executed 0%
+    #####: 1047:static void stbiw__wpcrc(unsigned char **data, int len)
+        -: 1048:{
+    #####: 1049:   unsigned int crc = stbiw__crc32(*data - len - 4, len+4);
+    %%%%%: 1049-block  0
+call    0 never executed
+    #####: 1050:   stbiw__wp32(*data, crc);
+    #####: 1051:}
+        -: 1052:
+function stbiw__paeth called 0 returned 0% blocks executed 0%
+    #####: 1053:static unsigned char stbiw__paeth(int a, int b, int c)
+        -: 1054:{
+    #####: 1055:   int p = a + b - c, pa = abs(p-a), pb = abs(p-b), pc = abs(p-c);
+    #####: 1056:   if (pa <= pb && pa <= pc) return STBIW_UCHAR(a);
+    %%%%%: 1056-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1056-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%: 1056-block  2
+    #####: 1057:   if (pb <= pc) return STBIW_UCHAR(b);
+    %%%%%: 1057-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1057-block  1
+    #####: 1058:   return STBIW_UCHAR(c);
+    %%%%%: 1058-block  0
+        -: 1059:}
+        -: 1060:
+        -: 1061:// @OPTIMIZE: provide an option that always forces left-predict or paeth predict
+function stbiw__encode_png_line called 0 returned 0% blocks executed 0%
+    #####: 1062:static void stbiw__encode_png_line(unsigned char *pixels, int stride_bytes, int width, int height, int y, int n, int filter_type, signed char *line_buffer)
+        -: 1063:{
+        -: 1064:   static int mapping[] = { 0,1,2,3,4 };
+        -: 1065:   static int firstmap[] = { 0,1,0,5,6 };
+    #####: 1066:   int *mymap = (y != 0) ? mapping : firstmap;
+    %%%%%: 1066-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1066-block  1
+    %%%%%: 1066-block  2
+        -: 1067:   int i;
+    #####: 1068:   int type = mymap[filter_type];
+    #####: 1069:   unsigned char *z = pixels + stride_bytes * (stbi__flip_vertically_on_write ? height-1-y : y);
+    %%%%%: 1069-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1069-block  1
+    %%%%%: 1069-block  2
+    #####: 1070:   int signed_stride = stbi__flip_vertically_on_write ? -stride_bytes : stride_bytes;
+    %%%%%: 1070-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1070-block  1
+    %%%%%: 1070-block  2
+        -: 1071:
+    #####: 1072:   if (type==0) {
+    %%%%%: 1072-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1073:      memcpy(line_buffer, z, width*n);
+    #####: 1074:      return;
+    %%%%%: 1074-block  0
+        -: 1075:   }
+        -: 1076:
+        -: 1077:   // first loop isn't optimized since it's just one pixel
+    #####: 1078:   for (i = 0; i < n; ++i) {
+    %%%%%: 1078-block  0
+    %%%%%: 1078-block  1
+branch  0 never executed
+branch  1 never executed
+    #####: 1079:      switch (type) {
+    %%%%%: 1079-block  0
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+branch  4 never executed
+branch  5 never executed
+branch  6 never executed
+    #####: 1080:         case 1: line_buffer[i] = z[i]; break;
+    %%%%%: 1080-block  0
+    #####: 1081:         case 2: line_buffer[i] = z[i] - z[i-signed_stride]; break;
+    %%%%%: 1081-block  0
+    #####: 1082:         case 3: line_buffer[i] = z[i] - (z[i-signed_stride]>>1); break;
+    %%%%%: 1082-block  0
+    #####: 1083:         case 4: line_buffer[i] = (signed char) (z[i] - stbiw__paeth(0,z[i-signed_stride],0)); break;
+    %%%%%: 1083-block  0
+call    0 never executed
+    #####: 1084:         case 5: line_buffer[i] = z[i]; break;
+    %%%%%: 1084-block  0
+    #####: 1085:         case 6: line_buffer[i] = z[i]; break;
+    %%%%%: 1085-block  0
+        -: 1086:      }
+    #####: 1087:   }
+    %%%%%: 1087-block  0
+    #####: 1088:   switch (type) {
+    %%%%%: 1088-block  0
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+branch  4 never executed
+branch  5 never executed
+branch  6 never executed
+    #####: 1089:      case 1: for (i=n; i < width*n; ++i) line_buffer[i] = z[i] - z[i-n]; break;
+    %%%%%: 1089-block  0
+    %%%%%: 1089-block  1
+    %%%%%: 1089-block  2
+branch  0 never executed
+branch  1 never executed
+    #####: 1090:      case 2: for (i=n; i < width*n; ++i) line_buffer[i] = z[i] - z[i-signed_stride]; break;
+    %%%%%: 1090-block  0
+    %%%%%: 1090-block  1
+    %%%%%: 1090-block  2
+branch  0 never executed
+branch  1 never executed
+    #####: 1091:      case 3: for (i=n; i < width*n; ++i) line_buffer[i] = z[i] - ((z[i-n] + z[i-signed_stride])>>1); break;
+    %%%%%: 1091-block  0
+    %%%%%: 1091-block  1
+    %%%%%: 1091-block  2
+branch  0 never executed
+branch  1 never executed
+    #####: 1092:      case 4: for (i=n; i < width*n; ++i) line_buffer[i] = z[i] - stbiw__paeth(z[i-n], z[i-signed_stride], z[i-signed_stride-n]); break;
+    %%%%%: 1092-block  0
+    %%%%%: 1092-block  1
+call    0 never executed
+    %%%%%: 1092-block  2
+branch  1 never executed
+branch  2 never executed
+    #####: 1093:      case 5: for (i=n; i < width*n; ++i) line_buffer[i] = z[i] - (z[i-n]>>1); break;
+    %%%%%: 1093-block  0
+    %%%%%: 1093-block  1
+    %%%%%: 1093-block  2
+branch  0 never executed
+branch  1 never executed
+    #####: 1094:      case 6: for (i=n; i < width*n; ++i) line_buffer[i] = z[i] - stbiw__paeth(z[i-n], 0,0); break;
+    %%%%%: 1094-block  0
+    %%%%%: 1094-block  1
+call    0 never executed
+    %%%%%: 1094-block  2
+branch  1 never executed
+branch  2 never executed
+        -: 1095:   }
+        -: 1096:}
+        -: 1097:
+function stbi_write_png_to_mem called 0 returned 0% blocks executed 0%
+    #####: 1098:STBIWDEF unsigned char *stbi_write_png_to_mem(const unsigned char *pixels, int stride_bytes, int x, int y, int n, int *out_len)
+        -: 1099:{
+    #####: 1100:   int force_filter = stbi_write_force_png_filter;
+    #####: 1101:   int ctype[5] = { -1, 0, 4, 2, 6 };
+    #####: 1102:   unsigned char sig[8] = { 137,80,78,71,13,10,26,10 };
+        -: 1103:   unsigned char *out,*o, *filt, *zlib;
+        -: 1104:   signed char *line_buffer;
+        -: 1105:   int j,zlen;
+        -: 1106:
+    #####: 1107:   if (stride_bytes == 0)
+    %%%%%: 1107-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1108:      stride_bytes = x * n;
+    %%%%%: 1108-block  0
+        -: 1109:
+    #####: 1110:   if (force_filter >= 5) {
+    %%%%%: 1110-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1111:      force_filter = -1;
+    %%%%%: 1111-block  0
+        -: 1112:   }
+        -: 1113:
+    #####: 1114:   filt = (unsigned char *) STBIW_MALLOC((x*n+1) * y); if (!filt) return 0;
+    %%%%%: 1114-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1114-block  1
+    #####: 1115:   line_buffer = (signed char *) STBIW_MALLOC(x * n); if (!line_buffer) { STBIW_FREE(filt); return 0; }
+    %%%%%: 1115-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1115-block  1
+    #####: 1116:   for (j=0; j < y; ++j) {
+    %%%%%: 1116-block  0
+    %%%%%: 1116-block  1
+branch  0 never executed
+branch  1 never executed
+        -: 1117:      int filter_type;
+    #####: 1118:      if (force_filter > -1) {
+    %%%%%: 1118-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1119:         filter_type = force_filter;
+    #####: 1120:         stbiw__encode_png_line((unsigned char*)(pixels), stride_bytes, x, y, j, n, force_filter, line_buffer);
+    %%%%%: 1120-block  0
+call    0 never executed
+        -: 1121:      } else { // Estimate the best filter by running through all of them:
+    #####: 1122:         int best_filter = 0, best_filter_val = 0x7fffffff, est, i;
+    #####: 1123:         for (filter_type = 0; filter_type < 5; filter_type++) {
+    %%%%%: 1123-block  0
+    %%%%%: 1123-block  1
+    %%%%%: 1123-block  2
+branch  0 never executed
+branch  1 never executed
+    #####: 1124:            stbiw__encode_png_line((unsigned char*)(pixels), stride_bytes, x, y, j, n, filter_type, line_buffer);
+    %%%%%: 1124-block  0
+call    0 never executed
+        -: 1125:
+        -: 1126:            // Estimate the entropy of the line using this filter; the less, the better.
+    #####: 1127:            est = 0;
+    #####: 1128:            for (i = 0; i < x*n; ++i) {
+    %%%%%: 1128-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1129:               est += abs((signed char) line_buffer[i]);
+    %%%%%: 1129-block  0
+        -: 1130:            }
+    #####: 1131:            if (est < best_filter_val) {
+    %%%%%: 1131-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1132:               best_filter_val = est;
+    #####: 1133:               best_filter = filter_type;
+    %%%%%: 1133-block  0
+        -: 1134:            }
+        -: 1135:         }
+    #####: 1136:         if (filter_type != best_filter) {  // If the last iteration already got us the best filter, don't redo it
+    %%%%%: 1136-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1137:            stbiw__encode_png_line((unsigned char*)(pixels), stride_bytes, x, y, j, n, best_filter, line_buffer);
+    %%%%%: 1137-block  0
+call    0 never executed
+    #####: 1138:            filter_type = best_filter;
+        -: 1139:         }
+        -: 1140:      }
+        -: 1141:      // when we get here, filter_type contains the filter type, and line_buffer contains the data
+    #####: 1142:      filt[j*(x*n+1)] = (unsigned char) filter_type;
+    #####: 1143:      STBIW_MEMMOVE(filt+j*(x*n+1)+1, line_buffer, x*n);
+    %%%%%: 1143-block  0
+        -: 1144:   }
+    #####: 1145:   STBIW_FREE(line_buffer);
+    #####: 1146:   zlib = stbi_zlib_compress(filt, y*( x*n+1), &zlen, stbi_write_png_compression_level);
+    %%%%%: 1146-block  0
+call    0 never executed
+    #####: 1147:   STBIW_FREE(filt);
+    #####: 1148:   if (!zlib) return 0;
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1148-block  0
+        -: 1149:
+        -: 1150:   // each tag requires 12 bytes of overhead
+    #####: 1151:   out = (unsigned char *) STBIW_MALLOC(8 + 12+13 + 12+zlen + 12);
+    #####: 1152:   if (!out) return 0;
+    %%%%%: 1152-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1152-block  1
+    #####: 1153:   *out_len = 8 + 12+13 + 12+zlen + 12;
+        -: 1154:
+    #####: 1155:   o=out;
+    #####: 1156:   STBIW_MEMMOVE(o,sig,8); o+= 8;
+    #####: 1157:   stbiw__wp32(o, 13); // header length
+    #####: 1158:   stbiw__wptag(o, "IHDR");
+    #####: 1159:   stbiw__wp32(o, x);
+    #####: 1160:   stbiw__wp32(o, y);
+    #####: 1161:   *o++ = 8;
+    #####: 1162:   *o++ = STBIW_UCHAR(ctype[n]);
+    #####: 1163:   *o++ = 0;
+    #####: 1164:   *o++ = 0;
+    #####: 1165:   *o++ = 0;
+    #####: 1166:   stbiw__wpcrc(&o,13);
+    %%%%%: 1166-block  0
+call    0 never executed
+        -: 1167:
+    #####: 1168:   stbiw__wp32(o, zlen);
+    #####: 1169:   stbiw__wptag(o, "IDAT");
+    #####: 1170:   STBIW_MEMMOVE(o, zlib, zlen);
+    #####: 1171:   o += zlen;
+    #####: 1172:   STBIW_FREE(zlib);
+    #####: 1173:   stbiw__wpcrc(&o, zlen);
+call    0 never executed
+        -: 1174:
+    #####: 1175:   stbiw__wp32(o,0);
+    #####: 1176:   stbiw__wptag(o, "IEND");
+    #####: 1177:   stbiw__wpcrc(&o,0);
+call    0 never executed
+        -: 1178:
+    #####: 1179:   STBIW_ASSERT(o == out + *out_len);
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1179-block  0
+call    2 never executed
+    %%%%%: 1179-block  1
+        -: 1180:
+    #####: 1181:   return out;
+    %%%%%: 1181-block  0
+        -: 1182:}
+        -: 1183:
+        -: 1184:#ifndef STBI_WRITE_NO_STDIO
+function stbi_write_png called 0 returned 0% blocks executed 0%
+    #####: 1185:STBIWDEF int stbi_write_png(char const *filename, int x, int y, int comp, const void *data, int stride_bytes)
+        -: 1186:{
+        -: 1187:   FILE *f;
+        -: 1188:   int len;
+    #####: 1189:   unsigned char *png = stbi_write_png_to_mem((const unsigned char *) data, stride_bytes, x, y, comp, &len);
+    %%%%%: 1189-block  0
+call    0 never executed
+    #####: 1190:   if (png == NULL) return 0;
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1190-block  0
+        -: 1191:
+    #####: 1192:   f = stbiw__fopen(filename, "wb");
+    %%%%%: 1192-block  0
+call    0 never executed
+    #####: 1193:   if (!f) { STBIW_FREE(png); return 0; }
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1193-block  0
+    #####: 1194:   fwrite(png, 1, len, f);
+    %%%%%: 1194-block  0
+call    0 never executed
+    #####: 1195:   fclose(f);
+call    0 never executed
+    #####: 1196:   STBIW_FREE(png);
+    #####: 1197:   return 1;
+        -: 1198:}
+        -: 1199:#endif
+        -: 1200:
+function stbi_write_png_to_func called 0 returned 0% blocks executed 0%
+    #####: 1201:STBIWDEF int stbi_write_png_to_func(stbi_write_func *func, void *context, int x, int y, int comp, const void *data, int stride_bytes)
+        -: 1202:{
+        -: 1203:   int len;
+    #####: 1204:   unsigned char *png = stbi_write_png_to_mem((const unsigned char *) data, stride_bytes, x, y, comp, &len);
+    %%%%%: 1204-block  0
+call    0 never executed
+    #####: 1205:   if (png == NULL) return 0;
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1205-block  0
+    #####: 1206:   func(context, png, len);
+    %%%%%: 1206-block  0
+call    0 never executed
+    #####: 1207:   STBIW_FREE(png);
+    #####: 1208:   return 1;
+        -: 1209:}
+        -: 1210:
+        -: 1211:
+        -: 1212:/* ***************************************************************************
+        -: 1213: *
+        -: 1214: * JPEG writer
+        -: 1215: *
+        -: 1216: * This is based on Jon Olick's jo_jpeg.cpp:
+        -: 1217: * public domain Simple, Minimalistic JPEG writer - http://www.jonolick.com/code.html
+        -: 1218: */
+        -: 1219:
+        -: 1220:static const unsigned char stbiw__jpg_ZigZag[] = { 0,1,5,6,14,15,27,28,2,4,7,13,16,26,29,42,3,8,12,17,25,30,41,43,9,11,18,
+        -: 1221:      24,31,40,44,53,10,19,23,32,39,45,52,54,20,22,33,38,46,51,55,60,21,34,37,47,50,56,59,61,35,36,48,49,57,58,62,63 };
+        -: 1222:
+function stbiw__jpg_writeBits called 0 returned 0% blocks executed 0%
+    #####: 1223:static void stbiw__jpg_writeBits(stbi__write_context *s, int *bitBufP, int *bitCntP, const unsigned short *bs) {
+    #####: 1224:   int bitBuf = *bitBufP, bitCnt = *bitCntP;
+    #####: 1225:   bitCnt += bs[1];
+    #####: 1226:   bitBuf |= bs[0] << (24 - bitCnt);
+    #####: 1227:   while(bitCnt >= 8) {
+    %%%%%: 1227-block  0
+    %%%%%: 1227-block  1
+branch  0 never executed
+branch  1 never executed
+    #####: 1228:      unsigned char c = (bitBuf >> 16) & 255;
+    #####: 1229:      stbiw__putc(s, c);
+    %%%%%: 1229-block  0
+call    0 never executed
+    #####: 1230:      if(c == 255) {
+branch  0 never executed
+branch  1 never executed
+    #####: 1231:         stbiw__putc(s, 0);
+    %%%%%: 1231-block  0
+call    0 never executed
+        -: 1232:      }
+    #####: 1233:      bitBuf <<= 8;
+    #####: 1234:      bitCnt -= 8;
+    %%%%%: 1234-block  0
+        -: 1235:   }
+    #####: 1236:   *bitBufP = bitBuf;
+    #####: 1237:   *bitCntP = bitCnt;
+    #####: 1238:}
+        -: 1239:
+function stbiw__jpg_DCT called 0 returned 0% blocks executed 0%
+    #####: 1240:static void stbiw__jpg_DCT(float *d0p, float *d1p, float *d2p, float *d3p, float *d4p, float *d5p, float *d6p, float *d7p) {
+    #####: 1241:   float d0 = *d0p, d1 = *d1p, d2 = *d2p, d3 = *d3p, d4 = *d4p, d5 = *d5p, d6 = *d6p, d7 = *d7p;
+        -: 1242:   float z1, z2, z3, z4, z5, z11, z13;
+        -: 1243:
+    #####: 1244:   float tmp0 = d0 + d7;
+    #####: 1245:   float tmp7 = d0 - d7;
+    #####: 1246:   float tmp1 = d1 + d6;
+    #####: 1247:   float tmp6 = d1 - d6;
+    #####: 1248:   float tmp2 = d2 + d5;
+    #####: 1249:   float tmp5 = d2 - d5;
+    #####: 1250:   float tmp3 = d3 + d4;
+    #####: 1251:   float tmp4 = d3 - d4;
+        -: 1252:
+        -: 1253:   // Even part
+    #####: 1254:   float tmp10 = tmp0 + tmp3;   // phase 2
+    #####: 1255:   float tmp13 = tmp0 - tmp3;
+    #####: 1256:   float tmp11 = tmp1 + tmp2;
+    #####: 1257:   float tmp12 = tmp1 - tmp2;
+        -: 1258:
+    #####: 1259:   d0 = tmp10 + tmp11;       // phase 3
+    #####: 1260:   d4 = tmp10 - tmp11;
+        -: 1261:
+    #####: 1262:   z1 = (tmp12 + tmp13) * 0.707106781f; // c4
+    #####: 1263:   d2 = tmp13 + z1;       // phase 5
+    #####: 1264:   d6 = tmp13 - z1;
+        -: 1265:
+        -: 1266:   // Odd part
+    #####: 1267:   tmp10 = tmp4 + tmp5;       // phase 2
+    #####: 1268:   tmp11 = tmp5 + tmp6;
+    #####: 1269:   tmp12 = tmp6 + tmp7;
+        -: 1270:
+        -: 1271:   // The rotator is modified from fig 4-8 to avoid extra negations.
+    #####: 1272:   z5 = (tmp10 - tmp12) * 0.382683433f; // c6
+    #####: 1273:   z2 = tmp10 * 0.541196100f + z5; // c2-c6
+    #####: 1274:   z4 = tmp12 * 1.306562965f + z5; // c2+c6
+    #####: 1275:   z3 = tmp11 * 0.707106781f; // c4
+        -: 1276:
+    #####: 1277:   z11 = tmp7 + z3;      // phase 5
+    #####: 1278:   z13 = tmp7 - z3;
+        -: 1279:
+    #####: 1280:   *d5p = z13 + z2;         // phase 6
+    #####: 1281:   *d3p = z13 - z2;
+    #####: 1282:   *d1p = z11 + z4;
+    #####: 1283:   *d7p = z11 - z4;
+        -: 1284:
+    #####: 1285:   *d0p = d0;  *d2p = d2;  *d4p = d4;  *d6p = d6;
+    #####: 1286:}
+        -: 1287:
+function stbiw__jpg_calcBits called 0 returned 0% blocks executed 0%
+    #####: 1288:static void stbiw__jpg_calcBits(int val, unsigned short bits[2]) {
+    #####: 1289:   int tmp1 = val < 0 ? -val : val;
+    #####: 1290:   val = val < 0 ? val-1 : val;
+    %%%%%: 1290-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1290-block  1
+    %%%%%: 1290-block  2
+    #####: 1291:   bits[1] = 1;
+    #####: 1292:   while(tmp1 >>= 1) {
+    %%%%%: 1292-block  0
+    %%%%%: 1292-block  1
+branch  0 never executed
+branch  1 never executed
+    #####: 1293:      ++bits[1];
+    %%%%%: 1293-block  0
+        -: 1294:   }
+    #####: 1295:   bits[0] = val & ((1<<bits[1])-1);
+    #####: 1296:}
+        -: 1297:
+function stbiw__jpg_processDU called 0 returned 0% blocks executed 0%
+    #####: 1298:static int stbiw__jpg_processDU(stbi__write_context *s, int *bitBuf, int *bitCnt, float *CDU, int du_stride, float *fdtbl, int DC, const unsigned short HTDC[256][2], const unsigned short HTAC[256][2]) {
+    #####: 1299:   const unsigned short EOB[2] = { HTAC[0x00][0], HTAC[0x00][1] };
+    #####: 1300:   const unsigned short M16zeroes[2] = { HTAC[0xF0][0], HTAC[0xF0][1] };
+        -: 1301:   int dataOff, i, j, n, diff, end0pos, x, y;
+        -: 1302:   int DU[64];
+        -: 1303:
+        -: 1304:   // DCT rows
+    #####: 1305:   for(dataOff=0, n=du_stride*8; dataOff<n; dataOff+=du_stride) {
+    %%%%%: 1305-block  0
+    %%%%%: 1305-block  1
+branch  0 never executed
+branch  1 never executed
+    #####: 1306:      stbiw__jpg_DCT(&CDU[dataOff], &CDU[dataOff+1], &CDU[dataOff+2], &CDU[dataOff+3], &CDU[dataOff+4], &CDU[dataOff+5], &CDU[dataOff+6], &CDU[dataOff+7]);
+    %%%%%: 1306-block  0
+call    0 never executed
+        -: 1307:   }
+        -: 1308:   // DCT columns
+    #####: 1309:   for(dataOff=0; dataOff<8; ++dataOff) {
+    %%%%%: 1309-block  0
+    %%%%%: 1309-block  1
+branch  0 never executed
+branch  1 never executed
+    #####: 1310:      stbiw__jpg_DCT(&CDU[dataOff], &CDU[dataOff+du_stride], &CDU[dataOff+du_stride*2], &CDU[dataOff+du_stride*3], &CDU[dataOff+du_stride*4],
+    #####: 1311:                     &CDU[dataOff+du_stride*5], &CDU[dataOff+du_stride*6], &CDU[dataOff+du_stride*7]);
+    %%%%%: 1311-block  0
+call    0 never executed
+        -: 1312:   }
+        -: 1313:   // Quantize/descale/zigzag the coefficients
+    #####: 1314:   for(y = 0, j=0; y < 8; ++y) {
+    %%%%%: 1314-block  0
+    %%%%%: 1314-block  1
+    %%%%%: 1314-block  2
+branch  0 never executed
+branch  1 never executed
+    #####: 1315:      for(x = 0; x < 8; ++x,++j) {
+    %%%%%: 1315-block  0
+    %%%%%: 1315-block  1
+branch  0 never executed
+branch  1 never executed
+        -: 1316:         float v;
+    #####: 1317:         i = y*du_stride+x;
+    #####: 1318:         v = CDU[i]*fdtbl[j];
+        -: 1319:         // DU[stbiw__jpg_ZigZag[j]] = (int)(v < 0 ? ceilf(v - 0.5f) : floorf(v + 0.5f));
+        -: 1320:         // ceilf() and floorf() are C99, not C89, but I /think/ they're not needed here anyway?
+    #####: 1321:         DU[stbiw__jpg_ZigZag[j]] = (int)(v < 0 ? v - 0.5f : v + 0.5f);
+    %%%%%: 1321-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1321-block  1
+    %%%%%: 1321-block  2
+    %%%%%: 1321-block  3
+        -: 1322:      }
+        -: 1323:   }
+        -: 1324:
+        -: 1325:   // Encode DC
+    #####: 1326:   diff = DU[0] - DC;
+    #####: 1327:   if (diff == 0) {
+    %%%%%: 1327-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1328:      stbiw__jpg_writeBits(s, bitBuf, bitCnt, HTDC[0]);
+    %%%%%: 1328-block  0
+call    0 never executed
+        -: 1329:   } else {
+        -: 1330:      unsigned short bits[2];
+    #####: 1331:      stbiw__jpg_calcBits(diff, bits);
+    %%%%%: 1331-block  0
+call    0 never executed
+    #####: 1332:      stbiw__jpg_writeBits(s, bitBuf, bitCnt, HTDC[bits[1]]);
+call    0 never executed
+    #####: 1333:      stbiw__jpg_writeBits(s, bitBuf, bitCnt, bits);
+call    0 never executed
+        -: 1334:   }
+        -: 1335:   // Encode ACs
+    #####: 1336:   end0pos = 63;
+    #####: 1337:   for(; (end0pos>0)&&(DU[end0pos]==0); --end0pos) {
+    %%%%%: 1337-block  0
+    %%%%%: 1337-block  1
+    %%%%%: 1337-block  2
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1337-block  3
+branch  2 never executed
+branch  3 never executed
+        -: 1338:   }
+        -: 1339:   // end0pos = first element in reverse order !=0
+    #####: 1340:   if(end0pos == 0) {
+    %%%%%: 1340-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1341:      stbiw__jpg_writeBits(s, bitBuf, bitCnt, EOB);
+    %%%%%: 1341-block  0
+call    0 never executed
+    #####: 1342:      return DU[0];
+        -: 1343:   }
+    #####: 1344:   for(i = 1; i <= end0pos; ++i) {
+    %%%%%: 1344-block  0
+    %%%%%: 1344-block  1
+branch  0 never executed
+branch  1 never executed
+    #####: 1345:      int startpos = i;
+        -: 1346:      int nrzeroes;
+        -: 1347:      unsigned short bits[2];
+    #####: 1348:      for (; DU[i]==0 && i<=end0pos; ++i) {
+    %%%%%: 1348-block  0
+    %%%%%: 1348-block  1
+    %%%%%: 1348-block  2
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1348-block  3
+branch  2 never executed
+branch  3 never executed
+        -: 1349:      }
+    #####: 1350:      nrzeroes = i-startpos;
+    #####: 1351:      if ( nrzeroes >= 16 ) {
+    %%%%%: 1351-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1352:         int lng = nrzeroes>>4;
+        -: 1353:         int nrmarker;
+    #####: 1354:         for (nrmarker=1; nrmarker <= lng; ++nrmarker)
+    %%%%%: 1354-block  0
+    %%%%%: 1354-block  1
+branch  0 never executed
+branch  1 never executed
+    #####: 1355:            stbiw__jpg_writeBits(s, bitBuf, bitCnt, M16zeroes);
+    %%%%%: 1355-block  0
+call    0 never executed
+    #####: 1356:         nrzeroes &= 15;
+    %%%%%: 1356-block  0
+        -: 1357:      }
+    #####: 1358:      stbiw__jpg_calcBits(DU[i], bits);
+    %%%%%: 1358-block  0
+call    0 never executed
+    #####: 1359:      stbiw__jpg_writeBits(s, bitBuf, bitCnt, HTAC[(nrzeroes<<4)+bits[1]]);
+call    0 never executed
+    #####: 1360:      stbiw__jpg_writeBits(s, bitBuf, bitCnt, bits);
+call    0 never executed
+        -: 1361:   }
+    #####: 1362:   if(end0pos != 63) {
+    %%%%%: 1362-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1363:      stbiw__jpg_writeBits(s, bitBuf, bitCnt, EOB);
+    %%%%%: 1363-block  0
+call    0 never executed
+        -: 1364:   }
+    #####: 1365:   return DU[0];
+    %%%%%: 1365-block  0
+        -: 1366:}
+        -: 1367:
+function stbi_write_jpg_core called 0 returned 0% blocks executed 0%
+    #####: 1368:static int stbi_write_jpg_core(stbi__write_context *s, int width, int height, int comp, const void* data, int quality) {
+        -: 1369:   // Constants that don't pollute global namespace
+        -: 1370:   static const unsigned char std_dc_luminance_nrcodes[] = {0,0,1,5,1,1,1,1,1,1,0,0,0,0,0,0,0};
+        -: 1371:   static const unsigned char std_dc_luminance_values[] = {0,1,2,3,4,5,6,7,8,9,10,11};
+        -: 1372:   static const unsigned char std_ac_luminance_nrcodes[] = {0,0,2,1,3,3,2,4,3,5,5,4,4,0,0,1,0x7d};
+        -: 1373:   static const unsigned char std_ac_luminance_values[] = {
+        -: 1374:      0x01,0x02,0x03,0x00,0x04,0x11,0x05,0x12,0x21,0x31,0x41,0x06,0x13,0x51,0x61,0x07,0x22,0x71,0x14,0x32,0x81,0x91,0xa1,0x08,
+        -: 1375:      0x23,0x42,0xb1,0xc1,0x15,0x52,0xd1,0xf0,0x24,0x33,0x62,0x72,0x82,0x09,0x0a,0x16,0x17,0x18,0x19,0x1a,0x25,0x26,0x27,0x28,
+        -: 1376:      0x29,0x2a,0x34,0x35,0x36,0x37,0x38,0x39,0x3a,0x43,0x44,0x45,0x46,0x47,0x48,0x49,0x4a,0x53,0x54,0x55,0x56,0x57,0x58,0x59,
+        -: 1377:      0x5a,0x63,0x64,0x65,0x66,0x67,0x68,0x69,0x6a,0x73,0x74,0x75,0x76,0x77,0x78,0x79,0x7a,0x83,0x84,0x85,0x86,0x87,0x88,0x89,
+        -: 1378:      0x8a,0x92,0x93,0x94,0x95,0x96,0x97,0x98,0x99,0x9a,0xa2,0xa3,0xa4,0xa5,0xa6,0xa7,0xa8,0xa9,0xaa,0xb2,0xb3,0xb4,0xb5,0xb6,
+        -: 1379:      0xb7,0xb8,0xb9,0xba,0xc2,0xc3,0xc4,0xc5,0xc6,0xc7,0xc8,0xc9,0xca,0xd2,0xd3,0xd4,0xd5,0xd6,0xd7,0xd8,0xd9,0xda,0xe1,0xe2,
+        -: 1380:      0xe3,0xe4,0xe5,0xe6,0xe7,0xe8,0xe9,0xea,0xf1,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,0xf8,0xf9,0xfa
+        -: 1381:   };
+        -: 1382:   static const unsigned char std_dc_chrominance_nrcodes[] = {0,0,3,1,1,1,1,1,1,1,1,1,0,0,0,0,0};
+        -: 1383:   static const unsigned char std_dc_chrominance_values[] = {0,1,2,3,4,5,6,7,8,9,10,11};
+        -: 1384:   static const unsigned char std_ac_chrominance_nrcodes[] = {0,0,2,1,2,4,4,3,4,7,5,4,4,0,1,2,0x77};
+        -: 1385:   static const unsigned char std_ac_chrominance_values[] = {
+        -: 1386:      0x00,0x01,0x02,0x03,0x11,0x04,0x05,0x21,0x31,0x06,0x12,0x41,0x51,0x07,0x61,0x71,0x13,0x22,0x32,0x81,0x08,0x14,0x42,0x91,
+        -: 1387:      0xa1,0xb1,0xc1,0x09,0x23,0x33,0x52,0xf0,0x15,0x62,0x72,0xd1,0x0a,0x16,0x24,0x34,0xe1,0x25,0xf1,0x17,0x18,0x19,0x1a,0x26,
+        -: 1388:      0x27,0x28,0x29,0x2a,0x35,0x36,0x37,0x38,0x39,0x3a,0x43,0x44,0x45,0x46,0x47,0x48,0x49,0x4a,0x53,0x54,0x55,0x56,0x57,0x58,
+        -: 1389:      0x59,0x5a,0x63,0x64,0x65,0x66,0x67,0x68,0x69,0x6a,0x73,0x74,0x75,0x76,0x77,0x78,0x79,0x7a,0x82,0x83,0x84,0x85,0x86,0x87,
+        -: 1390:      0x88,0x89,0x8a,0x92,0x93,0x94,0x95,0x96,0x97,0x98,0x99,0x9a,0xa2,0xa3,0xa4,0xa5,0xa6,0xa7,0xa8,0xa9,0xaa,0xb2,0xb3,0xb4,
+        -: 1391:      0xb5,0xb6,0xb7,0xb8,0xb9,0xba,0xc2,0xc3,0xc4,0xc5,0xc6,0xc7,0xc8,0xc9,0xca,0xd2,0xd3,0xd4,0xd5,0xd6,0xd7,0xd8,0xd9,0xda,
+        -: 1392:      0xe2,0xe3,0xe4,0xe5,0xe6,0xe7,0xe8,0xe9,0xea,0xf2,0xf3,0xf4,0xf5,0xf6,0xf7,0xf8,0xf9,0xfa
+        -: 1393:   };
+        -: 1394:   // Huffman tables
+        -: 1395:   static const unsigned short YDC_HT[256][2] = { {0,2},{2,3},{3,3},{4,3},{5,3},{6,3},{14,4},{30,5},{62,6},{126,7},{254,8},{510,9}};
+        -: 1396:   static const unsigned short UVDC_HT[256][2] = { {0,2},{1,2},{2,2},{6,3},{14,4},{30,5},{62,6},{126,7},{254,8},{510,9},{1022,10},{2046,11}};
+        -: 1397:   static const unsigned short YAC_HT[256][2] = {
+        -: 1398:      {10,4},{0,2},{1,2},{4,3},{11,4},{26,5},{120,7},{248,8},{1014,10},{65410,16},{65411,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1399:      {12,4},{27,5},{121,7},{502,9},{2038,11},{65412,16},{65413,16},{65414,16},{65415,16},{65416,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1400:      {28,5},{249,8},{1015,10},{4084,12},{65417,16},{65418,16},{65419,16},{65420,16},{65421,16},{65422,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1401:      {58,6},{503,9},{4085,12},{65423,16},{65424,16},{65425,16},{65426,16},{65427,16},{65428,16},{65429,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1402:      {59,6},{1016,10},{65430,16},{65431,16},{65432,16},{65433,16},{65434,16},{65435,16},{65436,16},{65437,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1403:      {122,7},{2039,11},{65438,16},{65439,16},{65440,16},{65441,16},{65442,16},{65443,16},{65444,16},{65445,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1404:      {123,7},{4086,12},{65446,16},{65447,16},{65448,16},{65449,16},{65450,16},{65451,16},{65452,16},{65453,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1405:      {250,8},{4087,12},{65454,16},{65455,16},{65456,16},{65457,16},{65458,16},{65459,16},{65460,16},{65461,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1406:      {504,9},{32704,15},{65462,16},{65463,16},{65464,16},{65465,16},{65466,16},{65467,16},{65468,16},{65469,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1407:      {505,9},{65470,16},{65471,16},{65472,16},{65473,16},{65474,16},{65475,16},{65476,16},{65477,16},{65478,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1408:      {506,9},{65479,16},{65480,16},{65481,16},{65482,16},{65483,16},{65484,16},{65485,16},{65486,16},{65487,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1409:      {1017,10},{65488,16},{65489,16},{65490,16},{65491,16},{65492,16},{65493,16},{65494,16},{65495,16},{65496,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1410:      {1018,10},{65497,16},{65498,16},{65499,16},{65500,16},{65501,16},{65502,16},{65503,16},{65504,16},{65505,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1411:      {2040,11},{65506,16},{65507,16},{65508,16},{65509,16},{65510,16},{65511,16},{65512,16},{65513,16},{65514,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1412:      {65515,16},{65516,16},{65517,16},{65518,16},{65519,16},{65520,16},{65521,16},{65522,16},{65523,16},{65524,16},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1413:      {2041,11},{65525,16},{65526,16},{65527,16},{65528,16},{65529,16},{65530,16},{65531,16},{65532,16},{65533,16},{65534,16},{0,0},{0,0},{0,0},{0,0},{0,0}
+        -: 1414:   };
+        -: 1415:   static const unsigned short UVAC_HT[256][2] = {
+        -: 1416:      {0,2},{1,2},{4,3},{10,4},{24,5},{25,5},{56,6},{120,7},{500,9},{1014,10},{4084,12},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1417:      {11,4},{57,6},{246,8},{501,9},{2038,11},{4085,12},{65416,16},{65417,16},{65418,16},{65419,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1418:      {26,5},{247,8},{1015,10},{4086,12},{32706,15},{65420,16},{65421,16},{65422,16},{65423,16},{65424,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1419:      {27,5},{248,8},{1016,10},{4087,12},{65425,16},{65426,16},{65427,16},{65428,16},{65429,16},{65430,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1420:      {58,6},{502,9},{65431,16},{65432,16},{65433,16},{65434,16},{65435,16},{65436,16},{65437,16},{65438,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1421:      {59,6},{1017,10},{65439,16},{65440,16},{65441,16},{65442,16},{65443,16},{65444,16},{65445,16},{65446,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1422:      {121,7},{2039,11},{65447,16},{65448,16},{65449,16},{65450,16},{65451,16},{65452,16},{65453,16},{65454,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1423:      {122,7},{2040,11},{65455,16},{65456,16},{65457,16},{65458,16},{65459,16},{65460,16},{65461,16},{65462,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1424:      {249,8},{65463,16},{65464,16},{65465,16},{65466,16},{65467,16},{65468,16},{65469,16},{65470,16},{65471,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1425:      {503,9},{65472,16},{65473,16},{65474,16},{65475,16},{65476,16},{65477,16},{65478,16},{65479,16},{65480,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1426:      {504,9},{65481,16},{65482,16},{65483,16},{65484,16},{65485,16},{65486,16},{65487,16},{65488,16},{65489,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1427:      {505,9},{65490,16},{65491,16},{65492,16},{65493,16},{65494,16},{65495,16},{65496,16},{65497,16},{65498,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1428:      {506,9},{65499,16},{65500,16},{65501,16},{65502,16},{65503,16},{65504,16},{65505,16},{65506,16},{65507,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1429:      {2041,11},{65508,16},{65509,16},{65510,16},{65511,16},{65512,16},{65513,16},{65514,16},{65515,16},{65516,16},{0,0},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1430:      {16352,14},{65517,16},{65518,16},{65519,16},{65520,16},{65521,16},{65522,16},{65523,16},{65524,16},{65525,16},{0,0},{0,0},{0,0},{0,0},{0,0},
+        -: 1431:      {1018,10},{32707,15},{65526,16},{65527,16},{65528,16},{65529,16},{65530,16},{65531,16},{65532,16},{65533,16},{65534,16},{0,0},{0,0},{0,0},{0,0},{0,0}
+        -: 1432:   };
+        -: 1433:   static const int YQT[] = {16,11,10,16,24,40,51,61,12,12,14,19,26,58,60,55,14,13,16,24,40,57,69,56,14,17,22,29,51,87,80,62,18,22,
+        -: 1434:                             37,56,68,109,103,77,24,35,55,64,81,104,113,92,49,64,78,87,103,121,120,101,72,92,95,98,112,100,103,99};
+        -: 1435:   static const int UVQT[] = {17,18,24,47,99,99,99,99,18,21,26,66,99,99,99,99,24,26,56,99,99,99,99,99,47,66,99,99,99,99,99,99,
+        -: 1436:                              99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99,99};
+        -: 1437:   static const float aasf[] = { 1.0f * 2.828427125f, 1.387039845f * 2.828427125f, 1.306562965f * 2.828427125f, 1.175875602f * 2.828427125f,
+        -: 1438:                                 1.0f * 2.828427125f, 0.785694958f * 2.828427125f, 0.541196100f * 2.828427125f, 0.275899379f * 2.828427125f };
+        -: 1439:
+        -: 1440:   int row, col, i, k, subsample;
+        -: 1441:   float fdtbl_Y[64], fdtbl_UV[64];
+        -: 1442:   unsigned char YTable[64], UVTable[64];
+        -: 1443:
+    #####: 1444:   if(!data || !width || !height || comp > 4 || comp < 1) {
+    %%%%%: 1444-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1444-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%: 1444-block  2
+branch  4 never executed
+branch  5 never executed
+    %%%%%: 1444-block  3
+branch  6 never executed
+branch  7 never executed
+    %%%%%: 1444-block  4
+branch  8 never executed
+branch  9 never executed
+    #####: 1445:      return 0;
+    %%%%%: 1445-block  0
+        -: 1446:   }
+        -: 1447:
+    #####: 1448:   quality = quality ? quality : 90;
+    %%%%%: 1448-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1448-block  1
+    %%%%%: 1448-block  2
+    #####: 1449:   subsample = quality <= 90 ? 1 : 0;
+    #####: 1450:   quality = quality < 1 ? 1 : quality > 100 ? 100 : quality;
+    %%%%%: 1450-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1450-block  1
+    %%%%%: 1450-block  2
+    #####: 1451:   quality = quality < 50 ? 5000 / quality : 200 - quality * 2;
+    %%%%%: 1451-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1451-block  1
+    %%%%%: 1451-block  2
+        -: 1452:
+    #####: 1453:   for(i = 0; i < 64; ++i) {
+    %%%%%: 1453-block  0
+    %%%%%: 1453-block  1
+branch  0 never executed
+branch  1 never executed
+    #####: 1454:      int uvti, yti = (YQT[i]*quality+50)/100;
+    #####: 1455:      YTable[stbiw__jpg_ZigZag[i]] = (unsigned char) (yti < 1 ? 1 : yti > 255 ? 255 : yti);
+    %%%%%: 1455-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1455-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%: 1455-block  2
+    %%%%%: 1455-block  3
+    %%%%%: 1455-block  4
+    %%%%%: 1455-block  5
+    #####: 1456:      uvti = (UVQT[i]*quality+50)/100;
+    #####: 1457:      UVTable[stbiw__jpg_ZigZag[i]] = (unsigned char) (uvti < 1 ? 1 : uvti > 255 ? 255 : uvti);
+    %%%%%: 1457-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1457-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%: 1457-block  2
+    %%%%%: 1457-block  3
+    %%%%%: 1457-block  4
+    %%%%%: 1457-block  5
+    %%%%%: 1457-block  6
+        -: 1458:   }
+        -: 1459:
+    #####: 1460:   for(row = 0, k = 0; row < 8; ++row) {
+    %%%%%: 1460-block  0
+    %%%%%: 1460-block  1
+    %%%%%: 1460-block  2
+branch  0 never executed
+branch  1 never executed
+    #####: 1461:      for(col = 0; col < 8; ++col, ++k) {
+    %%%%%: 1461-block  0
+    %%%%%: 1461-block  1
+branch  0 never executed
+branch  1 never executed
+    #####: 1462:         fdtbl_Y[k]  = 1 / (YTable [stbiw__jpg_ZigZag[k]] * aasf[row] * aasf[col]);
+    #####: 1463:         fdtbl_UV[k] = 1 / (UVTable[stbiw__jpg_ZigZag[k]] * aasf[row] * aasf[col]);
+    %%%%%: 1463-block  0
+        -: 1464:      }
+        -: 1465:   }
+        -: 1466:
+        -: 1467:   // Write Headers
+        -: 1468:   {
+        -: 1469:      static const unsigned char head0[] = { 0xFF,0xD8,0xFF,0xE0,0,0x10,'J','F','I','F',0,1,1,0,0,1,0,1,0,0,0xFF,0xDB,0,0x84,0 };
+        -: 1470:      static const unsigned char head2[] = { 0xFF,0xDA,0,0xC,3,1,0,2,0x11,3,0x11,0,0x3F,0 };
+    #####: 1471:      const unsigned char head1[] = { 0xFF,0xC0,0,0x11,8,(unsigned char)(height>>8),STBIW_UCHAR(height),(unsigned char)(width>>8),STBIW_UCHAR(width),
+    #####: 1472:                                      3,1,(unsigned char)(subsample?0x22:0x11),0,2,0x11,1,3,0x11,1,0xFF,0xC4,0x01,0xA2,0 };
+    %%%%%: 1472-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1472-block  1
+    %%%%%: 1472-block  2
+    #####: 1473:      s->func(s->context, (void*)head0, sizeof(head0));
+    %%%%%: 1473-block  0
+call    0 never executed
+    #####: 1474:      s->func(s->context, (void*)YTable, sizeof(YTable));
+call    0 never executed
+    #####: 1475:      stbiw__putc(s, 1);
+call    0 never executed
+    #####: 1476:      s->func(s->context, UVTable, sizeof(UVTable));
+call    0 never executed
+    #####: 1477:      s->func(s->context, (void*)head1, sizeof(head1));
+call    0 never executed
+    #####: 1478:      s->func(s->context, (void*)(std_dc_luminance_nrcodes+1), sizeof(std_dc_luminance_nrcodes)-1);
+call    0 never executed
+    #####: 1479:      s->func(s->context, (void*)std_dc_luminance_values, sizeof(std_dc_luminance_values));
+call    0 never executed
+    #####: 1480:      stbiw__putc(s, 0x10); // HTYACinfo
+call    0 never executed
+    #####: 1481:      s->func(s->context, (void*)(std_ac_luminance_nrcodes+1), sizeof(std_ac_luminance_nrcodes)-1);
+call    0 never executed
+    #####: 1482:      s->func(s->context, (void*)std_ac_luminance_values, sizeof(std_ac_luminance_values));
+call    0 never executed
+    #####: 1483:      stbiw__putc(s, 1); // HTUDCinfo
+call    0 never executed
+    #####: 1484:      s->func(s->context, (void*)(std_dc_chrominance_nrcodes+1), sizeof(std_dc_chrominance_nrcodes)-1);
+call    0 never executed
+    #####: 1485:      s->func(s->context, (void*)std_dc_chrominance_values, sizeof(std_dc_chrominance_values));
+call    0 never executed
+    #####: 1486:      stbiw__putc(s, 0x11); // HTUACinfo
+call    0 never executed
+    #####: 1487:      s->func(s->context, (void*)(std_ac_chrominance_nrcodes+1), sizeof(std_ac_chrominance_nrcodes)-1);
+call    0 never executed
+    #####: 1488:      s->func(s->context, (void*)std_ac_chrominance_values, sizeof(std_ac_chrominance_values));
+call    0 never executed
+    #####: 1489:      s->func(s->context, (void*)head2, sizeof(head2));
+call    0 never executed
+        -: 1490:   }
+        -: 1491:
+        -: 1492:   // Encode 8x8 macroblocks
+        -: 1493:   {
+        -: 1494:      static const unsigned short fillBits[] = {0x7F, 7};
+    #####: 1495:      int DCY=0, DCU=0, DCV=0;
+    #####: 1496:      int bitBuf=0, bitCnt=0;
+        -: 1497:      // comp == 2 is grey+alpha (alpha is ignored)
+    #####: 1498:      int ofsG = comp > 2 ? 1 : 0, ofsB = comp > 2 ? 2 : 0;
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1498-block  0
+    %%%%%: 1498-block  1
+    #####: 1499:      const unsigned char *dataR = (const unsigned char *)data;
+    #####: 1500:      const unsigned char *dataG = dataR + ofsG;
+    #####: 1501:      const unsigned char *dataB = dataR + ofsB;
+        -: 1502:      int x, y, pos;
+    #####: 1503:      if(subsample) {
+    %%%%%: 1503-block  0
+branch  0 never executed
+branch  1 never executed
+    #####: 1504:         for(y = 0; y < height; y += 16) {
+    %%%%%: 1504-block  0
+    %%%%%: 1504-block  1
+    %%%%%: 1504-block  2
+branch  0 never executed
+branch  1 never executed
+    #####: 1505:            for(x = 0; x < width; x += 16) {
+    %%%%%: 1505-block  0
+    %%%%%: 1505-block  1
+branch  0 never executed
+branch  1 never executed
+        -: 1506:               float Y[256], U[256], V[256];
+    #####: 1507:               for(row = y, pos = 0; row < y+16; ++row) {
+    %%%%%: 1507-block  0
+    %%%%%: 1507-block  1
+    %%%%%: 1507-block  2
+branch  0 never executed
+branch  1 never executed
+        -: 1508:                  // row >= height => use last input row
+    #####: 1509:                  int clamped_row = (row < height) ? row : height - 1;
+    %%%%%: 1509-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1509-block  1
+    %%%%%: 1509-block  2
+    #####: 1510:                  int base_p = (stbi__flip_vertically_on_write ? (height-1-clamped_row) : clamped_row)*width*comp;
+    %%%%%: 1510-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1510-block  1
+    %%%%%: 1510-block  2
+    #####: 1511:                  for(col = x; col < x+16; ++col, ++pos) {
+    %%%%%: 1511-block  0
+    %%%%%: 1511-block  1
+branch  0 never executed
+branch  1 never executed
+        -: 1512:                     // if col >= width => use pixel from last input column
+    #####: 1513:                     int p = base_p + ((col < width) ? col : (width-1))*comp;
+    %%%%%: 1513-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1513-block  1
+    %%%%%: 1513-block  2
+    #####: 1514:                     float r = dataR[p], g = dataG[p], b = dataB[p];
+    #####: 1515:                     Y[pos]= +0.29900f*r + 0.58700f*g + 0.11400f*b - 128;
+    #####: 1516:                     U[pos]= -0.16874f*r - 0.33126f*g + 0.50000f*b;
+    #####: 1517:                     V[pos]= +0.50000f*r - 0.41869f*g - 0.08131f*b;
+    %%%%%: 1517-block  0
+        -: 1518:                  }
+        -: 1519:               }
+    #####: 1520:               DCY = stbiw__jpg_processDU(s, &bitBuf, &bitCnt, Y+0,   16, fdtbl_Y, DCY, YDC_HT, YAC_HT);
+    %%%%%: 1520-block  0
+call    0 never executed
+    #####: 1521:               DCY = stbiw__jpg_processDU(s, &bitBuf, &bitCnt, Y+8,   16, fdtbl_Y, DCY, YDC_HT, YAC_HT);
+call    0 never executed
+    #####: 1522:               DCY = stbiw__jpg_processDU(s, &bitBuf, &bitCnt, Y+128, 16, fdtbl_Y, DCY, YDC_HT, YAC_HT);
+call    0 never executed
+    #####: 1523:               DCY = stbiw__jpg_processDU(s, &bitBuf, &bitCnt, Y+136, 16, fdtbl_Y, DCY, YDC_HT, YAC_HT);
+call    0 never executed
+        -: 1524:
+        -: 1525:               // subsample U,V
+        -: 1526:               {
+        -: 1527:                  float subU[64], subV[64];
+        -: 1528:                  int yy, xx;
+    #####: 1529:                  for(yy = 0, pos = 0; yy < 8; ++yy) {
+    %%%%%: 1529-block  0
+    %%%%%: 1529-block  1
+branch  0 never executed
+branch  1 never executed
+    #####: 1530:                     for(xx = 0; xx < 8; ++xx, ++pos) {
+    %%%%%: 1530-block  0
+    %%%%%: 1530-block  1
+branch  0 never executed
+branch  1 never executed
+    #####: 1531:                        int j = yy*32+xx*2;
+    #####: 1532:                        subU[pos] = (U[j+0] + U[j+1] + U[j+16] + U[j+17]) * 0.25f;
+    #####: 1533:                        subV[pos] = (V[j+0] + V[j+1] + V[j+16] + V[j+17]) * 0.25f;
+    %%%%%: 1533-block  0
+        -: 1534:                     }
+        -: 1535:                  }
+    #####: 1536:                  DCU = stbiw__jpg_processDU(s, &bitBuf, &bitCnt, subU, 8, fdtbl_UV, DCU, UVDC_HT, UVAC_HT);
+    %%%%%: 1536-block  0
+call    0 never executed
+    #####: 1537:                  DCV = stbiw__jpg_processDU(s, &bitBuf, &bitCnt, subV, 8, fdtbl_UV, DCV, UVDC_HT, UVAC_HT);
+call    0 never executed
+        -: 1538:               }
+        -: 1539:            }
+        -: 1540:         }
+        -: 1541:      } else {
+    #####: 1542:         for(y = 0; y < height; y += 8) {
+    %%%%%: 1542-block  0
+    %%%%%: 1542-block  1
+    %%%%%: 1542-block  2
+branch  0 never executed
+branch  1 never executed
+    #####: 1543:            for(x = 0; x < width; x += 8) {
+    %%%%%: 1543-block  0
+    %%%%%: 1543-block  1
+branch  0 never executed
+branch  1 never executed
+        -: 1544:               float Y[64], U[64], V[64];
+    #####: 1545:               for(row = y, pos = 0; row < y+8; ++row) {
+    %%%%%: 1545-block  0
+    %%%%%: 1545-block  1
+    %%%%%: 1545-block  2
+branch  0 never executed
+branch  1 never executed
+        -: 1546:                  // row >= height => use last input row
+    #####: 1547:                  int clamped_row = (row < height) ? row : height - 1;
+    %%%%%: 1547-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1547-block  1
+    %%%%%: 1547-block  2
+    #####: 1548:                  int base_p = (stbi__flip_vertically_on_write ? (height-1-clamped_row) : clamped_row)*width*comp;
+    %%%%%: 1548-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1548-block  1
+    %%%%%: 1548-block  2
+    #####: 1549:                  for(col = x; col < x+8; ++col, ++pos) {
+    %%%%%: 1549-block  0
+    %%%%%: 1549-block  1
+branch  0 never executed
+branch  1 never executed
+        -: 1550:                     // if col >= width => use pixel from last input column
+    #####: 1551:                     int p = base_p + ((col < width) ? col : (width-1))*comp;
+    %%%%%: 1551-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%: 1551-block  1
+    %%%%%: 1551-block  2
+    #####: 1552:                     float r = dataR[p], g = dataG[p], b = dataB[p];
+    #####: 1553:                     Y[pos]= +0.29900f*r + 0.58700f*g + 0.11400f*b - 128;
+    #####: 1554:                     U[pos]= -0.16874f*r - 0.33126f*g + 0.50000f*b;
+    #####: 1555:                     V[pos]= +0.50000f*r - 0.41869f*g - 0.08131f*b;
+    %%%%%: 1555-block  0
+        -: 1556:                  }
+        -: 1557:               }
+        -: 1558:
+    #####: 1559:               DCY = stbiw__jpg_processDU(s, &bitBuf, &bitCnt, Y, 8, fdtbl_Y,  DCY, YDC_HT, YAC_HT);
+    %%%%%: 1559-block  0
+call    0 never executed
+    #####: 1560:               DCU = stbiw__jpg_processDU(s, &bitBuf, &bitCnt, U, 8, fdtbl_UV, DCU, UVDC_HT, UVAC_HT);
+call    0 never executed
+    #####: 1561:               DCV = stbiw__jpg_processDU(s, &bitBuf, &bitCnt, V, 8, fdtbl_UV, DCV, UVDC_HT, UVAC_HT);
+call    0 never executed
+        -: 1562:            }
+        -: 1563:         }
+        -: 1564:      }
+        -: 1565:
+        -: 1566:      // Do the bit alignment of the EOI marker
+    #####: 1567:      stbiw__jpg_writeBits(s, &bitBuf, &bitCnt, fillBits);
+    %%%%%: 1567-block  0
+call    0 never executed
+        -: 1568:   }
+        -: 1569:
+        -: 1570:   // EOI
+    #####: 1571:   stbiw__putc(s, 0xFF);
+call    0 never executed
+    #####: 1572:   stbiw__putc(s, 0xD9);
+call    0 never executed
+        -: 1573:
+    #####: 1574:   return 1;
+        -: 1575:}
+        -: 1576:
+function stbi_write_jpg_to_func called 0 returned 0% blocks executed 0%
+    #####: 1577:STBIWDEF int stbi_write_jpg_to_func(stbi_write_func *func, void *context, int x, int y, int comp, const void *data, int quality)
+        -: 1578:{
+    #####: 1579:   stbi__write_context s = { 0 };
+    #####: 1580:   stbi__start_write_callbacks(&s, func, context);
+    %%%%%: 1580-block  0
+call    0 never executed
+    #####: 1581:   return stbi_write_jpg_core(&s, x, y, comp, (void *) data, quality);
+call    0 never executed
+        -: 1582:}
+        -: 1583:
+        -: 1584:
+        -: 1585:#ifndef STBI_WRITE_NO_STDIO
+function stbi_write_jpg called 0 returned 0% blocks executed 0%
+    #####: 1586:STBIWDEF int stbi_write_jpg(char const *filename, int x, int y, int comp, const void *data, int quality)
+        -: 1587:{
+    #####: 1588:   stbi__write_context s = { 0 };
+    #####: 1589:   if (stbi__start_write_file(&s,filename)) {
+    %%%%%: 1589-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####: 1590:      int r = stbi_write_jpg_core(&s, x, y, comp, data, quality);
+    %%%%%: 1590-block  0
+call    0 never executed
+    #####: 1591:      stbi__end_write_file(&s);
+call    0 never executed
+    #####: 1592:      return r;
+        -: 1593:   } else
+    #####: 1594:      return 0;
+    %%%%%: 1594-block  0
+        -: 1595:}
+        -: 1596:#endif
+        -: 1597:
+        -: 1598:#endif // STB_IMAGE_WRITE_IMPLEMENTATION
+        -: 1599:
+        -: 1600:/* Revision history
+        -: 1601:      1.14  (2020-02-02) updated JPEG writer to downsample chroma channels
+        -: 1602:      1.13
+        -: 1603:      1.12
+        -: 1604:      1.11  (2019-08-11)
+        -: 1605:
+        -: 1606:      1.10  (2019-02-07)
+        -: 1607:             support utf8 filenames in Windows; fix warnings and platform ifdefs
+        -: 1608:      1.09  (2018-02-11)
+        -: 1609:             fix typo in zlib quality API, improve STB_I_W_STATIC in C++
+        -: 1610:      1.08  (2018-01-29)
+        -: 1611:             add stbi__flip_vertically_on_write, external zlib, zlib quality, choose PNG filter
+        -: 1612:      1.07  (2017-07-24)
+        -: 1613:             doc fix
+        -: 1614:      1.06 (2017-07-23)
+        -: 1615:             writing JPEG (using Jon Olick's code)
+        -: 1616:      1.05   ???
+        -: 1617:      1.04 (2017-03-03)
+        -: 1618:             monochrome BMP expansion
+        -: 1619:      1.03   ???
+        -: 1620:      1.02 (2016-04-02)
+        -: 1621:             avoid allocating large structures on the stack
+        -: 1622:      1.01 (2016-01-16)
+        -: 1623:             STBIW_REALLOC_SIZED: support allocators with no realloc support
+        -: 1624:             avoid race-condition in crc initialization
+        -: 1625:             minor compile issues
+        -: 1626:      1.00 (2015-09-14)
+        -: 1627:             installable file IO function
+        -: 1628:      0.99 (2015-09-13)
+        -: 1629:             warning fixes; TGA rle support
+        -: 1630:      0.98 (2015-04-08)
+        -: 1631:             added STBIW_MALLOC, STBIW_ASSERT etc
+        -: 1632:      0.97 (2015-01-18)
+        -: 1633:             fixed HDR asserts, rewrote HDR rle logic
+        -: 1634:      0.96 (2015-01-17)
+        -: 1635:             add HDR output
+        -: 1636:             fix monochrome BMP
+        -: 1637:      0.95 (2014-08-17)
+        -: 1638:		       add monochrome TGA output
+        -: 1639:      0.94 (2014-05-31)
+        -: 1640:             rename private functions to avoid conflicts with stb_image.h
+        -: 1641:      0.93 (2014-05-27)
+        -: 1642:             warning fixes
+        -: 1643:      0.92 (2010-08-01)
+        -: 1644:             casts to unsigned char to fix warnings
+        -: 1645:      0.91 (2010-07-17)
+        -: 1646:             first public release
+        -: 1647:      0.90   first internal release
+        -: 1648:*/
+        -: 1649:
+        -: 1650:/*
+        -: 1651:------------------------------------------------------------------------------
+        -: 1652:This software is available under 2 licenses -- choose whichever you prefer.
+        -: 1653:------------------------------------------------------------------------------
+        -: 1654:ALTERNATIVE A - MIT License
+        -: 1655:Copyright (c) 2017 Sean Barrett
+        -: 1656:Permission is hereby granted, free of charge, to any person obtaining a copy of
+        -: 1657:this software and associated documentation files (the "Software"), to deal in
+        -: 1658:the Software without restriction, including without limitation the rights to
+        -: 1659:use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+        -: 1660:of the Software, and to permit persons to whom the Software is furnished to do
+        -: 1661:so, subject to the following conditions:
+        -: 1662:The above copyright notice and this permission notice shall be included in all
+        -: 1663:copies or substantial portions of the Software.
+        -: 1664:THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        -: 1665:IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        -: 1666:FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        -: 1667:AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        -: 1668:LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        -: 1669:OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        -: 1670:SOFTWARE.
+        -: 1671:------------------------------------------------------------------------------
+        -: 1672:ALTERNATIVE B - Public Domain (www.unlicense.org)
+        -: 1673:This is free and unencumbered software released into the public domain.
+        -: 1674:Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
+        -: 1675:software, either in source code form or as a compiled binary, for any purpose,
+        -: 1676:commercial or non-commercial, and by any means.
+        -: 1677:In jurisdictions that recognize copyright laws, the author or authors of this
+        -: 1678:software dedicate any and all copyright interest in the software to the public
+        -: 1679:domain. We make this dedication for the benefit of the public at large and to
+        -: 1680:the detriment of our heirs and successors. We intend this dedication to be an
+        -: 1681:overt act of relinquishment in perpetuity of all present and future rights to
+        -: 1682:this software under copyright law.
+        -: 1683:THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        -: 1684:IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        -: 1685:FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        -: 1686:AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+        -: 1687:ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+        -: 1688:WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+        -: 1689:------------------------------------------------------------------------------
+        -: 1690:*/

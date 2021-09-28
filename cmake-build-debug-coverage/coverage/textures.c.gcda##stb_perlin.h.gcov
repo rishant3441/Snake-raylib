@@ -1,0 +1,540 @@
+        -:    0:Source:C:/Dev/CLionProjects/Snake-raylib/cmake-build-debug-coverage/_deps/raylib-src/src/external/stb_perlin.h
+        -:    0:Graph:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\CMakeFiles\raylib.dir\textures.c.gcno
+        -:    0:Data:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\CMakeFiles\raylib.dir\textures.c.gcda
+        -:    0:Runs:1
+        -:    1:// stb_perlin.h - v0.5 - perlin noise
+        -:    2:// public domain single-file C implementation by Sean Barrett
+        -:    3://
+        -:    4:// LICENSE
+        -:    5://
+        -:    6://   See end of file.
+        -:    7://
+        -:    8://
+        -:    9:// to create the implementation,
+        -:   10://     #define STB_PERLIN_IMPLEMENTATION
+        -:   11:// in *one* C/CPP file that includes this file.
+        -:   12://
+        -:   13://
+        -:   14:// Documentation:
+        -:   15://
+        -:   16:// float  stb_perlin_noise3( float x,
+        -:   17://                           float y,
+        -:   18://                           float z,
+        -:   19://                           int   x_wrap=0,
+        -:   20://                           int   y_wrap=0,
+        -:   21://                           int   z_wrap=0)
+        -:   22://
+        -:   23:// This function computes a random value at the coordinate (x,y,z).
+        -:   24:// Adjacent random values are continuous but the noise fluctuates
+        -:   25:// its randomness with period 1, i.e. takes on wholly unrelated values
+        -:   26:// at integer points. Specifically, this implements Ken Perlin's
+        -:   27:// revised noise function from 2002.
+        -:   28://
+        -:   29:// The "wrap" parameters can be used to create wraparound noise that
+        -:   30:// wraps at powers of two. The numbers MUST be powers of two. Specify
+        -:   31:// 0 to mean "don't care". (The noise always wraps every 256 due
+        -:   32:// details of the implementation, even if you ask for larger or no
+        -:   33:// wrapping.)
+        -:   34://
+        -:   35:// float  stb_perlin_noise3_seed( float x,
+        -:   36://                                float y,
+        -:   37://                                float z,
+        -:   38://                                int   x_wrap=0,
+        -:   39://                                int   y_wrap=0,
+        -:   40://                                int   z_wrap=0,
+        -:   41://                                int   seed)
+        -:   42://
+        -:   43:// As above, but 'seed' selects from multiple different variations of the
+        -:   44:// noise function. The current implementation only uses the bottom 8 bits
+        -:   45:// of 'seed', but possibly in the future more bits will be used.
+        -:   46://
+        -:   47://
+        -:   48:// Fractal Noise:
+        -:   49://
+        -:   50:// Three common fractal noise functions are included, which produce
+        -:   51:// a wide variety of nice effects depending on the parameters
+        -:   52:// provided. Note that each function will call stb_perlin_noise3
+        -:   53:// 'octaves' times, so this parameter will affect runtime.
+        -:   54://
+        -:   55:// float stb_perlin_ridge_noise3(float x, float y, float z,
+        -:   56://                               float lacunarity, float gain, float offset, int octaves)
+        -:   57://
+        -:   58:// float stb_perlin_fbm_noise3(float x, float y, float z,
+        -:   59://                             float lacunarity, float gain, int octaves)
+        -:   60://
+        -:   61:// float stb_perlin_turbulence_noise3(float x, float y, float z,
+        -:   62://                                    float lacunarity, float gain, int octaves)
+        -:   63://
+        -:   64:// Typical values to start playing with:
+        -:   65://     octaves    =   6     -- number of "octaves" of noise3() to sum
+        -:   66://     lacunarity = ~ 2.0   -- spacing between successive octaves (use exactly 2.0 for wrapping output)
+        -:   67://     gain       =   0.5   -- relative weighting applied to each successive octave
+        -:   68://     offset     =   1.0?  -- used to invert the ridges, may need to be larger, not sure
+        -:   69://
+        -:   70://
+        -:   71:// Contributors:
+        -:   72://    Jack Mott - additional noise functions
+        -:   73://    Jordan Peck - seeded noise
+        -:   74://
+        -:   75:
+        -:   76:
+        -:   77:#ifdef __cplusplus
+        -:   78:extern "C" {
+        -:   79:#endif
+        -:   80:extern float stb_perlin_noise3(float x, float y, float z, int x_wrap, int y_wrap, int z_wrap);
+        -:   81:extern float stb_perlin_noise3_seed(float x, float y, float z, int x_wrap, int y_wrap, int z_wrap, int seed);
+        -:   82:extern float stb_perlin_ridge_noise3(float x, float y, float z, float lacunarity, float gain, float offset, int octaves);
+        -:   83:extern float stb_perlin_fbm_noise3(float x, float y, float z, float lacunarity, float gain, int octaves);
+        -:   84:extern float stb_perlin_turbulence_noise3(float x, float y, float z, float lacunarity, float gain, int octaves);
+        -:   85:extern float stb_perlin_noise3_wrap_nonpow2(float x, float y, float z, int x_wrap, int y_wrap, int z_wrap, unsigned char seed);
+        -:   86:#ifdef __cplusplus
+        -:   87:}
+        -:   88:#endif
+        -:   89:
+        -:   90:#ifdef STB_PERLIN_IMPLEMENTATION
+        -:   91:
+        -:   92:#include <math.h> // fabs()
+        -:   93:
+        -:   94:// not same permutation table as Perlin's reference to avoid copyright issues;
+        -:   95:// Perlin's table can be found at http://mrl.nyu.edu/~perlin/noise/
+        -:   96:static unsigned char stb__perlin_randtab[512] =
+        -:   97:{
+        -:   98:   23, 125, 161, 52, 103, 117, 70, 37, 247, 101, 203, 169, 124, 126, 44, 123,
+        -:   99:   152, 238, 145, 45, 171, 114, 253, 10, 192, 136, 4, 157, 249, 30, 35, 72,
+        -:  100:   175, 63, 77, 90, 181, 16, 96, 111, 133, 104, 75, 162, 93, 56, 66, 240,
+        -:  101:   8, 50, 84, 229, 49, 210, 173, 239, 141, 1, 87, 18, 2, 198, 143, 57,
+        -:  102:   225, 160, 58, 217, 168, 206, 245, 204, 199, 6, 73, 60, 20, 230, 211, 233,
+        -:  103:   94, 200, 88, 9, 74, 155, 33, 15, 219, 130, 226, 202, 83, 236, 42, 172,
+        -:  104:   165, 218, 55, 222, 46, 107, 98, 154, 109, 67, 196, 178, 127, 158, 13, 243,
+        -:  105:   65, 79, 166, 248, 25, 224, 115, 80, 68, 51, 184, 128, 232, 208, 151, 122,
+        -:  106:   26, 212, 105, 43, 179, 213, 235, 148, 146, 89, 14, 195, 28, 78, 112, 76,
+        -:  107:   250, 47, 24, 251, 140, 108, 186, 190, 228, 170, 183, 139, 39, 188, 244, 246,
+        -:  108:   132, 48, 119, 144, 180, 138, 134, 193, 82, 182, 120, 121, 86, 220, 209, 3,
+        -:  109:   91, 241, 149, 85, 205, 150, 113, 216, 31, 100, 41, 164, 177, 214, 153, 231,
+        -:  110:   38, 71, 185, 174, 97, 201, 29, 95, 7, 92, 54, 254, 191, 118, 34, 221,
+        -:  111:   131, 11, 163, 99, 234, 81, 227, 147, 156, 176, 17, 142, 69, 12, 110, 62,
+        -:  112:   27, 255, 0, 194, 59, 116, 242, 252, 19, 21, 187, 53, 207, 129, 64, 135,
+        -:  113:   61, 40, 167, 237, 102, 223, 106, 159, 197, 189, 215, 137, 36, 32, 22, 5,
+        -:  114:
+        -:  115:   // and a second copy so we don't need an extra mask or static initializer
+        -:  116:   23, 125, 161, 52, 103, 117, 70, 37, 247, 101, 203, 169, 124, 126, 44, 123,
+        -:  117:   152, 238, 145, 45, 171, 114, 253, 10, 192, 136, 4, 157, 249, 30, 35, 72,
+        -:  118:   175, 63, 77, 90, 181, 16, 96, 111, 133, 104, 75, 162, 93, 56, 66, 240,
+        -:  119:   8, 50, 84, 229, 49, 210, 173, 239, 141, 1, 87, 18, 2, 198, 143, 57,
+        -:  120:   225, 160, 58, 217, 168, 206, 245, 204, 199, 6, 73, 60, 20, 230, 211, 233,
+        -:  121:   94, 200, 88, 9, 74, 155, 33, 15, 219, 130, 226, 202, 83, 236, 42, 172,
+        -:  122:   165, 218, 55, 222, 46, 107, 98, 154, 109, 67, 196, 178, 127, 158, 13, 243,
+        -:  123:   65, 79, 166, 248, 25, 224, 115, 80, 68, 51, 184, 128, 232, 208, 151, 122,
+        -:  124:   26, 212, 105, 43, 179, 213, 235, 148, 146, 89, 14, 195, 28, 78, 112, 76,
+        -:  125:   250, 47, 24, 251, 140, 108, 186, 190, 228, 170, 183, 139, 39, 188, 244, 246,
+        -:  126:   132, 48, 119, 144, 180, 138, 134, 193, 82, 182, 120, 121, 86, 220, 209, 3,
+        -:  127:   91, 241, 149, 85, 205, 150, 113, 216, 31, 100, 41, 164, 177, 214, 153, 231,
+        -:  128:   38, 71, 185, 174, 97, 201, 29, 95, 7, 92, 54, 254, 191, 118, 34, 221,
+        -:  129:   131, 11, 163, 99, 234, 81, 227, 147, 156, 176, 17, 142, 69, 12, 110, 62,
+        -:  130:   27, 255, 0, 194, 59, 116, 242, 252, 19, 21, 187, 53, 207, 129, 64, 135,
+        -:  131:   61, 40, 167, 237, 102, 223, 106, 159, 197, 189, 215, 137, 36, 32, 22, 5,
+        -:  132:};
+        -:  133:
+        -:  134:
+        -:  135:// perlin's gradient has 12 cases so some get used 1/16th of the time
+        -:  136:// and some 2/16ths. We reduce bias by changing those fractions
+        -:  137:// to 5/64ths and 6/64ths
+        -:  138:
+        -:  139:// this array is designed to match the previous implementation
+        -:  140:// of gradient hash: indices[stb__perlin_randtab[i]&63]
+        -:  141:static unsigned char stb__perlin_randtab_grad_idx[512] =
+        -:  142:{
+        -:  143:    7, 9, 5, 0, 11, 1, 6, 9, 3, 9, 11, 1, 8, 10, 4, 7,
+        -:  144:    8, 6, 1, 5, 3, 10, 9, 10, 0, 8, 4, 1, 5, 2, 7, 8,
+        -:  145:    7, 11, 9, 10, 1, 0, 4, 7, 5, 0, 11, 6, 1, 4, 2, 8,
+        -:  146:    8, 10, 4, 9, 9, 2, 5, 7, 9, 1, 7, 2, 2, 6, 11, 5,
+        -:  147:    5, 4, 6, 9, 0, 1, 1, 0, 7, 6, 9, 8, 4, 10, 3, 1,
+        -:  148:    2, 8, 8, 9, 10, 11, 5, 11, 11, 2, 6, 10, 3, 4, 2, 4,
+        -:  149:    9, 10, 3, 2, 6, 3, 6, 10, 5, 3, 4, 10, 11, 2, 9, 11,
+        -:  150:    1, 11, 10, 4, 9, 4, 11, 0, 4, 11, 4, 0, 0, 0, 7, 6,
+        -:  151:    10, 4, 1, 3, 11, 5, 3, 4, 2, 9, 1, 3, 0, 1, 8, 0,
+        -:  152:    6, 7, 8, 7, 0, 4, 6, 10, 8, 2, 3, 11, 11, 8, 0, 2,
+        -:  153:    4, 8, 3, 0, 0, 10, 6, 1, 2, 2, 4, 5, 6, 0, 1, 3,
+        -:  154:    11, 9, 5, 5, 9, 6, 9, 8, 3, 8, 1, 8, 9, 6, 9, 11,
+        -:  155:    10, 7, 5, 6, 5, 9, 1, 3, 7, 0, 2, 10, 11, 2, 6, 1,
+        -:  156:    3, 11, 7, 7, 2, 1, 7, 3, 0, 8, 1, 1, 5, 0, 6, 10,
+        -:  157:    11, 11, 0, 2, 7, 0, 10, 8, 3, 5, 7, 1, 11, 1, 0, 7,
+        -:  158:    9, 0, 11, 5, 10, 3, 2, 3, 5, 9, 7, 9, 8, 4, 6, 5,
+        -:  159:
+        -:  160:    // and a second copy so we don't need an extra mask or static initializer
+        -:  161:    7, 9, 5, 0, 11, 1, 6, 9, 3, 9, 11, 1, 8, 10, 4, 7,
+        -:  162:    8, 6, 1, 5, 3, 10, 9, 10, 0, 8, 4, 1, 5, 2, 7, 8,
+        -:  163:    7, 11, 9, 10, 1, 0, 4, 7, 5, 0, 11, 6, 1, 4, 2, 8,
+        -:  164:    8, 10, 4, 9, 9, 2, 5, 7, 9, 1, 7, 2, 2, 6, 11, 5,
+        -:  165:    5, 4, 6, 9, 0, 1, 1, 0, 7, 6, 9, 8, 4, 10, 3, 1,
+        -:  166:    2, 8, 8, 9, 10, 11, 5, 11, 11, 2, 6, 10, 3, 4, 2, 4,
+        -:  167:    9, 10, 3, 2, 6, 3, 6, 10, 5, 3, 4, 10, 11, 2, 9, 11,
+        -:  168:    1, 11, 10, 4, 9, 4, 11, 0, 4, 11, 4, 0, 0, 0, 7, 6,
+        -:  169:    10, 4, 1, 3, 11, 5, 3, 4, 2, 9, 1, 3, 0, 1, 8, 0,
+        -:  170:    6, 7, 8, 7, 0, 4, 6, 10, 8, 2, 3, 11, 11, 8, 0, 2,
+        -:  171:    4, 8, 3, 0, 0, 10, 6, 1, 2, 2, 4, 5, 6, 0, 1, 3,
+        -:  172:    11, 9, 5, 5, 9, 6, 9, 8, 3, 8, 1, 8, 9, 6, 9, 11,
+        -:  173:    10, 7, 5, 6, 5, 9, 1, 3, 7, 0, 2, 10, 11, 2, 6, 1,
+        -:  174:    3, 11, 7, 7, 2, 1, 7, 3, 0, 8, 1, 1, 5, 0, 6, 10,
+        -:  175:    11, 11, 0, 2, 7, 0, 10, 8, 3, 5, 7, 1, 11, 1, 0, 7,
+        -:  176:    9, 0, 11, 5, 10, 3, 2, 3, 5, 9, 7, 9, 8, 4, 6, 5,
+        -:  177:};
+        -:  178:
+function stb__perlin_lerp called 0 returned 0% blocks executed 0%
+    #####:  179:static float stb__perlin_lerp(float a, float b, float t)
+        -:  180:{
+    #####:  181:   return a + (b-a) * t;
+    %%%%%:  181-block  0
+        -:  182:}
+        -:  183:
+function stb__perlin_fastfloor called 0 returned 0% blocks executed 0%
+    #####:  184:static int stb__perlin_fastfloor(float a)
+        -:  185:{
+    #####:  186:    int ai = (int) a;
+    #####:  187:    return (a < ai) ? ai-1 : ai;
+    %%%%%:  187-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  187-block  1
+    %%%%%:  187-block  2
+    %%%%%:  187-block  3
+        -:  188:}
+        -:  189:
+        -:  190:// different grad function from Perlin's, but easy to modify to match reference
+function stb__perlin_grad called 0 returned 0% blocks executed 0%
+    #####:  191:static float stb__perlin_grad(int grad_idx, float x, float y, float z)
+        -:  192:{
+        -:  193:   static float basis[12][4] =
+        -:  194:   {
+        -:  195:      {  1, 1, 0 },
+        -:  196:      { -1, 1, 0 },
+        -:  197:      {  1,-1, 0 },
+        -:  198:      { -1,-1, 0 },
+        -:  199:      {  1, 0, 1 },
+        -:  200:      { -1, 0, 1 },
+        -:  201:      {  1, 0,-1 },
+        -:  202:      { -1, 0,-1 },
+        -:  203:      {  0, 1, 1 },
+        -:  204:      {  0,-1, 1 },
+        -:  205:      {  0, 1,-1 },
+        -:  206:      {  0,-1,-1 },
+        -:  207:   };
+        -:  208:
+    #####:  209:   float *grad = basis[grad_idx];
+    #####:  210:   return grad[0]*x + grad[1]*y + grad[2]*z;
+    %%%%%:  210-block  0
+        -:  211:}
+        -:  212:
+function stb_perlin_noise3_internal called 0 returned 0% blocks executed 0%
+    #####:  213:float stb_perlin_noise3_internal(float x, float y, float z, int x_wrap, int y_wrap, int z_wrap, unsigned char seed)
+        -:  214:{
+        -:  215:   float u,v,w;
+        -:  216:   float n000,n001,n010,n011,n100,n101,n110,n111;
+        -:  217:   float n00,n01,n10,n11;
+        -:  218:   float n0,n1;
+        -:  219:
+    #####:  220:   unsigned int x_mask = (x_wrap-1) & 255;
+    #####:  221:   unsigned int y_mask = (y_wrap-1) & 255;
+    #####:  222:   unsigned int z_mask = (z_wrap-1) & 255;
+    #####:  223:   int px = stb__perlin_fastfloor(x);
+    %%%%%:  223-block  0
+call    0 never executed
+    #####:  224:   int py = stb__perlin_fastfloor(y);
+call    0 never executed
+    #####:  225:   int pz = stb__perlin_fastfloor(z);
+call    0 never executed
+    #####:  226:   int x0 = px & x_mask, x1 = (px+1) & x_mask;
+    #####:  227:   int y0 = py & y_mask, y1 = (py+1) & y_mask;
+    #####:  228:   int z0 = pz & z_mask, z1 = (pz+1) & z_mask;
+        -:  229:   int r0,r1, r00,r01,r10,r11;
+        -:  230:
+        -:  231:   #define stb__perlin_ease(a)   (((a*6-15)*a + 10) * a * a * a)
+        -:  232:
+    #####:  233:   x -= px; u = stb__perlin_ease(x);
+    #####:  234:   y -= py; v = stb__perlin_ease(y);
+    #####:  235:   z -= pz; w = stb__perlin_ease(z);
+        -:  236:
+    #####:  237:   r0 = stb__perlin_randtab[x0+seed];
+    #####:  238:   r1 = stb__perlin_randtab[x1+seed];
+        -:  239:
+    #####:  240:   r00 = stb__perlin_randtab[r0+y0];
+    #####:  241:   r01 = stb__perlin_randtab[r0+y1];
+    #####:  242:   r10 = stb__perlin_randtab[r1+y0];
+    #####:  243:   r11 = stb__perlin_randtab[r1+y1];
+        -:  244:
+    #####:  245:   n000 = stb__perlin_grad(stb__perlin_randtab_grad_idx[r00+z0], x  , y  , z   );
+call    0 never executed
+    #####:  246:   n001 = stb__perlin_grad(stb__perlin_randtab_grad_idx[r00+z1], x  , y  , z-1 );
+call    0 never executed
+    #####:  247:   n010 = stb__perlin_grad(stb__perlin_randtab_grad_idx[r01+z0], x  , y-1, z   );
+call    0 never executed
+    #####:  248:   n011 = stb__perlin_grad(stb__perlin_randtab_grad_idx[r01+z1], x  , y-1, z-1 );
+call    0 never executed
+    #####:  249:   n100 = stb__perlin_grad(stb__perlin_randtab_grad_idx[r10+z0], x-1, y  , z   );
+call    0 never executed
+    #####:  250:   n101 = stb__perlin_grad(stb__perlin_randtab_grad_idx[r10+z1], x-1, y  , z-1 );
+call    0 never executed
+    #####:  251:   n110 = stb__perlin_grad(stb__perlin_randtab_grad_idx[r11+z0], x-1, y-1, z   );
+call    0 never executed
+    #####:  252:   n111 = stb__perlin_grad(stb__perlin_randtab_grad_idx[r11+z1], x-1, y-1, z-1 );
+call    0 never executed
+        -:  253:
+    #####:  254:   n00 = stb__perlin_lerp(n000,n001,w);
+call    0 never executed
+    #####:  255:   n01 = stb__perlin_lerp(n010,n011,w);
+call    0 never executed
+    #####:  256:   n10 = stb__perlin_lerp(n100,n101,w);
+call    0 never executed
+    #####:  257:   n11 = stb__perlin_lerp(n110,n111,w);
+call    0 never executed
+        -:  258:
+    #####:  259:   n0 = stb__perlin_lerp(n00,n01,v);
+call    0 never executed
+    #####:  260:   n1 = stb__perlin_lerp(n10,n11,v);
+call    0 never executed
+        -:  261:
+    #####:  262:   return stb__perlin_lerp(n0,n1,u);
+call    0 never executed
+        -:  263:}
+        -:  264:
+function stb_perlin_noise3 called 0 returned 0% blocks executed 0%
+    #####:  265:float stb_perlin_noise3(float x, float y, float z, int x_wrap, int y_wrap, int z_wrap)
+        -:  266:{
+    #####:  267:    return stb_perlin_noise3_internal(x,y,z,x_wrap,y_wrap,z_wrap,0);
+    %%%%%:  267-block  0
+call    0 never executed
+        -:  268:}
+        -:  269:
+function stb_perlin_noise3_seed called 0 returned 0% blocks executed 0%
+    #####:  270:float stb_perlin_noise3_seed(float x, float y, float z, int x_wrap, int y_wrap, int z_wrap, int seed)
+        -:  271:{
+    #####:  272:    return stb_perlin_noise3_internal(x,y,z,x_wrap,y_wrap,z_wrap, (unsigned char) seed);
+    %%%%%:  272-block  0
+call    0 never executed
+        -:  273:}
+        -:  274:
+function stb_perlin_ridge_noise3 called 0 returned 0% blocks executed 0%
+    #####:  275:float stb_perlin_ridge_noise3(float x, float y, float z, float lacunarity, float gain, float offset, int octaves)
+        -:  276:{
+        -:  277:   int i;
+    #####:  278:   float frequency = 1.0f;
+    #####:  279:   float prev = 1.0f;
+    #####:  280:   float amplitude = 0.5f;
+    #####:  281:   float sum = 0.0f;
+        -:  282:
+    #####:  283:   for (i = 0; i < octaves; i++) {
+    %%%%%:  283-block  0
+    %%%%%:  283-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  284:      float r = stb_perlin_noise3_internal(x*frequency,y*frequency,z*frequency,0,0,0,(unsigned char)i);
+    %%%%%:  284-block  0
+call    0 never executed
+    #####:  285:      r = offset - (float) fabs(r);
+    #####:  286:      r = r*r;
+    #####:  287:      sum += r*amplitude*prev;
+    #####:  288:      prev = r;
+    #####:  289:      frequency *= lacunarity;
+    #####:  290:      amplitude *= gain;
+        -:  291:   }
+    #####:  292:   return sum;
+    %%%%%:  292-block  0
+        -:  293:}
+        -:  294:
+function stb_perlin_fbm_noise3 called 0 returned 0% blocks executed 0%
+    #####:  295:float stb_perlin_fbm_noise3(float x, float y, float z, float lacunarity, float gain, int octaves)
+        -:  296:{
+        -:  297:   int i;
+    #####:  298:   float frequency = 1.0f;
+    #####:  299:   float amplitude = 1.0f;
+    #####:  300:   float sum = 0.0f;
+        -:  301:
+    #####:  302:   for (i = 0; i < octaves; i++) {
+    %%%%%:  302-block  0
+    %%%%%:  302-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  303:      sum += stb_perlin_noise3_internal(x*frequency,y*frequency,z*frequency,0,0,0,(unsigned char)i)*amplitude;
+    %%%%%:  303-block  0
+call    0 never executed
+    #####:  304:      frequency *= lacunarity;
+    #####:  305:      amplitude *= gain;
+        -:  306:   }
+    #####:  307:   return sum;
+    %%%%%:  307-block  0
+        -:  308:}
+        -:  309:
+function stb_perlin_turbulence_noise3 called 0 returned 0% blocks executed 0%
+    #####:  310:float stb_perlin_turbulence_noise3(float x, float y, float z, float lacunarity, float gain, int octaves)
+        -:  311:{
+        -:  312:   int i;
+    #####:  313:   float frequency = 1.0f;
+    #####:  314:   float amplitude = 1.0f;
+    #####:  315:   float sum = 0.0f;
+        -:  316:
+    #####:  317:   for (i = 0; i < octaves; i++) {
+    %%%%%:  317-block  0
+    %%%%%:  317-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  318:      float r = stb_perlin_noise3_internal(x*frequency,y*frequency,z*frequency,0,0,0,(unsigned char)i)*amplitude;
+    %%%%%:  318-block  0
+call    0 never executed
+    #####:  319:      sum += (float) fabs(r);
+    #####:  320:      frequency *= lacunarity;
+    #####:  321:      amplitude *= gain;
+        -:  322:   }
+    #####:  323:   return sum;
+    %%%%%:  323-block  0
+        -:  324:}
+        -:  325:
+function stb_perlin_noise3_wrap_nonpow2 called 0 returned 0% blocks executed 0%
+    #####:  326:float stb_perlin_noise3_wrap_nonpow2(float x, float y, float z, int x_wrap, int y_wrap, int z_wrap, unsigned char seed)
+        -:  327:{
+        -:  328:   float u,v,w;
+        -:  329:   float n000,n001,n010,n011,n100,n101,n110,n111;
+        -:  330:   float n00,n01,n10,n11;
+        -:  331:   float n0,n1;
+        -:  332:
+    #####:  333:   int px = stb__perlin_fastfloor(x);
+    %%%%%:  333-block  0
+call    0 never executed
+    #####:  334:   int py = stb__perlin_fastfloor(y);
+call    0 never executed
+    #####:  335:   int pz = stb__perlin_fastfloor(z);
+call    0 never executed
+    #####:  336:   int x_wrap2 = (x_wrap ? x_wrap : 256);
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  336-block  0
+    %%%%%:  336-block  1
+    #####:  337:   int y_wrap2 = (y_wrap ? y_wrap : 256);
+    %%%%%:  337-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  337-block  1
+    %%%%%:  337-block  2
+    #####:  338:   int z_wrap2 = (z_wrap ? z_wrap : 256);
+    %%%%%:  338-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  338-block  1
+    %%%%%:  338-block  2
+    #####:  339:   int x0 = px % x_wrap2, x1;
+    #####:  340:   int y0 = py % y_wrap2, y1;
+    #####:  341:   int z0 = pz % z_wrap2, z1;
+        -:  342:   int r0,r1, r00,r01,r10,r11;
+        -:  343:
+    #####:  344:   if (x0 < 0) x0 += x_wrap2;
+    %%%%%:  344-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  344-block  1
+    #####:  345:   if (y0 < 0) y0 += y_wrap2;
+    %%%%%:  345-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  345-block  1
+    #####:  346:   if (z0 < 0) z0 += z_wrap2;
+    %%%%%:  346-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  346-block  1
+    #####:  347:   x1 = (x0+1) % x_wrap2;
+    #####:  348:   y1 = (y0+1) % y_wrap2;
+    #####:  349:   z1 = (z0+1) % z_wrap2;
+        -:  350:
+        -:  351:   #define stb__perlin_ease(a)   (((a*6-15)*a + 10) * a * a * a)
+        -:  352:
+    #####:  353:   x -= px; u = stb__perlin_ease(x);
+    #####:  354:   y -= py; v = stb__perlin_ease(y);
+    #####:  355:   z -= pz; w = stb__perlin_ease(z);
+        -:  356:
+    #####:  357:   r0 = stb__perlin_randtab[x0];
+    #####:  358:   r0 = stb__perlin_randtab[r0+seed];
+    #####:  359:   r1 = stb__perlin_randtab[x1];
+    #####:  360:   r1 = stb__perlin_randtab[r1+seed];
+        -:  361:
+    #####:  362:   r00 = stb__perlin_randtab[r0+y0];
+    #####:  363:   r01 = stb__perlin_randtab[r0+y1];
+    #####:  364:   r10 = stb__perlin_randtab[r1+y0];
+    #####:  365:   r11 = stb__perlin_randtab[r1+y1];
+        -:  366:
+    #####:  367:   n000 = stb__perlin_grad(stb__perlin_randtab_grad_idx[r00+z0], x  , y  , z   );
+    %%%%%:  367-block  0
+call    0 never executed
+    #####:  368:   n001 = stb__perlin_grad(stb__perlin_randtab_grad_idx[r00+z1], x  , y  , z-1 );
+call    0 never executed
+    #####:  369:   n010 = stb__perlin_grad(stb__perlin_randtab_grad_idx[r01+z0], x  , y-1, z   );
+call    0 never executed
+    #####:  370:   n011 = stb__perlin_grad(stb__perlin_randtab_grad_idx[r01+z1], x  , y-1, z-1 );
+call    0 never executed
+    #####:  371:   n100 = stb__perlin_grad(stb__perlin_randtab_grad_idx[r10+z0], x-1, y  , z   );
+call    0 never executed
+    #####:  372:   n101 = stb__perlin_grad(stb__perlin_randtab_grad_idx[r10+z1], x-1, y  , z-1 );
+call    0 never executed
+    #####:  373:   n110 = stb__perlin_grad(stb__perlin_randtab_grad_idx[r11+z0], x-1, y-1, z   );
+call    0 never executed
+    #####:  374:   n111 = stb__perlin_grad(stb__perlin_randtab_grad_idx[r11+z1], x-1, y-1, z-1 );
+call    0 never executed
+        -:  375:
+    #####:  376:   n00 = stb__perlin_lerp(n000,n001,w);
+call    0 never executed
+    #####:  377:   n01 = stb__perlin_lerp(n010,n011,w);
+call    0 never executed
+    #####:  378:   n10 = stb__perlin_lerp(n100,n101,w);
+call    0 never executed
+    #####:  379:   n11 = stb__perlin_lerp(n110,n111,w);
+call    0 never executed
+        -:  380:
+    #####:  381:   n0 = stb__perlin_lerp(n00,n01,v);
+call    0 never executed
+    #####:  382:   n1 = stb__perlin_lerp(n10,n11,v);
+call    0 never executed
+        -:  383:
+    #####:  384:   return stb__perlin_lerp(n0,n1,u);
+call    0 never executed
+        -:  385:}
+        -:  386:#endif  // STB_PERLIN_IMPLEMENTATION
+        -:  387:
+        -:  388:/*
+        -:  389:------------------------------------------------------------------------------
+        -:  390:This software is available under 2 licenses -- choose whichever you prefer.
+        -:  391:------------------------------------------------------------------------------
+        -:  392:ALTERNATIVE A - MIT License
+        -:  393:Copyright (c) 2017 Sean Barrett
+        -:  394:Permission is hereby granted, free of charge, to any person obtaining a copy of
+        -:  395:this software and associated documentation files (the "Software"), to deal in
+        -:  396:the Software without restriction, including without limitation the rights to
+        -:  397:use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+        -:  398:of the Software, and to permit persons to whom the Software is furnished to do
+        -:  399:so, subject to the following conditions:
+        -:  400:The above copyright notice and this permission notice shall be included in all
+        -:  401:copies or substantial portions of the Software.
+        -:  402:THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        -:  403:IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        -:  404:FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        -:  405:AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        -:  406:LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        -:  407:OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        -:  408:SOFTWARE.
+        -:  409:------------------------------------------------------------------------------
+        -:  410:ALTERNATIVE B - Public Domain (www.unlicense.org)
+        -:  411:This is free and unencumbered software released into the public domain.
+        -:  412:Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
+        -:  413:software, either in source code form or as a compiled binary, for any purpose,
+        -:  414:commercial or non-commercial, and by any means.
+        -:  415:In jurisdictions that recognize copyright laws, the author or authors of this
+        -:  416:software dedicate any and all copyright interest in the software to the public
+        -:  417:domain. We make this dedication for the benefit of the public at large and to
+        -:  418:the detriment of our heirs and successors. We intend this dedication to be an
+        -:  419:overt act of relinquishment in perpetuity of all present and future rights to
+        -:  420:this software under copyright law.
+        -:  421:THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        -:  422:IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        -:  423:FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        -:  424:AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+        -:  425:ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+        -:  426:WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+        -:  427:------------------------------------------------------------------------------
+        -:  428:*/

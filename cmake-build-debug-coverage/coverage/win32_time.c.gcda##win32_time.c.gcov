@@ -1,0 +1,97 @@
+        -:    0:Source:C:/Dev/CLionProjects/Snake-raylib/cmake-build-debug-coverage/_deps/raylib-src/src/external/glfw/src/win32_time.c
+        -:    0:Graph:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\external\glfw\src\CMakeFiles\glfw.dir\win32_time.c.gcno
+        -:    0:Data:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\external\glfw\src\CMakeFiles\glfw.dir\win32_time.c.gcda
+        -:    0:Runs:1
+        -:    1://========================================================================
+        -:    2:// GLFW 3.4 Win32 - www.glfw.org
+        -:    3://------------------------------------------------------------------------
+        -:    4:// Copyright (c) 2002-2006 Marcus Geelnard
+        -:    5:// Copyright (c) 2006-2017 Camilla Löwy <elmindreda@glfw.org>
+        -:    6://
+        -:    7:// This software is provided 'as-is', without any express or implied
+        -:    8:// warranty. In no event will the authors be held liable for any damages
+        -:    9:// arising from the use of this software.
+        -:   10://
+        -:   11:// Permission is granted to anyone to use this software for any purpose,
+        -:   12:// including commercial applications, and to alter it and redistribute it
+        -:   13:// freely, subject to the following restrictions:
+        -:   14://
+        -:   15:// 1. The origin of this software must not be misrepresented; you must not
+        -:   16://    claim that you wrote the original software. If you use this software
+        -:   17://    in a product, an acknowledgment in the product documentation would
+        -:   18://    be appreciated but is not required.
+        -:   19://
+        -:   20:// 2. Altered source versions must be plainly marked as such, and must not
+        -:   21://    be misrepresented as being the original software.
+        -:   22://
+        -:   23:// 3. This notice may not be removed or altered from any source
+        -:   24://    distribution.
+        -:   25://
+        -:   26://========================================================================
+        -:   27:// Please use C89 style variable declarations in this file because VS 2010
+        -:   28://========================================================================
+        -:   29:
+        -:   30:#include "internal.h"
+        -:   31:
+        -:   32:
+        -:   33://////////////////////////////////////////////////////////////////////////
+        -:   34://////                       GLFW internal API                      //////
+        -:   35://////////////////////////////////////////////////////////////////////////
+        -:   36:
+        -:   37:// Initialise timer
+        -:   38://
+function _glfwInitTimerWin32 called 1 returned 100% blocks executed 80%
+        1:   39:void _glfwInitTimerWin32(void)
+        -:   40:{
+        -:   41:    uint64_t frequency;
+        -:   42:
+        1:   43:    if (QueryPerformanceFrequency((LARGE_INTEGER*) &frequency))
+        1:   43-block  0
+call    0 returned 1
+branch  1 taken 1 (fallthrough)
+branch  2 taken 0
+        -:   44:    {
+        1:   45:        _glfw.timer.win32.hasPC = GLFW_TRUE;
+        1:   46:        _glfw.timer.win32.frequency = frequency;
+        1:   46-block  0
+        -:   47:    }
+        -:   48:    else
+        -:   49:    {
+    #####:   50:        _glfw.timer.win32.hasPC = GLFW_FALSE;
+    #####:   51:        _glfw.timer.win32.frequency = 1000;
+    %%%%%:   51-block  0
+        -:   52:    }
+        1:   53:}
+        -:   54:
+        -:   55:
+        -:   56://////////////////////////////////////////////////////////////////////////
+        -:   57://////                       GLFW platform API                      //////
+        -:   58://////////////////////////////////////////////////////////////////////////
+        -:   59:
+function _glfwPlatformGetTimerValue called 9951665 returned 100% blocks executed 67%
+  9951665:   60:uint64_t _glfwPlatformGetTimerValue(void)
+        -:   61:{
+  9951665:   62:    if (_glfw.timer.win32.hasPC)
+  9951665:   62-block  0
+branch  0 taken 9951665 (fallthrough)
+branch  1 taken 0
+        -:   63:    {
+        -:   64:        uint64_t value;
+  9951665:   65:        QueryPerformanceCounter((LARGE_INTEGER*) &value);
+  9951665:   65-block  0
+call    0 returned 9951665
+  9951665:   66:        return value;
+        -:   67:    }
+        -:   68:    else
+    #####:   69:        return (uint64_t) timeGetTime();
+    %%%%%:   69-block  0
+call    0 never executed
+        -:   70:}
+        -:   71:
+function _glfwPlatformGetTimerFrequency called 9951664 returned 100% blocks executed 100%
+  9951664:   72:uint64_t _glfwPlatformGetTimerFrequency(void)
+        -:   73:{
+  9951664:   74:    return _glfw.timer.win32.frequency;
+  9951664:   74-block  0
+        -:   75:}
+        -:   76:

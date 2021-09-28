@@ -1,0 +1,174 @@
+        -:    0:Source:C:/Dev/CLionProjects/Snake-raylib/cmake-build-debug-coverage/_deps/raylib-src/src/external/glfw/src/win32_thread.c
+        -:    0:Graph:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\external\glfw\src\CMakeFiles\glfw.dir\win32_thread.c.gcno
+        -:    0:Data:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\external\glfw\src\CMakeFiles\glfw.dir\win32_thread.c.gcda
+        -:    0:Runs:1
+        -:    1://========================================================================
+        -:    2:// GLFW 3.4 Win32 - www.glfw.org
+        -:    3://------------------------------------------------------------------------
+        -:    4:// Copyright (c) 2002-2006 Marcus Geelnard
+        -:    5:// Copyright (c) 2006-2017 Camilla Löwy <elmindreda@glfw.org>
+        -:    6://
+        -:    7:// This software is provided 'as-is', without any express or implied
+        -:    8:// warranty. In no event will the authors be held liable for any damages
+        -:    9:// arising from the use of this software.
+        -:   10://
+        -:   11:// Permission is granted to anyone to use this software for any purpose,
+        -:   12:// including commercial applications, and to alter it and redistribute it
+        -:   13:// freely, subject to the following restrictions:
+        -:   14://
+        -:   15:// 1. The origin of this software must not be misrepresented; you must not
+        -:   16://    claim that you wrote the original software. If you use this software
+        -:   17://    in a product, an acknowledgment in the product documentation would
+        -:   18://    be appreciated but is not required.
+        -:   19://
+        -:   20:// 2. Altered source versions must be plainly marked as such, and must not
+        -:   21://    be misrepresented as being the original software.
+        -:   22://
+        -:   23:// 3. This notice may not be removed or altered from any source
+        -:   24://    distribution.
+        -:   25://
+        -:   26://========================================================================
+        -:   27:// Please use C89 style variable declarations in this file because VS 2010
+        -:   28://========================================================================
+        -:   29:
+        -:   30:#include "internal.h"
+        -:   31:
+        -:   32:#include <assert.h>
+        -:   33:
+        -:   34:
+        -:   35://////////////////////////////////////////////////////////////////////////
+        -:   36://////                       GLFW platform API                      //////
+        -:   37://////////////////////////////////////////////////////////////////////////
+        -:   38:
+function _glfwPlatformCreateTls called 2 returned 100% blocks executed 60%
+        2:   39:GLFWbool _glfwPlatformCreateTls(_GLFWtls* tls)
+        -:   40:{
+       2*:   41:    assert(tls->win32.allocated == GLFW_FALSE);
+        2:   41-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2
+    %%%%%:   41-block  1
+call    2 never executed
+        2:   41-block  2
+        -:   42:
+        2:   43:    tls->win32.index = TlsAlloc();
+        2:   43-block  0
+call    0 returned 2
+        2:   44:    if (tls->win32.index == TLS_OUT_OF_INDEXES)
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2
+        -:   45:    {
+    #####:   46:        _glfwInputErrorWin32(GLFW_PLATFORM_ERROR,
+    %%%%%:   46-block  0
+call    0 never executed
+        -:   47:                             "Win32: Failed to allocate TLS index");
+    #####:   48:        return GLFW_FALSE;
+        -:   49:    }
+        -:   50:
+        2:   51:    tls->win32.allocated = GLFW_TRUE;
+        2:   52:    return GLFW_TRUE;
+        2:   52-block  0
+        -:   53:}
+        -:   54:
+function _glfwPlatformDestroyTls called 2 returned 100% blocks executed 100%
+        2:   55:void _glfwPlatformDestroyTls(_GLFWtls* tls)
+        -:   56:{
+        2:   57:    if (tls->win32.allocated)
+        2:   57-block  0
+branch  0 taken 2 (fallthrough)
+branch  1 taken 0
+        2:   58:        TlsFree(tls->win32.index);
+        2:   58-block  0
+call    0 returned 2
+        2:   59:    memset(tls, 0, sizeof(_GLFWtls));
+        2:   60:}
+        -:   61:
+function _glfwPlatformGetTls called 628 returned 100% blocks executed 67%
+      628:   62:void* _glfwPlatformGetTls(_GLFWtls* tls)
+        -:   63:{
+     628*:   64:    assert(tls->win32.allocated == GLFW_TRUE);
+      628:   64-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 628
+    %%%%%:   64-block  1
+call    2 never executed
+      628:   64-block  2
+      628:   65:    return TlsGetValue(tls->win32.index);
+      628:   65-block  0
+call    0 returned 628
+        -:   66:}
+        -:   67:
+function _glfwPlatformSetTls called 5 returned 100% blocks executed 67%
+        5:   68:void _glfwPlatformSetTls(_GLFWtls* tls, void* value)
+        -:   69:{
+       5*:   70:    assert(tls->win32.allocated == GLFW_TRUE);
+        5:   70-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 5
+    %%%%%:   70-block  1
+call    2 never executed
+        5:   70-block  2
+        5:   71:    TlsSetValue(tls->win32.index, value);
+        5:   71-block  0
+call    0 returned 5
+        5:   72:}
+        -:   73:
+function _glfwPlatformCreateMutex called 1 returned 100% blocks executed 71%
+        1:   74:GLFWbool _glfwPlatformCreateMutex(_GLFWmutex* mutex)
+        -:   75:{
+       1*:   76:    assert(mutex->win32.allocated == GLFW_FALSE);
+        1:   76-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 1
+    %%%%%:   76-block  1
+call    2 never executed
+        1:   76-block  2
+        1:   77:    InitializeCriticalSection(&mutex->win32.section);
+        1:   77-block  0
+call    0 returned 1
+        1:   78:    return mutex->win32.allocated = GLFW_TRUE;
+        -:   79:}
+        -:   80:
+function _glfwPlatformDestroyMutex called 1 returned 100% blocks executed 100%
+        1:   81:void _glfwPlatformDestroyMutex(_GLFWmutex* mutex)
+        -:   82:{
+        1:   83:    if (mutex->win32.allocated)
+        1:   83-block  0
+branch  0 taken 1 (fallthrough)
+branch  1 taken 0
+        1:   84:        DeleteCriticalSection(&mutex->win32.section);
+        1:   84-block  0
+call    0 returned 1
+        1:   85:    memset(mutex, 0, sizeof(_GLFWmutex));
+        1:   86:}
+        -:   87:
+function _glfwPlatformLockMutex called 0 returned 0% blocks executed 0%
+    #####:   88:void _glfwPlatformLockMutex(_GLFWmutex* mutex)
+        -:   89:{
+    #####:   90:    assert(mutex->win32.allocated == GLFW_TRUE);
+    %%%%%:   90-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:   90-block  1
+call    2 never executed
+    %%%%%:   90-block  2
+    #####:   91:    EnterCriticalSection(&mutex->win32.section);
+    %%%%%:   91-block  0
+call    0 never executed
+    #####:   92:}
+        -:   93:
+function _glfwPlatformUnlockMutex called 0 returned 0% blocks executed 0%
+    #####:   94:void _glfwPlatformUnlockMutex(_GLFWmutex* mutex)
+        -:   95:{
+    #####:   96:    assert(mutex->win32.allocated == GLFW_TRUE);
+    %%%%%:   96-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:   96-block  1
+call    2 never executed
+    %%%%%:   96-block  2
+    #####:   97:    LeaveCriticalSection(&mutex->win32.section);
+    %%%%%:   97-block  0
+call    0 never executed
+    #####:   98:}
+        -:   99:

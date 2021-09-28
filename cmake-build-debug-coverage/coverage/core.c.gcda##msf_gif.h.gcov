@@ -1,0 +1,854 @@
+        -:    0:Source:C:/Dev/CLionProjects/Snake-raylib/cmake-build-debug-coverage/_deps/raylib-src/src/external/msf_gif.h
+        -:    0:Graph:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\CMakeFiles\raylib.dir\core.c.gcno
+        -:    0:Data:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\CMakeFiles\raylib.dir\core.c.gcda
+        -:    0:Runs:1
+        -:    1:/*
+        -:    2:HOW TO USE:
+        -:    3:
+        -:    4:    In exactly one translation unit (.c or .cpp file), #define MSF_GIF_IMPL before including the header, like so:
+        -:    5:
+        -:    6:    #define MSF_GIF_IMPL
+        -:    7:    #include "msf_gif.h"
+        -:    8:
+        -:    9:    Everywhere else, just include the header like normal.
+        -:   10:
+        -:   11:
+        -:   12:USAGE EXAMPLE:
+        -:   13:
+        -:   14:    int width = 480, height = 320, centisecondsPerFrame = 5, bitDepth = 16;
+        -:   15:    MsfGifState gifState = {};
+        -:   16:    msf_gif_begin(&gifState, width, height);
+        -:   17:    msf_gif_frame(&gifState, ..., centisecondsPerFrame, bitDepth, width * 4); //frame 1
+        -:   18:    msf_gif_frame(&gifState, ..., centisecondsPerFrame, bitDepth, width * 4); //frame 2
+        -:   19:    msf_gif_frame(&gifState, ..., centisecondsPerFrame, bitDepth, width * 4); //frame 3, etc...
+        -:   20:    MsfGifResult result = msf_gif_end(&gifState);
+        -:   21:    FILE * fp = fopen("MyGif.gif", "wb");
+        -:   22:    fwrite(result.data, result.dataSize, 1, fp);
+        -:   23:    fclose(fp);
+        -:   24:    msf_gif_free(result);
+        -:   25:
+        -:   26:Detailed function documentation can be found in the header section below.
+        -:   27:
+        -:   28:
+        -:   29:REPLACING MALLOC:
+        -:   30:
+        -:   31:    This library uses malloc+realloc+free internally for memory allocation.
+        -:   32:    To facilitate integration with custom memory allocators, these calls go through macros, which can be redefined.
+        -:   33:    The expected function signature equivalents of the macros are as follows:
+        -:   34:
+        -:   35:    void * MSF_GIF_MALLOC(void * context, size_t newSize)
+        -:   36:    void * MSF_GIF_REALLOC(void * context, void * oldMemory, size_t oldSize, size_t newSize)
+        -:   37:    void MSF_GIF_FREE(void * context, void * oldMemory, size_t oldSize)
+        -:   38:
+        -:   39:    If your allocator needs a context pointer, you can set the `customAllocatorContext` field of the MsfGifState struct
+        -:   40:    before calling msf_gif_begin(), and it will be passed to all subsequent allocator macro calls.
+        -:   41:
+        -:   42:See end of file for license information.
+        -:   43:*/
+        -:   44:
+        -:   45://version 2.1
+        -:   46:
+        -:   47:#ifndef MSF_GIF_H
+        -:   48:#define MSF_GIF_H
+        -:   49:
+        -:   50:#include <stdint.h>
+        -:   51:#include <stddef.h>
+        -:   52:
+        -:   53:typedef struct {
+        -:   54:    void * data;
+        -:   55:    size_t dataSize;
+        -:   56:
+        -:   57:    size_t allocSize; //internal use
+        -:   58:    void * contextPointer; //internal use
+        -:   59:} MsfGifResult;
+        -:   60:
+        -:   61:typedef struct { //internal use
+        -:   62:    uint32_t * pixels;
+        -:   63:    int depth, count, rbits, gbits, bbits;
+        -:   64:} MsfCookedFrame;
+        -:   65:
+        -:   66:typedef struct {
+        -:   67:    MsfCookedFrame previousFrame;
+        -:   68:    uint8_t * listHead;
+        -:   69:    uint8_t * listTail;
+        -:   70:    int width, height;
+        -:   71:    void * customAllocatorContext;
+        -:   72:} MsfGifState;
+        -:   73:
+        -:   74:#ifdef __cplusplus
+        -:   75:extern "C" {
+        -:   76:#endif //__cplusplus
+        -:   77:
+        -:   78:/**
+        -:   79: * @param width                Image width in pixels.
+        -:   80: * @param height               Image height in pixels.
+        -:   81: * @return                     Non-zero on success, 0 on error.
+        -:   82: */
+        -:   83:int msf_gif_begin(MsfGifState * handle, int width, int height);
+        -:   84:
+        -:   85:/**
+        -:   86: * @param pixelData            Pointer to raw framebuffer data. Rows must be contiguous in memory, in RGBA8 format.
+        -:   87: *                             Note: This function does NOT free `pixelData`. You must free it yourself afterwards.
+        -:   88: * @param centiSecondsPerFrame How many hundredths of a second this frame should be displayed for.
+        -:   89: *                             Note: This being specified in centiseconds is a limitation of the GIF format.
+        -:   90: * @param maxBitDepth          Limits how many bits per pixel can be used when quantizing the gif.
+        -:   91: *                             The actual bit depth chosen for a given frame will be less than or equal to
+        -:   92: *                             the supplied maximum, depending on the variety of colors used in the frame.
+        -:   93: *                             `maxBitDepth` will be clamped between 1 and 16. The recommended default is 16.
+        -:   94: *                             Lowering this value can result in faster exports and smaller gifs,
+        -:   95: *                             but the quality may suffer.
+        -:   96: *                             Please experiment with this value to find what works best for your application.
+        -:   97: * @param pitchInBytes         The number of bytes from the beginning of one row of pixels to the beginning of the next.
+        -:   98: *                             If you want to flip the image, just pass in a negative pitch.
+        -:   99: * @return                     Non-zero on success, 0 on error.
+        -:  100: */
+        -:  101:int msf_gif_frame(MsfGifState * handle, uint8_t * pixelData, int centiSecondsPerFame, int maxBitDepth, int pitchInBytes);
+        -:  102:
+        -:  103:/**
+        -:  104: * @return                     A block of memory containing the gif file data, or NULL on error.
+        -:  105: *                             You are responsible for freeing this via `msf_gif_free()`.
+        -:  106: */
+        -:  107:MsfGifResult msf_gif_end(MsfGifState * handle);
+        -:  108:
+        -:  109:/**
+        -:  110: * @param result                The MsfGifResult struct, verbatim as it was returned from `msf_gif_end()`.
+        -:  111: */
+        -:  112:void msf_gif_free(MsfGifResult result);
+        -:  113:
+        -:  114:#ifdef __cplusplus
+        -:  115:}
+        -:  116:#endif //__cplusplus
+        -:  117:
+        -:  118:#endif //MSF_GIF_H
+        -:  119:
+        -:  120:////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        -:  121:/// IMPLEMENTATION                                                                                                   ///
+        -:  122:////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        -:  123:
+        -:  124:#ifdef MSF_GIF_IMPL
+        -:  125:#ifndef MSF_GIF_ALREADY_IMPLEMENTED_IN_THIS_TRANSLATION_UNIT
+        -:  126:#define MSF_GIF_ALREADY_IMPLEMENTED_IN_THIS_TRANSLATION_UNIT
+        -:  127:
+        -:  128:#ifndef MSF_GIF_BUFFER_INIT_SIZE
+        -:  129:#define MSF_GIF_BUFFER_INIT_SIZE 1024 * 1024 * 4 //4MB by default, you can increase this if you want to realloc less
+        -:  130:#endif
+        -:  131:
+        -:  132://ensure the library user has either defined all of malloc/realloc/free, or none
+        -:  133:#if defined(MSF_GIF_MALLOC) && defined(MSF_GIF_REALLOC) && defined(MSF_GIF_FREE) //ok
+        -:  134:#elif !defined(MSF_GIF_MALLOC) && !defined(MSF_GIF_REALLOC) && !defined(MSF_GIF_FREE) //ok
+        -:  135:#else
+        -:  136:#error "You must either define all of MSF_GIF_MALLOC, MSF_GIF_REALLOC, and MSF_GIF_FREE, or define none of them"
+        -:  137:#endif
+        -:  138:
+        -:  139://provide default allocator definitions that redirect to the standard global allocator
+        -:  140:#if !defined(MSF_GIF_MALLOC)
+        -:  141:#include <stdlib.h> //malloc, etc.
+        -:  142:#define MSF_GIF_MALLOC(contextPointer, newSize) malloc(newSize)
+        -:  143:#define MSF_GIF_REALLOC(contextPointer, oldMemory, oldSize, newSize) realloc(oldMemory, newSize)
+        -:  144:#define MSF_GIF_FREE(contextPointer, oldMemory, oldSize) free(oldMemory)
+        -:  145:#endif
+        -:  146:
+        -:  147://instrumentation for capturing profiling traces (useless for the library user, but useful for the library author)
+        -:  148:#ifdef MSF_GIF_ENABLE_TRACING
+        -:  149:#define MsfTimeFunc TimeFunc
+        -:  150:#define MsfTimeLoop TimeLoop
+        -:  151:#define msf_init_profiling_thread init_profiling_thread
+        -:  152:#else
+        -:  153:#define MsfTimeFunc
+        -:  154:#define MsfTimeLoop(name)
+        -:  155:#define msf_init_profiling_thread()
+        -:  156:#endif //MSF_GIF_ENABLE_TRACING
+        -:  157:
+        -:  158:#include <string.h> //memcpy
+        -:  159:
+        -:  160://TODO: use compiler-specific notation to force-inline functions currently marked inline
+        -:  161:#if defined(__GNUC__) //gcc, clang
+function msf_bit_log called 0 returned 0% blocks executed 0%
+    #####:  162:static inline int msf_bit_log(int i) { return 32 - __builtin_clz(i); }
+    %%%%%:  162-block  0
+        -:  163:#elif defined(_MSC_VER) //msvc
+        -:  164:#include <intrin.h>
+        -:  165:static inline int msf_bit_log(int i) { unsigned long idx; _BitScanReverse(&idx, i); return idx + 1; }
+        -:  166:#else //fallback implementation for other compilers
+        -:  167://from https://stackoverflow.com/a/31718095/3064745 - thanks!
+        -:  168:static inline int msf_bit_log(int i) {
+        -:  169:    static const int MultiplyDeBruijnBitPosition[32] = {
+        -:  170:        0, 9, 1, 10, 13, 21, 2, 29, 11, 14, 16, 18, 22, 25, 3, 30,
+        -:  171:        8, 12, 20, 28, 15, 17, 24, 7, 19, 27, 23, 6, 26, 5, 4, 31,
+        -:  172:    };
+        -:  173:    i |= i >> 1;
+        -:  174:    i |= i >> 2;
+        -:  175:    i |= i >> 4;
+        -:  176:    i |= i >> 8;
+        -:  177:    i |= i >> 16;
+        -:  178:    return MultiplyDeBruijnBitPosition[(uint32_t)(i * 0x07C4ACDDU) >> 27] + 1;
+        -:  179:}
+        -:  180:#endif
+function msf_imin called 0 returned 0% blocks executed 0%
+    #####:  181:static inline int msf_imin(int a, int b) { return a < b? a : b; }
+    %%%%%:  181-block  0
+function msf_imax called 0 returned 0% blocks executed 0%
+    #####:  182:static inline int msf_imax(int a, int b) { return b < a? a : b; }
+    %%%%%:  182-block  0
+        -:  183:
+        -:  184:////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        -:  185:/// Frame Cooking                                                                                                    ///
+        -:  186:////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        -:  187:
+        -:  188:#if (defined (__SSE2__) || defined (_M_X64) || _M_IX86_FP == 2) && !defined(MSF_GIF_NO_SSE2)
+        -:  189:#include <emmintrin.h>
+        -:  190:#endif
+        -:  191:
+function msf_cook_frame called 0 returned 0% blocks executed 0%
+    #####:  192:static MsfCookedFrame msf_cook_frame(void * allocContext, uint8_t * raw, uint8_t * used,
+        -:  193:                                     int width, int height, int pitch, int depth)
+        -:  194:{ MsfTimeFunc
+        -:  195:    //bit depth for each channel
+        -:  196:    const static int rdepths[17] = { 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5 };
+        -:  197:    const static int gdepths[17] = { 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6 };
+        -:  198:    const static int bdepths[17] = { 0, 0, 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5 };
+        -:  199:
+        -:  200:    const static int ditherKernel[16] = {
+        -:  201:         0 << 12,  8 << 12,  2 << 12, 10 << 12,
+        -:  202:        12 << 12,  4 << 12, 14 << 12,  6 << 12,
+        -:  203:         3 << 12, 11 << 12,  1 << 12,  9 << 12,
+        -:  204:        15 << 12,  7 << 12, 13 << 12,  5 << 12,
+        -:  205:    };
+        -:  206:
+    #####:  207:    uint32_t * cooked = (uint32_t *) MSF_GIF_MALLOC(allocContext, width * height * sizeof(uint32_t));
+    #####:  208:    if (!cooked) { MsfCookedFrame blank = {0}; return blank; }
+    %%%%%:  208-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  208-block  1
+        -:  209:
+    #####:  210:    int count = 0;
+    %%%%%:  210-block  0
+        -:  211:    MsfTimeLoop("do") do {
+    #####:  212:        int rbits = rdepths[depth], gbits = gdepths[depth], bbits = bdepths[depth];
+    #####:  213:        int paletteSize = 1 << (rbits + gbits + bbits);
+    #####:  214:        memset(used, 0, paletteSize * sizeof(uint8_t));
+        -:  215:
+        -:  216:        //TODO: document what this math does and why it's correct
+    #####:  217:        int rdiff = (1 << (8 - rbits)) - 1;
+    #####:  218:        int gdiff = (1 << (8 - gbits)) - 1;
+    #####:  219:        int bdiff = (1 << (8 - bbits)) - 1;
+    #####:  220:        short rmul = (short) ((255.0f - rdiff) / 255.0f * 257);
+    #####:  221:        short gmul = (short) ((255.0f - gdiff) / 255.0f * 257);
+    #####:  222:        short bmul = (short) ((255.0f - bdiff) / 255.0f * 257);
+        -:  223:
+    #####:  224:        int gmask = ((1 << gbits) - 1) << rbits;
+    #####:  225:        int bmask = ((1 << bbits) - 1) << rbits << gbits;
+        -:  226:
+    #####:  227:        MsfTimeLoop("cook") for (int y = 0; y < height; ++y) {
+    %%%%%:  227-block  0
+    %%%%%:  227-block  1
+    %%%%%:  227-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  228:            int x = 0;
+        -:  229:
+        -:  230:            #if (defined (__SSE2__) || defined (_M_X64) || _M_IX86_FP == 2) && !defined(MSF_GIF_NO_SSE2)
+    #####:  231:                __m128i k = _mm_loadu_si128((__m128i *) &ditherKernel[(y & 3) * 4]);
+    %%%%%:  231-block  0
+    %%%%%:  231-block  1
+    #####:  232:                __m128i k2 = _mm_or_si128(_mm_srli_epi32(k, rbits), _mm_slli_epi32(_mm_srli_epi32(k, bbits), 16));
+    %%%%%:  232-block  0
+    %%%%%:  232-block  1
+    %%%%%:  232-block  2
+        -:  233:                // MsfTimeLoop("SIMD")
+    #####:  234:                for (; x < width - 3; x += 4) {
+    %%%%%:  234-block  0
+    %%%%%:  234-block  1
+    %%%%%:  234-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  235:                    uint8_t * pixels = &raw[y * pitch + x * 4];
+    %%%%%:  235-block  0
+    #####:  236:                    __m128i p = _mm_loadu_si128((__m128i *) pixels);
+    %%%%%:  236-block  0
+        -:  237:
+    #####:  238:                    __m128i rb = _mm_and_si128(p, _mm_set1_epi32(0x00FF00FF));
+    %%%%%:  238-block  0
+    #####:  239:                    __m128i rb1 = _mm_mullo_epi16(rb, _mm_set_epi16(bmul, rmul, bmul, rmul, bmul, rmul, bmul, rmul));
+    %%%%%:  239-block  0
+    %%%%%:  239-block  1
+    %%%%%:  239-block  2
+    #####:  240:                    __m128i rb2 = _mm_adds_epu16(rb1, k2);
+    #####:  241:                    __m128i r3 = _mm_srli_epi32(_mm_and_si128(rb2, _mm_set1_epi32(0x0000FFFF)), 16 - rbits);
+    %%%%%:  241-block  0
+    %%%%%:  241-block  1
+    %%%%%:  241-block  2
+    %%%%%:  241-block  3
+    #####:  242:                    __m128i b3 = _mm_and_si128(_mm_srli_epi32(rb2, 32 - rbits - gbits - bbits), _mm_set1_epi32(bmask));
+    %%%%%:  242-block  0
+    %%%%%:  242-block  1
+    %%%%%:  242-block  2
+        -:  243:
+    #####:  244:                    __m128i g = _mm_and_si128(_mm_srli_epi32(p, 8), _mm_set1_epi32(0x000000FF));
+    %%%%%:  244-block  0
+    %%%%%:  244-block  1
+    #####:  245:                    __m128i g1 = _mm_mullo_epi16(g, _mm_set1_epi32(gmul));
+    %%%%%:  245-block  0
+    %%%%%:  245-block  1
+    %%%%%:  245-block  2
+    #####:  246:                    __m128i g2 = _mm_adds_epu16(g1, _mm_srli_epi32(k, gbits));
+    %%%%%:  246-block  0
+    %%%%%:  246-block  1
+    #####:  247:                    __m128i g3 = _mm_and_si128(_mm_srli_epi32(g2, 16 - rbits - gbits), _mm_set1_epi32(gmask));
+    %%%%%:  247-block  0
+    %%%%%:  247-block  1
+        -:  248:
+        -:  249:                    //TODO: does storing this as a __m128i then reading it back as a uint32_t violate strict aliasing?
+    #####:  250:                    uint32_t * c = &cooked[y * width + x];
+    %%%%%:  250-block  0
+    #####:  251:                    __m128i out = _mm_or_si128(_mm_or_si128(r3, g3), b3);
+    %%%%%:  251-block  0
+    %%%%%:  251-block  1
+        -:  252:                    _mm_storeu_si128((__m128i *) c, out);
+        -:  253:                }
+        -:  254:            #endif
+        -:  255:
+        -:  256:            //scalar cleanup loop
+        -:  257:            // MsfTimeLoop("scalar")
+    #####:  258:            for (; x < width; ++x) {
+    %%%%%:  258-block  0
+    %%%%%:  258-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  259:                uint8_t * p = &raw[y * pitch + x * 4];
+    #####:  260:                int dx = x & 3, dy = y & 3;
+    #####:  261:                int k = ditherKernel[dy * 4 + dx];
+    #####:  262:                cooked[y * width + x] =
+    #####:  263:                    (msf_imin(65535, p[2] * bmul + (k >> bbits)) >> (16 - rbits - gbits - bbits) & bmask) |
+    %%%%%:  263-block  0
+call    0 never executed
+    #####:  264:                    (msf_imin(65535, p[1] * gmul + (k >> gbits)) >> (16 - rbits - gbits        ) & gmask) |
+call    0 never executed
+    #####:  265:                     msf_imin(65535, p[0] * rmul + (k >> rbits)) >> (16 - rbits                );
+call    0 never executed
+        -:  266:            }
+        -:  267:        }
+        -:  268:
+    #####:  269:        count = 0;
+    #####:  270:        MsfTimeLoop("mark and count") for (int i = 0; i < width * height; ++i) {
+    %%%%%:  270-block  0
+    %%%%%:  270-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  271:            used[cooked[i]] = 1;
+    %%%%%:  271-block  0
+        -:  272:        }
+        -:  273:
+        -:  274:        //count used colors
+    #####:  275:        MsfTimeLoop("count") for (int j = 0; j < paletteSize; ++j) {
+    %%%%%:  275-block  0
+    %%%%%:  275-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  276:            count += used[j];
+    %%%%%:  276-block  0
+        -:  277:        }
+    #####:  278:    } while (count >= 256 && --depth);
+    %%%%%:  278-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  278-block  1
+branch  2 never executed
+branch  3 never executed
+        -:  279:
+    #####:  280:    MsfCookedFrame ret = { cooked, depth, count, rdepths[depth], gdepths[depth], bdepths[depth] };
+    #####:  281:    return ret;
+    %%%%%:  281-block  0
+        -:  282:}
+        -:  283:
+        -:  284:////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        -:  285:/// Frame Compression                                                                                                ///
+        -:  286:////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        -:  287:
+        -:  288:typedef struct {
+        -:  289:    uint8_t * next;
+        -:  290:    size_t size;
+        -:  291:} MsfBufferHeader;
+        -:  292:
+function msf_put_code called 0 returned 0% blocks executed 0%
+    #####:  293:static inline int msf_put_code(uint8_t * * writeHead, uint32_t * blockBits, int len, uint32_t code) {
+        -:  294:    //insert new code into block buffer
+    #####:  295:    int idx = *blockBits / 8;
+    #####:  296:    int bit = *blockBits % 8;
+    #####:  297:    (*writeHead)[idx + 0] |= code <<       bit ;
+    #####:  298:    (*writeHead)[idx + 1] |= code >> ( 8 - bit);
+    #####:  299:    (*writeHead)[idx + 2] |= code >> (16 - bit);
+    #####:  300:    *blockBits += len;
+        -:  301:
+        -:  302:    //prep the next block buffer if the current one is full
+    #####:  303:    if (*blockBits >= 256 * 8) {
+    %%%%%:  303-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  304:        *blockBits -= 255 * 8;
+    #####:  305:        (*writeHead) += 256;
+    #####:  306:        (*writeHead)[2] = (*writeHead)[1];
+    #####:  307:        (*writeHead)[1] = (*writeHead)[0];
+    #####:  308:        (*writeHead)[0] = 255;
+    #####:  309:        memset((*writeHead) + 4, 0, 256);
+    %%%%%:  309-block  0
+        -:  310:    }
+        -:  311:
+    #####:  312:    return 1;
+    %%%%%:  312-block  0
+        -:  313:}
+        -:  314:
+        -:  315:typedef struct {
+        -:  316:    int16_t * data;
+        -:  317:    int len;
+        -:  318:    int stride;
+        -:  319:} MsfStridedList;
+        -:  320:
+function msf_lzw_reset called 0 returned 0% blocks executed 0%
+    #####:  321:static inline void msf_lzw_reset(MsfStridedList * lzw, int tableSize, int stride) { MsfTimeFunc
+    #####:  322:    memset(lzw->data, 0xFF, 4096 * stride * sizeof(int16_t));
+    #####:  323:    lzw->len = tableSize + 2;
+    #####:  324:    lzw->stride = stride;
+    #####:  325:}
+        -:  326:
+function msf_compress_frame called 0 returned 0% blocks executed 0%
+    #####:  327:static uint8_t * msf_compress_frame(void * allocContext, int width, int height, int centiSeconds,
+        -:  328:                                    MsfCookedFrame frame, MsfCookedFrame previous, uint8_t * used)
+        -:  329:{ MsfTimeFunc
+        -:  330:    //NOTE: we reserve enough memory for theoretical the worst case upfront because it's a reasonable amount,
+        -:  331:    //      and prevents us from ever having to check size or realloc during compression
+    #####:  332:    int maxBufSize = sizeof(MsfBufferHeader) + 32 + 256 * 3 + width * height * 3 / 2; //headers + color table + data
+    #####:  333:    uint8_t * allocation = (uint8_t *) MSF_GIF_MALLOC(allocContext, maxBufSize);
+    #####:  334:    if (!allocation) { return NULL; }
+    %%%%%:  334-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  334-block  1
+    #####:  335:    uint8_t * writeBase = allocation + sizeof(MsfBufferHeader);
+    #####:  336:    uint8_t * writeHead = writeBase;
+    #####:  337:    int lzwAllocSize = 4096 * (frame.count + 1) * sizeof(int16_t);
+    #####:  338:    MsfStridedList lzw = { (int16_t *) MSF_GIF_MALLOC(allocContext, lzwAllocSize) };
+    #####:  339:    if (!lzw.data) { MSF_GIF_FREE(allocContext, allocation, maxBufSize); return NULL; }
+    %%%%%:  339-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  339-block  1
+        -:  340:
+        -:  341:    //allocate tlb
+    #####:  342:    int totalBits = frame.rbits + frame.gbits + frame.bbits;
+    #####:  343:    int tlbSize = 1 << totalBits;
+        -:  344:    uint8_t tlb[1 << 16]; //only 64k, so stack allocating is fine
+        -:  345:
+        -:  346:    //generate palette
+        -:  347:    typedef struct { uint8_t r, g, b; } Color3;
+    #####:  348:    Color3 table[256] = { {0} };
+    #####:  349:    int tableIdx = 1; //we start counting at 1 because 0 is the transparent color
+    #####:  350:    MsfTimeLoop("table") for (int i = 0; i < tlbSize; ++i) {
+    %%%%%:  350-block  0
+    %%%%%:  350-block  1
+    %%%%%:  350-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  351:        if (used[i]) {
+    %%%%%:  351-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  352:            tlb[i] = tableIdx;
+    #####:  353:            int rmask = (1 << frame.rbits) - 1;
+    #####:  354:            int gmask = (1 << frame.gbits) - 1;
+        -:  355:            //isolate components
+    #####:  356:            int r = i & rmask;
+    #####:  357:            int g = i >> frame.rbits & gmask;
+    #####:  358:            int b = i >> (frame.rbits + frame.gbits);
+        -:  359:            //shift into highest bits
+    #####:  360:            r <<= 8 - frame.rbits;
+    #####:  361:            g <<= 8 - frame.gbits;
+    #####:  362:            b <<= 8 - frame.bbits;
+    #####:  363:            table[tableIdx].r = r | r >> frame.rbits | r >> (frame.rbits * 2) | r >> (frame.rbits * 3);
+    #####:  364:            table[tableIdx].g = g | g >> frame.gbits | g >> (frame.gbits * 2) | g >> (frame.gbits * 3);
+    #####:  365:            table[tableIdx].b = b | b >> frame.bbits | b >> (frame.bbits * 2) | b >> (frame.bbits * 3);
+    #####:  366:            ++tableIdx;
+    %%%%%:  366-block  0
+        -:  367:        }
+        -:  368:    }
+        -:  369:
+        -:  370:    //SPEC: "Because of some algorithmic constraints however, black & white images which have one color bit
+        -:  371:    //       must be indicated as having a code size of 2."
+    #####:  372:    int tableBits = msf_imax(2, msf_bit_log(tableIdx - 1));
+    %%%%%:  372-block  0
+call    0 never executed
+call    1 never executed
+    #####:  373:    int tableSize = 1 << tableBits;
+        -:  374:    //NOTE: we don't just compare `depth` field here because it will be wrong for the first frame and we will segfault
+    #####:  375:    int hasSamePal = frame.rbits == previous.rbits && frame.gbits == previous.gbits && frame.bbits == previous.bbits;
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  375-block  0
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  375-block  1
+branch  4 never executed
+branch  5 never executed
+    %%%%%:  375-block  2
+    %%%%%:  375-block  3
+        -:  376:
+        -:  377:    //NOTE: because __attribute__((__packed__)) is annoyingly compiler-specific, we do this unreadable weirdness
+    #####:  378:    char headerBytes[19] = "\x21\xF9\x04\x05\0\0\0\0" "\x2C\0\0\0\0\0\0\0\0\x80";
+    #####:  379:    memcpy(&headerBytes[4], &centiSeconds, 2);
+    #####:  380:    memcpy(&headerBytes[13], &width, 2);
+    #####:  381:    memcpy(&headerBytes[15], &height, 2);
+    #####:  382:    headerBytes[17] |= tableBits - 1;
+    #####:  383:    memcpy(writeHead, headerBytes, 18);
+    #####:  384:    writeHead += 18;
+        -:  385:
+        -:  386:    //local color table
+    #####:  387:    memcpy(writeHead, table, tableSize * sizeof(Color3));
+    #####:  388:    writeHead += tableSize * sizeof(Color3);
+    #####:  389:    *writeHead++ = tableBits;
+        -:  390:
+        -:  391:    //prep block
+    #####:  392:    memset(writeHead, 0, 260);
+    #####:  393:    writeHead[0] = 255;
+    #####:  394:    uint32_t blockBits = 8; //relative to block.head
+        -:  395:
+        -:  396:    //SPEC: "Encoders should output a Clear code as the first code of each image data stream."
+    #####:  397:    msf_lzw_reset(&lzw, tableSize, tableIdx);
+    %%%%%:  397-block  0
+call    0 never executed
+    #####:  398:    msf_put_code(&writeHead, &blockBits, msf_bit_log(lzw.len - 1), tableSize);
+call    0 never executed
+call    1 never executed
+        -:  399:
+    #####:  400:    int lastCode = hasSamePal && frame.pixels[0] == previous.pixels[0]? 0 : tlb[frame.pixels[0]];
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  400-block  0
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  400-block  1
+    %%%%%:  400-block  2
+    #####:  401:    MsfTimeLoop("compress") for (int i = 1; i < width * height; ++i) {
+    %%%%%:  401-block  0
+    %%%%%:  401-block  1
+    %%%%%:  401-block  2
+branch  0 never executed
+branch  1 never executed
+        -:  402:        //PERF: branching vs. branchless version of this line is observed to have no discernable impact on speed
+    #####:  403:        int color = hasSamePal && frame.pixels[i] == previous.pixels[i]? 0 : tlb[frame.pixels[i]];
+    %%%%%:  403-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  403-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  403-block  2
+    %%%%%:  403-block  3
+        -:  404:        //PERF: branchless version must use && otherwise it will segfault on frame 1, but it's well-predicted so OK
+        -:  405:        // int color = (!(hasSamePal && frame.pixels[i] == previous.pixels[i])) * tlb[frame.pixels[i]];
+    #####:  406:        int code = (&lzw.data[lastCode * lzw.stride])[color];
+    #####:  407:        if (code < 0) {
+    %%%%%:  407-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  408:            //write to code stream
+    #####:  409:            int codeBits = msf_bit_log(lzw.len - 1);
+    %%%%%:  409-block  0
+call    0 never executed
+    #####:  410:            msf_put_code(&writeHead, &blockBits, codeBits, lastCode);
+call    0 never executed
+        -:  411:
+    #####:  412:            if (lzw.len > 4095) {
+branch  0 never executed
+branch  1 never executed
+        -:  413:                //reset buffer code table
+    #####:  414:                msf_put_code(&writeHead, &blockBits, codeBits, tableSize);
+    %%%%%:  414-block  0
+call    0 never executed
+    #####:  415:                msf_lzw_reset(&lzw, tableSize, tableIdx);
+call    0 never executed
+        -:  416:            } else {
+    #####:  417:                (&lzw.data[lastCode * lzw.stride])[color] = lzw.len;
+    #####:  418:                ++lzw.len;
+    %%%%%:  418-block  0
+        -:  419:            }
+        -:  420:
+    #####:  421:            lastCode = color;
+    %%%%%:  421-block  0
+        -:  422:        } else {
+    #####:  423:            lastCode = code;
+    %%%%%:  423-block  0
+        -:  424:        }
+        -:  425:    }
+        -:  426:
+    #####:  427:    MSF_GIF_FREE(allocContext, lzw.data, lzwAllocSize);
+    #####:  428:    MSF_GIF_FREE(allocContext, previous.pixels, width * height * sizeof(uint32_t));
+        -:  429:
+        -:  430:    //write code for leftover index buffer contents, then the end code
+    #####:  431:    msf_put_code(&writeHead, &blockBits, msf_imin(12, msf_bit_log(lzw.len - 1)), lastCode);
+    %%%%%:  431-block  0
+call    0 never executed
+call    1 never executed
+call    2 never executed
+    #####:  432:    msf_put_code(&writeHead, &blockBits, msf_imin(12, msf_bit_log(lzw.len)), tableSize + 1);
+call    0 never executed
+call    1 never executed
+call    2 never executed
+        -:  433:
+        -:  434:    //flush remaining data
+    #####:  435:    if (blockBits > 8) {
+branch  0 never executed
+branch  1 never executed
+    #####:  436:        int bytes = (blockBits + 7) / 8; //round up
+    #####:  437:        writeHead[0] = bytes - 1;
+    #####:  438:        writeHead += bytes;
+    %%%%%:  438-block  0
+        -:  439:    }
+    #####:  440:    *writeHead++ = 0; //terminating block
+        -:  441:
+        -:  442:    //filling in buffer header and shrink buffer to fit data
+    #####:  443:    MsfBufferHeader * header = (MsfBufferHeader *) allocation;
+    #####:  444:    header->next = NULL;
+    #####:  445:    header->size = writeHead - writeBase;
+    #####:  446:    uint8_t * moved = (uint8_t *) MSF_GIF_REALLOC(allocContext, allocation, maxBufSize, writeHead - allocation);
+    #####:  447:    if (!moved) { MSF_GIF_FREE(allocContext, allocation, maxBufSize); return NULL; }
+    %%%%%:  447-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  447-block  1
+    #####:  448:    return moved;
+    %%%%%:  448-block  0
+        -:  449:}
+        -:  450:
+        -:  451:////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        -:  452:/// Incremental API                                                                                                  ///
+        -:  453:////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        -:  454:
+function msf_gif_begin called 0 returned 0% blocks executed 0%
+    #####:  455:int msf_gif_begin(MsfGifState * handle, int width, int height) { MsfTimeFunc
+    #####:  456:    MsfCookedFrame empty = {0}; //god I hate MSVC...
+    #####:  457:    handle->previousFrame = empty;
+    #####:  458:    handle->width = width;
+    #####:  459:    handle->height = height;
+        -:  460:
+        -:  461:    //setup header buffer header (lol)
+    #####:  462:    handle->listHead = (uint8_t *) MSF_GIF_MALLOC(handle->customAllocatorContext, sizeof(MsfBufferHeader) + 32);
+    #####:  463:    if (!handle->listHead) { return 0; }
+    %%%%%:  463-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  463-block  1
+    #####:  464:    handle->listTail = handle->listHead;
+    #####:  465:    MsfBufferHeader * header = (MsfBufferHeader *) handle->listHead;
+    #####:  466:    header->next = NULL;
+    #####:  467:    header->size = 32;
+        -:  468:
+        -:  469:    //NOTE: because __attribute__((__packed__)) is annoyingly compiler-specific, we do this unreadable weirdness
+    #####:  470:    char headerBytes[33] = "GIF89a\0\0\0\0\x10\0\0" "\x21\xFF\x0BNETSCAPE2.0\x03\x01\0\0\0";
+    #####:  471:    memcpy(&headerBytes[6], &width, 2);
+    #####:  472:    memcpy(&headerBytes[8], &height, 2);
+    #####:  473:    memcpy(handle->listHead + sizeof(MsfBufferHeader), headerBytes, 32);
+    #####:  474:    return 1;
+    %%%%%:  474-block  0
+        -:  475:}
+        -:  476:
+function msf_gif_frame called 0 returned 0% blocks executed 0%
+    #####:  477:int msf_gif_frame(MsfGifState * handle, uint8_t * pixelData, int centiSecondsPerFame, int maxBitDepth, int pitchInBytes)
+        -:  478:{ MsfTimeFunc
+    #####:  479:    if (!handle->listHead) { return 0; }
+    %%%%%:  479-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  479-block  1
+        -:  480:
+    #####:  481:    maxBitDepth = msf_imax(1, msf_imin(16, maxBitDepth));
+    %%%%%:  481-block  0
+call    0 never executed
+call    1 never executed
+    #####:  482:    if (pitchInBytes == 0) pitchInBytes = handle->width * 4;
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  482-block  0
+    #####:  483:    if (pitchInBytes < 0) pixelData -= pitchInBytes * (handle->height - 1);
+    %%%%%:  483-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  483-block  1
+        -:  484:
+        -:  485:    uint8_t used[1 << 16]; //only 64k, so stack allocating is fine
+        -:  486:    MsfCookedFrame frame =
+    #####:  487:        msf_cook_frame(handle->customAllocatorContext, pixelData, used, handle->width, handle->height, pitchInBytes,
+call    0 never executed
+    #####:  488:            msf_imin(maxBitDepth, handle->previousFrame.depth + 160 / msf_imax(1, handle->previousFrame.count)));
+    %%%%%:  488-block  0
+call    0 never executed
+call    1 never executed
+        -:  489:    //TODO: de-duplicate cleanup code
+    #####:  490:    if (!frame.pixels) {
+branch  0 never executed
+branch  1 never executed
+    #####:  491:        MSF_GIF_FREE(handle->customAllocatorContext,
+        -:  492:                     handle->previousFrame.pixels, handle->width * handle->height * sizeof(uint32_t));
+    #####:  493:        for (uint8_t * node = handle->listHead; node;) {
+    %%%%%:  493-block  0
+    %%%%%:  493-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  494:            MsfBufferHeader * header = (MsfBufferHeader *) node;
+    #####:  495:            node = header->next;
+    #####:  496:            MSF_GIF_FREE(handle->customAllocatorContext, header, sizeof(MsfBufferHeader) + header->size);
+    %%%%%:  496-block  0
+        -:  497:        }
+    #####:  498:        handle->listHead = handle->listTail = NULL;
+    #####:  499:        return 0;
+    %%%%%:  499-block  0
+        -:  500:    }
+        -:  501:
+    #####:  502:    uint8_t * buffer = msf_compress_frame(handle->customAllocatorContext,
+    %%%%%:  502-block  0
+call    0 never executed
+        -:  503:        handle->width, handle->height, centiSecondsPerFame, frame, handle->previousFrame, used);
+    #####:  504:    ((MsfBufferHeader *) handle->listTail)->next = buffer;
+    #####:  505:    handle->listTail = buffer;
+    #####:  506:    if (!buffer) {
+branch  0 never executed
+branch  1 never executed
+    #####:  507:        MSF_GIF_FREE(handle->customAllocatorContext, frame.pixels, handle->width * handle->height * sizeof(uint32_t));
+    #####:  508:        MSF_GIF_FREE(handle->customAllocatorContext,
+        -:  509:                     handle->previousFrame.pixels, handle->width * handle->height * sizeof(uint32_t));
+    #####:  510:        for (uint8_t * node = handle->listHead; node;) {
+    %%%%%:  510-block  0
+    %%%%%:  510-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  511:            MsfBufferHeader * header = (MsfBufferHeader *) node;
+    #####:  512:            node = header->next;
+    #####:  513:            MSF_GIF_FREE(handle->customAllocatorContext, header, sizeof(MsfBufferHeader) + header->size);
+    %%%%%:  513-block  0
+        -:  514:        }
+    #####:  515:        handle->listHead = handle->listTail = NULL;
+    #####:  516:        return 0;
+    %%%%%:  516-block  0
+        -:  517:    }
+        -:  518:
+    #####:  519:    handle->previousFrame = frame;
+    #####:  520:    return 1;
+    %%%%%:  520-block  0
+        -:  521:}
+        -:  522:
+function msf_gif_end called 0 returned 0% blocks executed 0%
+    #####:  523:MsfGifResult msf_gif_end(MsfGifState * handle) { MsfTimeFunc
+    #####:  524:    if (!handle->listHead) { MsfGifResult empty = {0}; return empty; }
+    %%%%%:  524-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  524-block  1
+        -:  525:
+    #####:  526:    MSF_GIF_FREE(handle->customAllocatorContext,
+        -:  527:                 handle->previousFrame.pixels, handle->width * handle->height * sizeof(uint32_t));
+        -:  528:
+        -:  529:    //first pass: determine total size
+    #####:  530:    size_t total = 1; //1 byte for trailing marker
+    #####:  531:    for (uint8_t * node = handle->listHead; node;) {
+    %%%%%:  531-block  0
+    %%%%%:  531-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  532:        MsfBufferHeader * header = (MsfBufferHeader *) node;
+    #####:  533:        node = header->next;
+    #####:  534:        total += header->size;
+    %%%%%:  534-block  0
+        -:  535:    }
+        -:  536:
+        -:  537:    //second pass: write data
+    #####:  538:    uint8_t * buffer = (uint8_t *) MSF_GIF_MALLOC(handle->customAllocatorContext, total);
+    #####:  539:    if (buffer) {
+    %%%%%:  539-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  540:        uint8_t * writeHead = buffer;
+    #####:  541:        for (uint8_t * node = handle->listHead; node;) {
+    %%%%%:  541-block  0
+    %%%%%:  541-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  542:            MsfBufferHeader * header = (MsfBufferHeader *) node;
+    #####:  543:            memcpy(writeHead, node + sizeof(MsfBufferHeader), header->size);
+    #####:  544:            writeHead += header->size;
+    #####:  545:            node = header->next;
+    %%%%%:  545-block  0
+        -:  546:        }
+    #####:  547:        *writeHead++ = 0x3B;
+    %%%%%:  547-block  0
+        -:  548:    }
+        -:  549:
+        -:  550:    //third pass: free buffers
+    #####:  551:    for (uint8_t * node = handle->listHead; node;) {
+    %%%%%:  551-block  0
+    %%%%%:  551-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  552:        MsfBufferHeader * header = (MsfBufferHeader *) node;
+    #####:  553:        node = header->next;
+    #####:  554:        MSF_GIF_FREE(handle->customAllocatorContext, header, sizeof(MsfBufferHeader) + header->size);
+    %%%%%:  554-block  0
+        -:  555:    }
+        -:  556:
+    #####:  557:    MsfGifResult ret = { buffer, total, total, handle->customAllocatorContext };
+    #####:  558:    return ret;
+    %%%%%:  558-block  0
+        -:  559:}
+        -:  560:
+function msf_gif_free called 0 returned 0% blocks executed 0%
+    #####:  561:void msf_gif_free(MsfGifResult result) {
+    #####:  562:    if (result.data) { MSF_GIF_FREE(result.contextPointer, result.data, result.allocSize); }
+    %%%%%:  562-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  562-block  1
+    #####:  563:}
+        -:  564:
+        -:  565:#endif //MSF_GIF_ALREADY_IMPLEMENTED_IN_THIS_TRANSLATION_UNIT
+        -:  566:#endif //MSF_GIF_IMPL
+        -:  567:
+        -:  568:/*
+        -:  569:------------------------------------------------------------------------------
+        -:  570:This software is available under 2 licenses -- choose whichever you prefer.
+        -:  571:------------------------------------------------------------------------------
+        -:  572:ALTERNATIVE A - MIT License
+        -:  573:Copyright (c) 2020 Miles Fogle
+        -:  574:Permission is hereby granted, free of charge, to any person obtaining a copy of
+        -:  575:this software and associated documentation files (the "Software"), to deal in
+        -:  576:the Software without restriction, including without limitation the rights to
+        -:  577:use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+        -:  578:of the Software, and to permit persons to whom the Software is furnished to do
+        -:  579:so, subject to the following conditions:
+        -:  580:The above copyright notice and this permission notice shall be included in all
+        -:  581:copies or substantial portions of the Software.
+        -:  582:THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        -:  583:IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        -:  584:FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        -:  585:AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        -:  586:LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        -:  587:OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        -:  588:SOFTWARE.
+        -:  589:------------------------------------------------------------------------------
+        -:  590:ALTERNATIVE B - Public Domain (www.unlicense.org)
+        -:  591:This is free and unencumbered software released into the public domain.
+        -:  592:Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
+        -:  593:software, either in source code form or as a compiled binary, for any purpose,
+        -:  594:commercial or non-commercial, and by any means.
+        -:  595:In jurisdictions that recognize copyright laws, the author or authors of this
+        -:  596:software dedicate any and all copyright interest in the software to the public
+        -:  597:domain. We make this dedication for the benefit of the public at large and to
+        -:  598:the detriment of our heirs and successors. We intend this dedication to be an
+        -:  599:overt act of relinquishment in perpetuity of all present and future rights to
+        -:  600:this software under copyright law.
+        -:  601:THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        -:  602:IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        -:  603:FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        -:  604:AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+        -:  605:ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+        -:  606:WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+        -:  607:------------------------------------------------------------------------------
+        -:  608:*/

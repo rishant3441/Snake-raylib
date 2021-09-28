@@ -1,0 +1,1158 @@
+        -:    0:Source:C:/Dev/CLionProjects/Snake-raylib/cmake-build-debug-coverage/_deps/raylib-src/src/external/sdefl.h
+        -:    0:Graph:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\CMakeFiles\raylib.dir\core.c.gcno
+        -:    0:Data:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\CMakeFiles\raylib.dir\core.c.gcda
+        -:    0:Runs:1
+        -:    1:/*
+        -:    2:# Small Deflate
+        -:    3:`sdefl` is a small bare bone lossless compression library in ANSI C (ISO C90)
+        -:    4:which implements the Deflate (RFC 1951) compressed data format specification standard.
+        -:    5:It is mainly tuned to get as much speed and compression ratio from as little code
+        -:    6:as needed to keep the implementation as concise as possible.
+        -:    7:
+        -:    8:## Features
+        -:    9:- Portable single header and source file duo written in ANSI C (ISO C90)
+        -:   10:- Dual license with either MIT or public domain
+        -:   11:- Small implementation
+        -:   12:    - Deflate: 525 LoC
+        -:   13:    - Inflate: 320 LoC
+        -:   14:- Webassembly:
+        -:   15:    - Deflate ~3.7 KB (~2.2KB compressed)
+        -:   16:    - Inflate ~3.6 KB (~2.2KB compressed)
+        -:   17:
+        -:   18:## Usage:
+        -:   19:This file behaves differently depending on what symbols you define
+        -:   20:before including it.
+        -:   21:
+        -:   22:Header-File mode:
+        -:   23:If you do not define `SDEFL_IMPLEMENTATION` before including this file, it
+        -:   24:will operate in header only mode. In this mode it declares all used structs
+        -:   25:and the API of the library without including the implementation of the library.
+        -:   26:
+        -:   27:Implementation mode:
+        -:   28:If you define `SDEFL_IMPLEMENTATION` before including this file, it will
+        -:   29:compile the implementation . Make sure that you only include
+        -:   30:this file implementation in *one* C or C++ file to prevent collisions.
+        -:   31:
+        -:   32:### Benchmark
+        -:   33:
+        -:   34:| Compressor name         | Compression| Decompress.| Compr. size | Ratio |
+        -:   35:| ------------------------| -----------| -----------| ----------- | ----- |
+        -:   36:| sdefl 1.0 -0            |   127 MB/s |   233 MB/s |    40004116 | 39.88 |
+        -:   37:| sdefl 1.0 -1            |   111 MB/s |   259 MB/s |    38940674 | 38.82 |
+        -:   38:| sdefl 1.0 -5            |    45 MB/s |   275 MB/s |    36577183 | 36.46 |
+        -:   39:| sdefl 1.0 -7            |    38 MB/s |   276 MB/s |    36523781 | 36.41 |
+        -:   40:| zlib 1.2.11 -1          |    72 MB/s |   307 MB/s |    42298774 | 42.30 |
+        -:   41:| zlib 1.2.11 -6          |    24 MB/s |   313 MB/s |    36548921 | 36.55 |
+        -:   42:| zlib 1.2.11 -9          |    20 MB/s |   314 MB/s |    36475792 | 36.48 |
+        -:   43:| miniz 1.0 -1            |   122 MB/s |   208 MB/s |    48510028 | 48.51 |
+        -:   44:| miniz 1.0 -6            |    27 MB/s |   260 MB/s |    36513697 | 36.51 |
+        -:   45:| miniz 1.0 -9            |    23 MB/s |   261 MB/s |    36460101 | 36.46 |
+        -:   46:| libdeflate 1.3 -1       |   147 MB/s |   667 MB/s |    39597378 | 39.60 |
+        -:   47:| libdeflate 1.3 -6       |    69 MB/s |   689 MB/s |    36648318 | 36.65 |
+        -:   48:| libdeflate 1.3 -9       |    13 MB/s |   672 MB/s |    35197141 | 35.20 |
+        -:   49:| libdeflate 1.3 -12      |  8.13 MB/s |   670 MB/s |    35100568 | 35.10 |
+        -:   50:
+        -:   51:### Compression
+        -:   52:Results on the [Silesia compression corpus](http://sun.aei.polsl.pl/~sdeor/index.php?page=silesia):
+        -:   53:
+        -:   54:| File    |   Original | `sdefl 0`  	| `sdefl 5` 	| `sdefl 7` |
+        -:   55:| :------ | ---------: | -----------------: | ---------: | ----------: |
+        -:   56:| dickens | 10.192.446 |  4,260,187|  3,845,261|   3,833,657 |
+        -:   57:| mozilla | 51.220.480 | 20,774,706 | 19,607,009 |  19,565,867 |
+        -:   58:| mr      |  9.970.564 | 3,860,531 |  3,673,460 |   3,665,627 |
+        -:   59:| nci     | 33.553.445 | 4,030,283 |  3,094,526 |   3,006,075 |
+        -:   60:| ooffice |  6.152.192 | 3,320,063 |  3,186,373 |   3,183,815 |
+        -:   61:| osdb    | 10.085.684 | 3,919,646 |  3,649,510 |   3,649,477 |
+        -:   62:| reymont |  6.627.202 | 2,263,378 |  1,857,588 |   1,827,237 |
+        -:   63:| samba   | 21.606.400 | 6,121,797 |  5,462,670 |   5,450,762 |
+        -:   64:| sao     |  7.251.944 | 5,612,421 |  5,485,380 |   5,481,765 |
+        -:   65:| webster | 41.458.703 | 13,972,648 | 12,059,432 |  11,991,421 |
+        -:   66:| xml     |  5.345.280 | 886,620|    674,009 |     662,141 |
+        -:   67:| x-ray   |  8.474.240 | 6,304,655 |  6,244,779 |   6,244,779 |
+        -:   68:
+        -:   69:## License
+        -:   70:```
+        -:   71:------------------------------------------------------------------------------
+        -:   72:This software is available under 2 licenses -- choose whichever you prefer.
+        -:   73:------------------------------------------------------------------------------
+        -:   74:ALTERNATIVE A - MIT License
+        -:   75:Copyright (c) 2020 Micha Mettke
+        -:   76:Permission is hereby granted, free of charge, to any person obtaining a copy of
+        -:   77:this software and associated documentation files (the "Software"), to deal in
+        -:   78:the Software without restriction, including without limitation the rights to
+        -:   79:use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+        -:   80:of the Software, and to permit persons to whom the Software is furnished to do
+        -:   81:so, subject to the following conditions:
+        -:   82:The above copyright notice and this permission notice shall be included in all
+        -:   83:copies or substantial portions of the Software.
+        -:   84:THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        -:   85:IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        -:   86:FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        -:   87:AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        -:   88:LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        -:   89:OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        -:   90:SOFTWARE.
+        -:   91:------------------------------------------------------------------------------
+        -:   92:ALTERNATIVE B - Public Domain (www.unlicense.org)
+        -:   93:This is free and unencumbered software released into the public domain.
+        -:   94:Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
+        -:   95:software, either in source code form or as a compiled binary, for any purpose,
+        -:   96:commercial or non-commercial, and by any means.
+        -:   97:In jurisdictions that recognize copyright laws, the author or authors of this
+        -:   98:software dedicate any and all copyright interest in the software to the public
+        -:   99:domain. We make this dedication for the benefit of the public at large and to
+        -:  100:the detriment of our heirs and successors. We intend this dedication to be an
+        -:  101:overt act of relinquishment in perpetuity of all present and future rights to
+        -:  102:this software under copyright law.
+        -:  103:THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        -:  104:IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        -:  105:FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        -:  106:AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+        -:  107:ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+        -:  108:WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+        -:  109:------------------------------------------------------------------------------
+        -:  110:```
+        -:  111:*/
+        -:  112:#ifndef SDEFL_H_INCLUDED
+        -:  113:#define SDEFL_H_INCLUDED
+        -:  114:
+        -:  115:#ifdef __cplusplus
+        -:  116:extern "C" {
+        -:  117:#endif
+        -:  118:
+        -:  119:#define SDEFL_MAX_OFF   (1 << 15)
+        -:  120:#define SDEFL_WIN_SIZ   SDEFL_MAX_OFF
+        -:  121:#define SDEFL_WIN_MSK   (SDEFL_WIN_SIZ-1)
+        -:  122:
+        -:  123:#define SDEFL_HASH_BITS 15
+        -:  124:#define SDEFL_HASH_SIZ  (1 << SDEFL_HASH_BITS)
+        -:  125:#define SDEFL_HASH_MSK  (SDEFL_HASH_SIZ-1)
+        -:  126:
+        -:  127:#define SDEFL_MIN_MATCH 4
+        -:  128:#define SDEFL_BLK_MAX   (256*1024)
+        -:  129:#define SDEFL_SEQ_SIZ   ((SDEFL_BLK_MAX + SDEFL_MIN_MATCH)/SDEFL_MIN_MATCH)
+        -:  130:
+        -:  131:#define SDEFL_SYM_MAX   (288)
+        -:  132:#define SDEFL_OFF_MAX   (32)
+        -:  133:#define SDEFL_PRE_MAX   (19)
+        -:  134:
+        -:  135:#define SDEFL_LVL_MIN   0
+        -:  136:#define SDEFL_LVL_DEF   5
+        -:  137:#define SDEFL_LVL_MAX   8
+        -:  138:
+        -:  139:struct sdefl_freq {
+        -:  140:  unsigned lit[SDEFL_SYM_MAX];
+        -:  141:  unsigned off[SDEFL_OFF_MAX];
+        -:  142:};
+        -:  143:struct sdefl_code_words {
+        -:  144:  unsigned lit[SDEFL_SYM_MAX];
+        -:  145:  unsigned off[SDEFL_OFF_MAX];
+        -:  146:};
+        -:  147:struct sdefl_lens {
+        -:  148:  unsigned char lit[SDEFL_SYM_MAX];
+        -:  149:  unsigned char off[SDEFL_OFF_MAX];
+        -:  150:};
+        -:  151:struct sdefl_codes {
+        -:  152:  struct sdefl_code_words word;
+        -:  153:  struct sdefl_lens len;
+        -:  154:};
+        -:  155:struct sdefl_seqt {
+        -:  156:  int off, len;
+        -:  157:};
+        -:  158:struct sdefl {
+        -:  159:  int bits, bitcnt;
+        -:  160:  int tbl[SDEFL_HASH_SIZ];
+        -:  161:  int prv[SDEFL_WIN_SIZ];
+        -:  162:
+        -:  163:  int seq_cnt;
+        -:  164:  struct sdefl_seqt seq[SDEFL_SEQ_SIZ];
+        -:  165:  struct sdefl_freq freq;
+        -:  166:  struct sdefl_codes cod;
+        -:  167:};
+        -:  168:extern int sdefl_bound(int in_len);
+        -:  169:extern int sdeflate(struct sdefl *s, void *o, const void *i, int n, int lvl);
+        -:  170:extern int zsdeflate(struct sdefl *s, void *o, const void *i, int n, int lvl);
+        -:  171:
+        -:  172:#ifdef __cplusplus
+        -:  173:}
+        -:  174:#endif
+        -:  175:
+        -:  176:#endif /* SDEFL_H_INCLUDED */
+        -:  177:
+        -:  178:#ifdef SDEFL_IMPLEMENTATION
+        -:  179:
+        -:  180:#include <assert.h> /* assert */
+        -:  181:#include <string.h> /* memcpy */
+        -:  182:#include <limits.h> /* CHAR_BIT */
+        -:  183:
+        -:  184:#define SDEFL_NIL               (-1)
+        -:  185:#define SDEFL_MAX_MATCH         258
+        -:  186:#define SDEFL_MAX_CODE_LEN      (15)
+        -:  187:#define SDEFL_SYM_BITS          (10u)
+        -:  188:#define SDEFL_SYM_MSK           ((1u << SDEFL_SYM_BITS)-1u)
+        -:  189:#define SDEFL_LIT_LEN_CODES     (14)
+        -:  190:#define SDEFL_OFF_CODES         (15)
+        -:  191:#define SDEFL_PRE_CODES         (7)
+        -:  192:#define SDEFL_CNT_NUM(n)        ((((n)+3u/4u)+3u)&~3u)
+        -:  193:#define SDEFL_EOB               (256)
+        -:  194:
+        -:  195:#define sdefl_npow2(n) (1 << (sdefl_ilog2((n)-1) + 1))
+        -:  196:
+        -:  197:static int
+function sdefl_ilog2 called 0 returned 0% blocks executed 0%
+    #####:  198:sdefl_ilog2(int n) {
+    #####:  199:  if (!n) return 0;
+    %%%%%:  199-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  199-block  1
+        -:  200:#ifdef _MSC_VER
+        -:  201:  unsigned long msbp = 0;
+        -:  202:  _BitScanReverse(&msbp, (unsigned long)n);
+        -:  203:  return (int)msbp;
+        -:  204:#elif defined(__GNUC__) || defined(__clang__)
+    #####:  205:  return (int)sizeof(unsigned long) * CHAR_BIT - 1 - __builtin_clzl((unsigned long)n);
+    %%%%%:  205-block  0
+        -:  206:#else
+        -:  207:  #define lt(n) n, n, n, n, n, n, n, n, n, n, n, n, n, n, n, n
+        -:  208:  static const char tbl[256] = {
+        -:  209:    0,0,1,1,2,2,2,2,3,3,3,3,3,3,3,3,lt(4), lt(5), lt(5), lt(6), lt(6), lt(6), lt(6),
+        -:  210:    lt(7), lt(7), lt(7), lt(7), lt(7), lt(7), lt(7), lt(7)};
+        -:  211:  int tt, t;
+        -:  212:  if ((tt = (n >> 16))) {
+        -:  213:    return (t = (tt >> 8)) ? 24 + tbl[t] : 16 + tbl[tt];
+        -:  214:  } else {
+        -:  215:    return (t = (n >> 8)) ? 8 + tbl[t] : tbl[n];
+        -:  216:  }
+        -:  217:  #undef lt
+        -:  218:#endif
+        -:  219:}
+        -:  220:static unsigned
+function sdefl_uload32 called 0 returned 0% blocks executed 0%
+    #####:  221:sdefl_uload32(const void *p) {
+        -:  222:  /* hopefully will be optimized to an unaligned read */
+    #####:  223:  unsigned n = 0;
+    #####:  224:  memcpy(&n, p, sizeof(n));
+    #####:  225:  return n;
+    %%%%%:  225-block  0
+        -:  226:}
+        -:  227:static unsigned
+function sdefl_hash32 called 0 returned 0% blocks executed 0%
+    #####:  228:sdefl_hash32(const void *p) {
+    #####:  229:  unsigned n = sdefl_uload32(p);
+    %%%%%:  229-block  0
+call    0 never executed
+    #####:  230:  return (n * 0x9E377989) >> (32 - SDEFL_HASH_BITS);
+        -:  231:}
+        -:  232:static void
+function sdefl_put called 0 returned 0% blocks executed 0%
+    #####:  233:sdefl_put(unsigned char **dst, struct sdefl *s, int code, int bitcnt) {
+    #####:  234:  s->bits |= (code << s->bitcnt);
+    #####:  235:  s->bitcnt += bitcnt;
+    #####:  236:  while (s->bitcnt >= 8) {
+    %%%%%:  236-block  0
+    %%%%%:  236-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  237:    unsigned char *tar = *dst;
+    #####:  238:    *tar = (unsigned char)(s->bits & 0xFF);
+    #####:  239:    s->bits >>= 8;
+    #####:  240:    s->bitcnt -= 8;
+    #####:  241:    *dst = *dst + 1;
+    %%%%%:  241-block  0
+        -:  242:  }
+    #####:  243:}
+        -:  244:static void
+function sdefl_heap_sub called 0 returned 0% blocks executed 0%
+    #####:  245:sdefl_heap_sub(unsigned A[], unsigned len, unsigned sub) {
+    #####:  246:  unsigned c, p = sub;
+    #####:  247:  unsigned v = A[sub];
+    #####:  248:  while ((c = p << 1) <= len) {
+    %%%%%:  248-block  0
+    %%%%%:  248-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  249:    if (c < len && A[c + 1] > A[c]) c++;
+    %%%%%:  249-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  249-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  249-block  2
+    #####:  250:    if (v >= A[c]) break;
+    %%%%%:  250-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  250-block  1
+    #####:  251:    A[p] = A[c], p = c;
+    %%%%%:  251-block  0
+        -:  252:  }
+    #####:  253:  A[p] = v;
+    #####:  254:}
+        -:  255:static void
+function sdefl_heap_array called 0 returned 0% blocks executed 0%
+    #####:  256:sdefl_heap_array(unsigned *A, unsigned len) {
+        -:  257:  unsigned sub;
+    #####:  258:  for (sub = len >> 1; sub >= 1; sub--)
+    %%%%%:  258-block  0
+    %%%%%:  258-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  259:    sdefl_heap_sub(A, len, sub);
+    %%%%%:  259-block  0
+call    0 never executed
+    #####:  260:}
+        -:  261:static void
+function sdefl_heap_sort called 0 returned 0% blocks executed 0%
+    #####:  262:sdefl_heap_sort(unsigned *A, unsigned n) {
+    #####:  263:  A--;
+    #####:  264:  sdefl_heap_array(A, n);
+    %%%%%:  264-block  0
+call    0 never executed
+    #####:  265:  while (n >= 2) {
+    %%%%%:  265-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  266:    unsigned tmp = A[n];
+    #####:  267:    A[n--] = A[1];
+    #####:  268:    A[1] = tmp;
+    #####:  269:    sdefl_heap_sub(A, n, 1);
+    %%%%%:  269-block  0
+call    0 never executed
+        -:  270:  }
+    #####:  271:}
+        -:  272:static unsigned
+function sdefl_sort_sym called 0 returned 0% blocks executed 0%
+    #####:  273:sdefl_sort_sym(unsigned sym_cnt, unsigned *freqs,
+        -:  274:               unsigned char *lens, unsigned *sym_out) {
+    #####:  275:  unsigned cnts[SDEFL_CNT_NUM(SDEFL_SYM_MAX)] = {0};
+    #####:  276:  unsigned cnt_num = SDEFL_CNT_NUM(sym_cnt);
+    #####:  277:  unsigned used_sym = 0;
+        -:  278:  unsigned sym, i;
+    #####:  279:  for (sym = 0; sym < sym_cnt; sym++)
+    %%%%%:  279-block  0
+    %%%%%:  279-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  280:    cnts[freqs[sym] < cnt_num-1 ? freqs[sym]: cnt_num-1]++;
+    %%%%%:  280-block  0
+    #####:  281:  for (i = 1; i < cnt_num; i++) {
+    %%%%%:  281-block  0
+    %%%%%:  281-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  282:    unsigned cnt = cnts[i];
+    #####:  283:    cnts[i] = used_sym;
+    #####:  284:    used_sym += cnt;
+    %%%%%:  284-block  0
+        -:  285:  }
+    #####:  286:  for (sym = 0; sym < sym_cnt; sym++) {
+    %%%%%:  286-block  0
+    %%%%%:  286-block  1
+    %%%%%:  286-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  287:    unsigned freq = freqs[sym];
+    #####:  288:    if (freq) {
+    %%%%%:  288-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  289:        unsigned idx = freq < cnt_num-1 ? freq : cnt_num-1;
+    #####:  290:        sym_out[cnts[idx]++] = sym | (freq << SDEFL_SYM_BITS);
+    %%%%%:  290-block  0
+    #####:  291:    } else lens[sym] = 0;
+    %%%%%:  291-block  0
+        -:  292:  }
+    #####:  293:  sdefl_heap_sort(sym_out + cnts[cnt_num-2], cnts[cnt_num-1] - cnts[cnt_num-2]);
+    %%%%%:  293-block  0
+call    0 never executed
+    #####:  294:  return used_sym;
+        -:  295:}
+        -:  296:static void
+function sdefl_build_tree called 0 returned 0% blocks executed 0%
+    #####:  297:sdefl_build_tree(unsigned *A, unsigned sym_cnt) {
+    #####:  298:  unsigned i = 0, b = 0, e = 0;
+    %%%%%:  298-block  0
+        -:  299:  do {
+        -:  300:    unsigned m, n, freq_shift;
+    #####:  301:    if (i != sym_cnt && (b == e || (A[i] >> SDEFL_SYM_BITS) <= (A[b] >> SDEFL_SYM_BITS)))
+    %%%%%:  301-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  301-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  301-block  2
+branch  4 never executed
+branch  5 never executed
+    #####:  302:      m = i++;
+    %%%%%:  302-block  0
+    #####:  303:    else m = b++;
+    %%%%%:  303-block  0
+    #####:  304:    if (i != sym_cnt && (b == e || (A[i] >> SDEFL_SYM_BITS) <= (A[b] >> SDEFL_SYM_BITS)))
+    %%%%%:  304-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  304-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  304-block  2
+branch  4 never executed
+branch  5 never executed
+    #####:  305:      n = i++;
+    %%%%%:  305-block  0
+    #####:  306:    else n = b++;
+    %%%%%:  306-block  0
+        -:  307:
+    #####:  308:    freq_shift = (A[m] & ~SDEFL_SYM_MSK) + (A[n] & ~SDEFL_SYM_MSK);
+    #####:  309:    A[m] = (A[m] & SDEFL_SYM_MSK) | (e << SDEFL_SYM_BITS);
+    #####:  310:    A[n] = (A[n] & SDEFL_SYM_MSK) | (e << SDEFL_SYM_BITS);
+    #####:  311:    A[e] = (A[e] & SDEFL_SYM_MSK) | freq_shift;
+    #####:  312:  } while (sym_cnt - ++e > 1);
+    %%%%%:  312-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  313:}
+        -:  314:static void
+function sdefl_gen_len_cnt called 0 returned 0% blocks executed 0%
+    #####:  315:sdefl_gen_len_cnt(unsigned *A, unsigned root, unsigned *len_cnt,
+        -:  316:                  unsigned max_code_len) {
+        -:  317:  int n;
+        -:  318:  unsigned i;
+    #####:  319:  for (i = 0; i <= max_code_len; i++)
+    %%%%%:  319-block  0
+    %%%%%:  319-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  320:    len_cnt[i] = 0;
+    %%%%%:  320-block  0
+    #####:  321:  len_cnt[1] = 2;
+        -:  322:
+    #####:  323:  A[root] &= SDEFL_SYM_MSK;
+    #####:  324:  for (n = (int)root - 1; n >= 0; n--) {
+    %%%%%:  324-block  0
+    %%%%%:  324-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  325:    unsigned p = A[n] >> SDEFL_SYM_BITS;
+    #####:  326:    unsigned pdepth = A[p] >> SDEFL_SYM_BITS;
+    #####:  327:    unsigned depth = pdepth + 1;
+    #####:  328:    unsigned len = depth;
+        -:  329:
+    #####:  330:    A[n] = (A[n] & SDEFL_SYM_MSK) | (depth << SDEFL_SYM_BITS);
+    #####:  331:    if (len >= max_code_len) {
+    %%%%%:  331-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  332:      len = max_code_len;
+    %%%%%:  332-block  0
+    #####:  333:      do len--; while (!len_cnt[len]);
+    %%%%%:  333-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  334:    }
+    #####:  335:    len_cnt[len]--;
+    #####:  336:    len_cnt[len+1] += 2;
+    %%%%%:  336-block  0
+        -:  337:  }
+    #####:  338:}
+        -:  339:static void
+function sdefl_gen_codes called 0 returned 0% blocks executed 0%
+    #####:  340:sdefl_gen_codes(unsigned *A, unsigned char *lens, const unsigned *len_cnt,
+        -:  341:                unsigned max_code_word_len, unsigned sym_cnt) {
+        -:  342:  unsigned i, sym, len, nxt[SDEFL_MAX_CODE_LEN + 1];
+    #####:  343:  for (i = 0, len = max_code_word_len; len >= 1; len--) {
+    %%%%%:  343-block  0
+    %%%%%:  343-block  1
+    %%%%%:  343-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  344:    unsigned cnt = len_cnt[len];
+    #####:  345:    while (cnt--) lens[A[i++] & SDEFL_SYM_MSK] = (unsigned char)len;
+    %%%%%:  345-block  0
+    %%%%%:  345-block  1
+    %%%%%:  345-block  2
+branch  0 never executed
+branch  1 never executed
+        -:  346:  }
+    #####:  347:  nxt[0] = nxt[1] = 0;
+    #####:  348:  for (len = 2; len <= max_code_word_len; len++)
+    %%%%%:  348-block  0
+    %%%%%:  348-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  349:    nxt[len] = (nxt[len-1] + len_cnt[len-1]) << 1;
+    %%%%%:  349-block  0
+    #####:  350:  for (sym = 0; sym < sym_cnt; sym++)
+    %%%%%:  350-block  0
+    %%%%%:  350-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  351:    A[sym] = nxt[lens[sym]]++;
+    %%%%%:  351-block  0
+    #####:  352:}
+        -:  353:static unsigned
+function sdefl_rev called 0 returned 0% blocks executed 0%
+    #####:  354:sdefl_rev(unsigned c, unsigned char n) {
+    #####:  355:  c = ((c & 0x5555) << 1) | ((c & 0xAAAA) >> 1);
+    #####:  356:  c = ((c & 0x3333) << 2) | ((c & 0xCCCC) >> 2);
+    #####:  357:  c = ((c & 0x0F0F) << 4) | ((c & 0xF0F0) >> 4);
+    #####:  358:  c = ((c & 0x00FF) << 8) | ((c & 0xFF00) >> 8);
+    #####:  359:  return c >> (16-n);
+    %%%%%:  359-block  0
+        -:  360:}
+        -:  361:static void
+function sdefl_huff called 0 returned 0% blocks executed 0%
+    #####:  362:sdefl_huff(unsigned char *lens, unsigned *codes, unsigned *freqs,
+        -:  363:           unsigned num_syms, unsigned max_code_len) {
+    #####:  364:  unsigned c, *A = codes;
+        -:  365:  unsigned len_cnt[SDEFL_MAX_CODE_LEN + 1];
+    #####:  366:  unsigned used_syms = sdefl_sort_sym(num_syms, freqs, lens, A);
+    %%%%%:  366-block  0
+call    0 never executed
+    #####:  367:  if (!used_syms) return;
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  367-block  0
+    %%%%%:  367-block  1
+    #####:  368:  if (used_syms == 1) {
+    %%%%%:  368-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  369:    unsigned s = A[0] & SDEFL_SYM_MSK;
+    #####:  370:    unsigned i = s ? s : 1;
+    %%%%%:  370-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  370-block  1
+    %%%%%:  370-block  2
+    #####:  371:    codes[0] = 0, lens[0] = 1;
+    #####:  372:    codes[i] = 1, lens[i] = 1;
+    #####:  373:    return;
+    %%%%%:  373-block  0
+        -:  374:  }
+    #####:  375:  sdefl_build_tree(A, used_syms);
+    %%%%%:  375-block  0
+call    0 never executed
+    #####:  376:  sdefl_gen_len_cnt(A, used_syms-2, len_cnt, max_code_len);
+call    0 never executed
+    #####:  377:  sdefl_gen_codes(A, lens, len_cnt, max_code_len, num_syms);
+call    0 never executed
+    #####:  378:  for (c = 0; c < num_syms; c++) {
+    %%%%%:  378-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  379:    codes[c] = sdefl_rev(codes[c], lens[c]);
+    %%%%%:  379-block  0
+call    0 never executed
+        -:  380:  }
+        -:  381:}
+        -:  382:struct sdefl_symcnt {
+        -:  383:  int items;
+        -:  384:  int lit;
+        -:  385:  int off;
+        -:  386:};
+        -:  387:static void
+function sdefl_precode called 0 returned 0% blocks executed 0%
+    #####:  388:sdefl_precode(struct sdefl_symcnt *cnt, unsigned *freqs, unsigned *items,
+        -:  389:              const unsigned char *litlen, const unsigned char *offlen) {
+    #####:  390:  unsigned *at = items;
+    #####:  391:  unsigned run_start = 0;
+        -:  392:
+    #####:  393:  unsigned total = 0;
+        -:  394:  unsigned char lens[SDEFL_SYM_MAX + SDEFL_OFF_MAX];
+    #####:  395:  for (cnt->lit = SDEFL_SYM_MAX; cnt->lit > 257; cnt->lit--)
+    %%%%%:  395-block  0
+    %%%%%:  395-block  1
+    %%%%%:  395-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  396:    if (litlen[cnt->lit - 1]) break;
+    %%%%%:  396-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  396-block  1
+    #####:  397:  for (cnt->off = SDEFL_OFF_MAX; cnt->off > 1; cnt->off--)
+    %%%%%:  397-block  0
+    %%%%%:  397-block  1
+    %%%%%:  397-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  398:    if (offlen[cnt->off - 1]) break;
+    %%%%%:  398-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  398-block  1
+        -:  399:
+    #####:  400:  total = (unsigned)(cnt->lit + cnt->off);
+    #####:  401:  memcpy(lens, litlen, sizeof(unsigned char) * cnt->lit);
+    #####:  402:  memcpy(lens + cnt->lit, offlen, sizeof(unsigned char) * cnt->off);
+    %%%%%:  402-block  0
+        -:  403:  do {
+    #####:  404:    unsigned len = lens[run_start];
+    #####:  405:    unsigned run_end = run_start;
+    %%%%%:  405-block  0
+    #####:  406:    do run_end++; while (run_end != total && len == lens[run_end]);
+    %%%%%:  406-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  406-block  1
+branch  2 never executed
+branch  3 never executed
+    #####:  407:    if (!len) {
+    %%%%%:  407-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  408:      while ((run_end - run_start) >= 11) {
+    %%%%%:  408-block  0
+    %%%%%:  408-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  409:        unsigned n = (run_end - run_start) - 11;
+    #####:  410:        unsigned xbits =  n < 0x7f ? n : 0x7f;
+    #####:  411:        freqs[18]++;
+    #####:  412:        *at++ = 18u | (xbits << 5u);
+    #####:  413:        run_start += 11 + xbits;
+    %%%%%:  413-block  0
+        -:  414:      }
+    #####:  415:      if ((run_end - run_start) >= 3) {
+    %%%%%:  415-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  416:        unsigned n = (run_end - run_start) - 3;
+    #####:  417:        unsigned xbits =  n < 0x7 ? n : 0x7;
+    #####:  418:        freqs[17]++;
+    #####:  419:        *at++ = 17u | (xbits << 5u);
+    #####:  420:        run_start += 3 + xbits;
+    %%%%%:  420-block  0
+        -:  421:      }
+    #####:  422:    } else if ((run_end - run_start) >= 4) {
+    %%%%%:  422-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  423:      freqs[len]++;
+    #####:  424:      *at++ = len;
+    #####:  425:      run_start++;
+    %%%%%:  425-block  0
+        -:  426:      do {
+    #####:  427:        unsigned xbits = (run_end - run_start) - 3;
+    #####:  428:        xbits = xbits < 0x03 ? xbits : 0x03;
+    #####:  429:        *at++ = 16 | (xbits << 5);
+    #####:  430:        run_start += 3 + xbits;
+    #####:  431:        freqs[16]++;
+    #####:  432:      } while ((run_end - run_start) >= 3);
+    %%%%%:  432-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  433:    }
+    #####:  434:    while (run_start != run_end) {
+    %%%%%:  434-block  0
+    %%%%%:  434-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  435:      freqs[len]++;
+    #####:  436:      *at++ = len;
+    #####:  437:      run_start++;
+    %%%%%:  437-block  0
+        -:  438:    }
+    #####:  439:  } while (run_start != total);
+    %%%%%:  439-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  440:  cnt->items = (int)(at - items);
+    #####:  441:}
+        -:  442:struct sdefl_match_codes {
+        -:  443:  int ls, lc;
+        -:  444:  int dc, dx;
+        -:  445:};
+        -:  446:static void
+function sdefl_match_codes called 0 returned 0% blocks executed 0%
+    #####:  447:sdefl_match_codes(struct sdefl_match_codes *cod, int dist, int len) {
+        -:  448:  static const short dxmax[] = {0,6,12,24,48,96,192,384,768,1536,3072,6144,12288,24576};
+        -:  449:  static const unsigned char lslot[258+1] = {
+        -:  450:    0, 0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 12,
+        -:  451:    12, 13, 13, 13, 13, 14, 14, 14, 14, 15, 15, 15, 15, 16, 16, 16, 16, 16,
+        -:  452:    16, 16, 16, 17, 17, 17, 17, 17, 17, 17, 17, 18, 18, 18, 18, 18, 18, 18,
+        -:  453:    18, 19, 19, 19, 19, 19, 19, 19, 19, 20, 20, 20, 20, 20, 20, 20, 20, 20,
+        -:  454:    20, 20, 20, 20, 20, 20, 20, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21, 21,
+        -:  455:    21, 21, 21, 21, 21, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
+        -:  456:    22, 22, 22, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23, 23,
+        -:  457:    23, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24,
+        -:  458:    24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 24, 25, 25, 25,
+        -:  459:    25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25,
+        -:  460:    25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 26, 26, 26, 26, 26, 26, 26,
+        -:  461:    26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26, 26,
+        -:  462:    26, 26, 26, 26, 26, 26, 26, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27,
+        -:  463:    27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27, 27,
+        -:  464:    27, 27, 28
+        -:  465:  };
+    #####:  466:  cod->ls = lslot[len];
+    #####:  467:  cod->lc = 257 + cod->ls;
+    #####:  468:  cod->dx = sdefl_ilog2(sdefl_npow2(dist) >> 2);
+    %%%%%:  468-block  0
+call    0 never executed
+call    1 never executed
+    #####:  469:  cod->dc = cod->dx ? ((cod->dx + 1) << 1) + (dist > dxmax[cod->dx]) : dist-1;
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  469-block  0
+    %%%%%:  469-block  1
+    #####:  470:}
+        -:  471:static void
+function sdefl_match called 0 returned 0% blocks executed 0%
+    #####:  472:sdefl_match(unsigned char **dst, struct sdefl *s, int dist, int len) {
+        -:  473:  static const char lxn[] = {0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4,5,5,5,5,0};
+        -:  474:  static const short lmin[] = {3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,43,
+        -:  475:      51,59,67,83,99,115,131,163,195,227,258};
+        -:  476:  static const short dmin[] = {1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,257,
+        -:  477:      385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577};
+        -:  478:
+        -:  479:  struct sdefl_match_codes cod;
+    #####:  480:  sdefl_match_codes(&cod, dist, len);
+    %%%%%:  480-block  0
+call    0 never executed
+    #####:  481:  sdefl_put(dst, s, (int)s->cod.word.lit[cod.lc], s->cod.len.lit[cod.lc]);
+call    0 never executed
+    #####:  482:  sdefl_put(dst, s, len - lmin[cod.ls], lxn[cod.ls]);
+call    0 never executed
+    #####:  483:  sdefl_put(dst, s, (int)s->cod.word.off[cod.dc], s->cod.len.off[cod.dc]);
+call    0 never executed
+    #####:  484:  sdefl_put(dst, s, dist - dmin[cod.dc], cod.dx);
+call    0 never executed
+    #####:  485:}
+        -:  486:static void
+function sdefl_flush called 0 returned 0% blocks executed 0%
+    #####:  487:sdefl_flush(unsigned char **dst, struct sdefl *s, int is_last,
+        -:  488:            const unsigned char *in) {
+    #####:  489:  int j, i = 0, item_cnt = 0;
+    #####:  490:  struct sdefl_symcnt symcnt = {0};
+        -:  491:  unsigned codes[SDEFL_PRE_MAX];
+        -:  492:  unsigned char lens[SDEFL_PRE_MAX];
+    #####:  493:  unsigned freqs[SDEFL_PRE_MAX] = {0};
+        -:  494:  unsigned items[SDEFL_SYM_MAX + SDEFL_OFF_MAX];
+        -:  495:  static const unsigned char perm[SDEFL_PRE_MAX] = {16,17,18,0,8,7,9,6,10,5,11,
+        -:  496:      4,12,3,13,2,14,1,15};
+        -:  497:
+        -:  498:  /* huffman codes */
+    #####:  499:  s->freq.lit[SDEFL_EOB]++;
+    #####:  500:  sdefl_huff(s->cod.len.lit, s->cod.word.lit, s->freq.lit, SDEFL_SYM_MAX, SDEFL_LIT_LEN_CODES);
+    %%%%%:  500-block  0
+call    0 never executed
+    #####:  501:  sdefl_huff(s->cod.len.off, s->cod.word.off, s->freq.off, SDEFL_OFF_MAX, SDEFL_OFF_CODES);
+call    0 never executed
+    #####:  502:  sdefl_precode(&symcnt, freqs, items, s->cod.len.lit, s->cod.len.off);
+call    0 never executed
+    #####:  503:  sdefl_huff(lens, codes, freqs, SDEFL_PRE_MAX, SDEFL_PRE_CODES);
+call    0 never executed
+    #####:  504:  for (item_cnt = SDEFL_PRE_MAX; item_cnt > 4; item_cnt--) {
+    %%%%%:  504-block  0
+    %%%%%:  504-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  505:    if (lens[perm[item_cnt - 1]]) break;
+    %%%%%:  505-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  505-block  1
+        -:  506:  }
+        -:  507:  /* block header */
+    #####:  508:  sdefl_put(dst, s, is_last ? 0x01 : 0x00, 1); /* block */
+    %%%%%:  508-block  0
+call    0 never executed
+    #####:  509:  sdefl_put(dst, s, 0x02, 2); /* dynamic huffman */
+call    0 never executed
+    #####:  510:  sdefl_put(dst, s, symcnt.lit - 257, 5);
+call    0 never executed
+    #####:  511:  sdefl_put(dst, s, symcnt.off - 1, 5);
+call    0 never executed
+    #####:  512:  sdefl_put(dst, s, item_cnt - 4, 4);
+call    0 never executed
+    #####:  513:  for (i = 0; i < item_cnt; ++i)
+    %%%%%:  513-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  514:    sdefl_put(dst, s, lens[perm[i]], 3);
+    %%%%%:  514-block  0
+call    0 never executed
+    #####:  515:  for (i = 0; i < symcnt.items; ++i) {
+    %%%%%:  515-block  0
+    %%%%%:  515-block  1
+    %%%%%:  515-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  516:    unsigned sym = items[i] & 0x1F;
+    #####:  517:    sdefl_put(dst, s, (int)codes[sym], lens[sym]);
+    %%%%%:  517-block  0
+call    0 never executed
+    #####:  518:    if (sym < 16) continue;
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  518-block  0
+    #####:  519:    if (sym == 16) sdefl_put(dst, s, items[i] >> 5, 2);
+    %%%%%:  519-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  519-block  1
+call    2 never executed
+    #####:  520:    else if(sym == 17) sdefl_put(dst, s, items[i] >> 5, 3);
+    %%%%%:  520-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  520-block  1
+call    2 never executed
+    #####:  521:    else sdefl_put(dst, s, items[i] >> 5, 7);
+    %%%%%:  521-block  0
+call    0 never executed
+        -:  522:  }
+        -:  523:  /* block sequences */
+    #####:  524:  for (i = 0; i < s->seq_cnt; ++i) {
+    %%%%%:  524-block  0
+    %%%%%:  524-block  1
+    %%%%%:  524-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  525:    if (s->seq[i].off >= 0)
+    %%%%%:  525-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  526:      for (j = 0; j < s->seq[i].len; ++j) {
+    %%%%%:  526-block  0
+    %%%%%:  526-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  527:        int c = in[s->seq[i].off + j];
+    #####:  528:        sdefl_put(dst, s, (int)s->cod.word.lit[c], s->cod.len.lit[c]);
+    %%%%%:  528-block  0
+call    0 never executed
+        -:  529:      }
+    #####:  530:    else sdefl_match(dst, s, -s->seq[i].off, s->seq[i].len);
+    %%%%%:  530-block  0
+call    0 never executed
+        -:  531:  }
+    #####:  532:  sdefl_put(dst, s, (int)(s)->cod.word.lit[SDEFL_EOB], (s)->cod.len.lit[SDEFL_EOB]);
+    %%%%%:  532-block  0
+call    0 never executed
+    #####:  533:  memset(&s->freq, 0, sizeof(s->freq));
+    #####:  534:  s->seq_cnt = 0;
+    #####:  535:}
+        -:  536:static void
+function sdefl_seq called 0 returned 0% blocks executed 0%
+    #####:  537:sdefl_seq(struct sdefl *s, int off, int len) {
+    #####:  538:  assert(s->seq_cnt + 2 < SDEFL_SEQ_SIZ);
+    %%%%%:  538-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  538-block  1
+call    2 never executed
+    %%%%%:  538-block  2
+    #####:  539:  s->seq[s->seq_cnt].off = off;
+    #####:  540:  s->seq[s->seq_cnt].len = len;
+    #####:  541:  s->seq_cnt++;
+    #####:  542:}
+        -:  543:static void
+function sdefl_reg_match called 0 returned 0% blocks executed 0%
+    #####:  544:sdefl_reg_match(struct sdefl *s, int off, int len) {
+        -:  545:  struct sdefl_match_codes cod;
+    #####:  546:  sdefl_match_codes(&cod, off, len);
+    %%%%%:  546-block  0
+call    0 never executed
+    #####:  547:  s->freq.lit[cod.lc]++;
+    #####:  548:  s->freq.off[cod.dc]++;
+    #####:  549:}
+        -:  550:struct sdefl_match {
+        -:  551:  int off;
+        -:  552:  int len;
+        -:  553:};
+        -:  554:static void
+function sdefl_fnd called 0 returned 0% blocks executed 0%
+    #####:  555:sdefl_fnd(struct sdefl_match *m, const struct sdefl *s,
+        -:  556:          int chain_len, int max_match, const unsigned char *in, int p) {
+    #####:  557:  int i = s->tbl[sdefl_hash32(&in[p])];
+    %%%%%:  557-block  0
+call    0 never executed
+    #####:  558:  int limit = ((p-SDEFL_WIN_SIZ)<SDEFL_NIL)?SDEFL_NIL:(p-SDEFL_WIN_SIZ);
+    #####:  559:  while (i > limit) {
+    %%%%%:  559-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  560:    if (in[i+m->len] == in[p+m->len] &&
+    %%%%%:  560-block  0
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+    #####:  561:        (sdefl_uload32(&in[i]) == sdefl_uload32(&in[p]))){
+    %%%%%:  561-block  0
+call    0 never executed
+call    1 never executed
+    #####:  562:      int n = SDEFL_MIN_MATCH;
+    #####:  563:      while (n < max_match && in[i+n] == in[p+n]) n++;
+    %%%%%:  563-block  0
+    %%%%%:  563-block  1
+    %%%%%:  563-block  2
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  563-block  3
+branch  2 never executed
+branch  3 never executed
+    #####:  564:      if (n > m->len) {
+    %%%%%:  564-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  565:        m->len = n, m->off = p - i;
+    #####:  566:        if (n == max_match) break;
+    %%%%%:  566-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  566-block  1
+        -:  567:      }
+        -:  568:    }
+    #####:  569:    if (!(--chain_len)) break;
+    %%%%%:  569-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  569-block  1
+    #####:  570:    i = s->prv[i&SDEFL_WIN_MSK];
+    %%%%%:  570-block  0
+        -:  571:  }
+    #####:  572:}
+        -:  573:static int
+function sdefl_compr called 0 returned 0% blocks executed 0%
+    #####:  574:sdefl_compr(struct sdefl *s, unsigned char *out, const unsigned char *in,
+        -:  575:            int in_len, int lvl) {
+    #####:  576:  unsigned char *q = out;
+        -:  577:  static const unsigned char pref[] = {8,10,14,24,30,48,65,96,130};
+    #####:  578:  int max_chain = (lvl < 8) ? (1 << (lvl + 1)): (1 << 13);
+    %%%%%:  578-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  578-block  1
+    %%%%%:  578-block  2
+    #####:  579:  int n, i = 0, litlen = 0;
+    #####:  580:  for (n = 0; n < SDEFL_HASH_SIZ; ++n) {
+    %%%%%:  580-block  0
+    %%%%%:  580-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  581:    s->tbl[n] = SDEFL_NIL;
+    %%%%%:  581-block  0
+        -:  582:  }
+    #####:  583:  do {int blk_end = i + SDEFL_BLK_MAX < in_len ? i + SDEFL_BLK_MAX : in_len;
+    #####:  584:    while (i < blk_end) {
+    %%%%%:  584-block  0
+    %%%%%:  584-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  585:      struct sdefl_match m = {0};
+    #####:  586:      int max_match = ((in_len-i)>SDEFL_MAX_MATCH) ? SDEFL_MAX_MATCH:(in_len-i);
+    #####:  587:      int nice_match = pref[lvl] < max_match ? pref[lvl] : max_match;
+    #####:  588:      int run = 1, inc = 1, run_inc;
+    #####:  589:      if (max_match > SDEFL_MIN_MATCH) {
+    %%%%%:  589-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  590:        sdefl_fnd(&m, s, max_chain, max_match, in, i);
+    %%%%%:  590-block  0
+call    0 never executed
+        -:  591:      }
+    #####:  592:      if (lvl >= 5 && m.len >= SDEFL_MIN_MATCH && m.len < nice_match){
+    %%%%%:  592-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  592-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  592-block  2
+branch  4 never executed
+branch  5 never executed
+    #####:  593:        struct sdefl_match m2 = {0};
+    #####:  594:        sdefl_fnd(&m2, s, max_chain, m.len+1, in, i+1);
+    %%%%%:  594-block  0
+call    0 never executed
+    #####:  595:        m.len = (m2.len > m.len) ? 0 : m.len;
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  595-block  0
+    %%%%%:  595-block  1
+    %%%%%:  595-block  2
+        -:  596:      }
+    #####:  597:      if (m.len >= SDEFL_MIN_MATCH) {
+    %%%%%:  597-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  598:        if (litlen) {
+    %%%%%:  598-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  599:          sdefl_seq(s, i - litlen, litlen);
+    %%%%%:  599-block  0
+call    0 never executed
+    #####:  600:          litlen = 0;
+        -:  601:        }
+    #####:  602:        sdefl_seq(s, -m.off, m.len);
+    %%%%%:  602-block  0
+call    0 never executed
+    #####:  603:        sdefl_reg_match(s, m.off, m.len);
+call    0 never executed
+    #####:  604:        if (lvl < 2 && m.len >= nice_match) {
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  604-block  0
+branch  2 never executed
+branch  3 never executed
+    #####:  605:          inc = m.len;
+    %%%%%:  605-block  0
+        -:  606:        } else {
+    #####:  607:          run = m.len;
+    %%%%%:  607-block  0
+        -:  608:        }
+        -:  609:      } else {
+    #####:  610:        s->freq.lit[in[i]]++;
+    #####:  611:        litlen++;
+    %%%%%:  611-block  0
+        -:  612:      }
+    #####:  613:      run_inc = run * inc;
+    #####:  614:      if (in_len - (i + run_inc) > SDEFL_MIN_MATCH) {
+    %%%%%:  614-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  615:        while (run-- > 0) {
+    %%%%%:  615-block  0
+    %%%%%:  615-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  616:          unsigned h = sdefl_hash32(&in[i]);
+    %%%%%:  616-block  0
+call    0 never executed
+    #####:  617:          s->prv[i&SDEFL_WIN_MSK] = s->tbl[h];
+    #####:  618:          s->tbl[h] = i, i += inc;
+        -:  619:        }
+        -:  620:      } else {
+    #####:  621:        i += run_inc;
+    %%%%%:  621-block  0
+        -:  622:      }
+        -:  623:    }
+    #####:  624:    if (litlen) {
+    %%%%%:  624-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  625:      sdefl_seq(s, i - litlen, litlen);
+    %%%%%:  625-block  0
+call    0 never executed
+    #####:  626:      litlen = 0;
+        -:  627:    }
+    #####:  628:    sdefl_flush(&q, s, blk_end == in_len, in);
+    %%%%%:  628-block  0
+call    0 never executed
+    #####:  629:  } while (i < in_len);
+branch  0 never executed
+branch  1 never executed
+        -:  630:
+    #####:  631:  if (s->bitcnt)
+    %%%%%:  631-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  632:    sdefl_put(&q, s, 0x00, 8 - s->bitcnt);
+    %%%%%:  632-block  0
+call    0 never executed
+    #####:  633:  return (int)(q - out);
+    %%%%%:  633-block  0
+        -:  634:}
+        -:  635:extern int
+function sdeflate called 0 returned 0% blocks executed 0%
+    #####:  636:sdeflate(struct sdefl *s, void *out, const void *in, int n, int lvl) {
+    #####:  637:  s->bits = s->bitcnt = 0;
+    #####:  638:  return sdefl_compr(s, (unsigned char*)out, (const unsigned char*)in, n, lvl);
+    %%%%%:  638-block  0
+call    0 never executed
+        -:  639:}
+        -:  640:static unsigned
+function sdefl_adler32 called 0 returned 0% blocks executed 0%
+    #####:  641:sdefl_adler32(unsigned adler32, const unsigned char *in, int in_len) {
+        -:  642:  #define SDEFL_ADLER_INIT (1)
+    #####:  643:  const unsigned ADLER_MOD = 65521;
+    #####:  644:  unsigned s1 = adler32 & 0xffff;
+    #####:  645:  unsigned s2 = adler32 >> 16;
+        -:  646:  unsigned blk_len, i;
+        -:  647:
+    #####:  648:  blk_len = in_len % 5552;
+    #####:  649:  while (in_len) {
+    %%%%%:  649-block  0
+    %%%%%:  649-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  650:    for (i = 0; i + 7 < blk_len; i += 8) {
+    %%%%%:  650-block  0
+    %%%%%:  650-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  651:      s1 += in[0]; s2 += s1;
+    #####:  652:      s1 += in[1]; s2 += s1;
+    #####:  653:      s1 += in[2]; s2 += s1;
+    #####:  654:      s1 += in[3]; s2 += s1;
+    #####:  655:      s1 += in[4]; s2 += s1;
+    #####:  656:      s1 += in[5]; s2 += s1;
+    #####:  657:      s1 += in[6]; s2 += s1;
+    #####:  658:      s1 += in[7]; s2 += s1;
+    #####:  659:      in += 8;
+    %%%%%:  659-block  0
+        -:  660:    }
+    #####:  661:    for (; i < blk_len; ++i) {
+    %%%%%:  661-block  0
+    %%%%%:  661-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  662:      s1 += *in++, s2 += s1;
+    %%%%%:  662-block  0
+        -:  663:    }
+    #####:  664:    s1 %= ADLER_MOD;
+    #####:  665:    s2 %= ADLER_MOD;
+    #####:  666:    in_len -= blk_len;
+    #####:  667:    blk_len = 5552;
+    %%%%%:  667-block  0
+        -:  668:  }
+    #####:  669:  return (unsigned)(s2 << 16) + (unsigned)s1;
+    %%%%%:  669-block  0
+        -:  670:}
+        -:  671:extern int
+function zsdeflate called 0 returned 0% blocks executed 0%
+    #####:  672:zsdeflate(struct sdefl *s, void *out, const void *in, int n, int lvl) {
+    #####:  673:  int p = 0;
+    #####:  674:  unsigned a = 0;
+    #####:  675:  unsigned char *q = (unsigned char*)out;
+        -:  676:
+    #####:  677:  s->bits = s->bitcnt = 0;
+    #####:  678:  sdefl_put(&q, s, 0x78, 8); /* deflate, 32k window */
+    %%%%%:  678-block  0
+call    0 never executed
+    #####:  679:  sdefl_put(&q, s, 0x01, 8); /* fast compression */
+call    0 never executed
+    #####:  680:  q += sdefl_compr(s, q, (const unsigned char*)in, n, lvl);
+call    0 never executed
+        -:  681:
+        -:  682:  /* append adler checksum */
+    #####:  683:  a = sdefl_adler32(SDEFL_ADLER_INIT, (const unsigned char*)in, n);
+call    0 never executed
+    #####:  684:  for (p = 0; p < 4; ++p) {
+    %%%%%:  684-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  685:    sdefl_put(&q, s, (a >> 24) & 0xFF, 8);
+    %%%%%:  685-block  0
+call    0 never executed
+    #####:  686:    a <<= 8;
+        -:  687:  }
+    #####:  688:  return (int)(q - (unsigned char*)out);
+    %%%%%:  688-block  0
+        -:  689:}
+        -:  690:extern int
+function sdefl_bound called 0 returned 0% blocks executed 0%
+    #####:  691:sdefl_bound(int len) {
+    #####:  692:  int a = 128 + (len * 110) / 100;
+    #####:  693:  int b = 128 + len + ((len / (31 * 1024)) + 1) * 5;
+    #####:  694:  return (a > b) ? a : b;
+    %%%%%:  694-block  0
+        -:  695:}
+        -:  696:#endif /* SDEFL_IMPLEMENTATION */
+        -:  697:

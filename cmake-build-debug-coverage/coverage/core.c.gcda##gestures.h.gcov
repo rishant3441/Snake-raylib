@@ -1,0 +1,757 @@
+        -:    0:Source:C:/Dev/CLionProjects/Snake-raylib/cmake-build-debug-coverage/_deps/raylib-src/src/gestures.h
+        -:    0:Graph:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\CMakeFiles\raylib.dir\core.c.gcno
+        -:    0:Data:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\CMakeFiles\raylib.dir\core.c.gcda
+        -:    0:Runs:1
+        -:    1:/**********************************************************************************************
+        -:    2:*
+        -:    3:*   raylib.gestures - Gestures system, gestures processing based on input events (touch/mouse)
+        -:    4:*
+        -:    5:*   NOTE: Memory footprint of this library is aproximately 128 bytes (global variables)
+        -:    6:*
+        -:    7:*   CONFIGURATION:
+        -:    8:*
+        -:    9:*   #define GESTURES_IMPLEMENTATION
+        -:   10:*       Generates the implementation of the library into the included file.
+        -:   11:*       If not defined, the library is in header only mode and can be included in other headers
+        -:   12:*       or source files without problems. But only ONE file should hold the implementation.
+        -:   13:*
+        -:   14:*   #define GESTURES_STANDALONE
+        -:   15:*       If defined, the library can be used as standalone to process gesture events with
+        -:   16:*       no external dependencies.
+        -:   17:*
+        -:   18:*   CONTRIBUTORS:
+        -:   19:*       Marc Palau:         Initial implementation (2014)
+        -:   20:*       Albert Martos:      Complete redesign and testing (2015)
+        -:   21:*       Ian Eito:           Complete redesign and testing (2015)
+        -:   22:*       Ramon Santamaria:   Supervision, review, update and maintenance
+        -:   23:*
+        -:   24:*
+        -:   25:*   LICENSE: zlib/libpng
+        -:   26:*
+        -:   27:*   Copyright (c) 2014-2021 Ramon Santamaria (@raysan5)
+        -:   28:*
+        -:   29:*   This software is provided "as-is", without any express or implied warranty. In no event
+        -:   30:*   will the authors be held liable for any damages arising from the use of this software.
+        -:   31:*
+        -:   32:*   Permission is granted to anyone to use this software for any purpose, including commercial
+        -:   33:*   applications, and to alter it and redistribute it freely, subject to the following restrictions:
+        -:   34:*
+        -:   35:*     1. The origin of this software must not be misrepresented; you must not claim that you
+        -:   36:*     wrote the original software. If you use this software in a product, an acknowledgment
+        -:   37:*     in the product documentation would be appreciated but is not required.
+        -:   38:*
+        -:   39:*     2. Altered source versions must be plainly marked as such, and must not be misrepresented
+        -:   40:*     as being the original software.
+        -:   41:*
+        -:   42:*     3. This notice may not be removed or altered from any source distribution.
+        -:   43:*
+        -:   44:**********************************************************************************************/
+        -:   45:
+        -:   46:#ifndef GESTURES_H
+        -:   47:#define GESTURES_H
+        -:   48:
+        -:   49:#ifndef PI
+        -:   50:    #define PI 3.14159265358979323846
+        -:   51:#endif
+        -:   52:
+        -:   53://----------------------------------------------------------------------------------
+        -:   54:// Defines and Macros
+        -:   55://----------------------------------------------------------------------------------
+        -:   56:#ifndef MAX_TOUCH_POINTS
+        -:   57:    #define MAX_TOUCH_POINTS        8        // Maximum number of touch points supported
+        -:   58:#endif
+        -:   59:
+        -:   60://----------------------------------------------------------------------------------
+        -:   61:// Types and Structures Definition
+        -:   62:// NOTE: Below types are required for GESTURES_STANDALONE usage
+        -:   63://----------------------------------------------------------------------------------
+        -:   64:#if defined(GESTURES_STANDALONE)
+        -:   65:    #ifndef __cplusplus
+        -:   66:        // Boolean type
+        -:   67:        typedef enum { false, true } bool;
+        -:   68:    #endif
+        -:   69:
+        -:   70:    // Vector2 type
+        -:   71:    typedef struct Vector2 {
+        -:   72:        float x;
+        -:   73:        float y;
+        -:   74:    } Vector2;
+        -:   75:
+        -:   76:    // Gestures type
+        -:   77:    // NOTE: It could be used as flags to enable only some gestures
+        -:   78:    typedef enum {
+        -:   79:        GESTURE_NONE        = 0,
+        -:   80:        GESTURE_TAP         = 1,
+        -:   81:        GESTURE_DOUBLETAP   = 2,
+        -:   82:        GESTURE_HOLD        = 4,
+        -:   83:        GESTURE_DRAG        = 8,
+        -:   84:        GESTURE_SWIPE_RIGHT = 16,
+        -:   85:        GESTURE_SWIPE_LEFT  = 32,
+        -:   86:        GESTURE_SWIPE_UP    = 64,
+        -:   87:        GESTURE_SWIPE_DOWN  = 128,
+        -:   88:        GESTURE_PINCH_IN    = 256,
+        -:   89:        GESTURE_PINCH_OUT   = 512
+        -:   90:    } Gestures;
+        -:   91:#endif
+        -:   92:
+        -:   93:typedef enum { TOUCH_UP, TOUCH_DOWN, TOUCH_MOVE } TouchAction;
+        -:   94:
+        -:   95:// Gesture event
+        -:   96:typedef struct {
+        -:   97:    int touchAction;
+        -:   98:    int pointCount;
+        -:   99:    int pointId[MAX_TOUCH_POINTS];
+        -:  100:    Vector2 position[MAX_TOUCH_POINTS];
+        -:  101:} GestureEvent;
+        -:  102:
+        -:  103://----------------------------------------------------------------------------------
+        -:  104:// Global Variables Definition
+        -:  105://----------------------------------------------------------------------------------
+        -:  106://...
+        -:  107:
+        -:  108://----------------------------------------------------------------------------------
+        -:  109:// Module Functions Declaration
+        -:  110://----------------------------------------------------------------------------------
+        -:  111:
+        -:  112:#ifdef __cplusplus
+        -:  113:extern "C" {            // Prevents name mangling of functions
+        -:  114:#endif
+        -:  115:
+        -:  116:void ProcessGestureEvent(GestureEvent event);           // Process gesture event and translate it into gestures
+        -:  117:void UpdateGestures(void);                              // Update gestures detected (must be called every frame)
+        -:  118:#if defined(GESTURES_STANDALONE)
+        -:  119:void SetGesturesEnabled(unsigned int flags);            // Enable a set of gestures using flags
+        -:  120:bool IsGestureDetected(int gesture);                    // Check if a gesture have been detected
+        -:  121:int GetGestureDetected(void);                           // Get latest detected gesture
+        -:  122:int GetTouchPointCount(void);                          // Get touch points count
+        -:  123:float GetGestureHoldDuration(void);                     // Get gesture hold time in milliseconds
+        -:  124:Vector2 GetGestureDragVector(void);                     // Get gesture drag vector
+        -:  125:float GetGestureDragAngle(void);                        // Get gesture drag angle
+        -:  126:Vector2 GetGesturePinchVector(void);                    // Get gesture pinch delta
+        -:  127:float GetGesturePinchAngle(void);                       // Get gesture pinch angle
+        -:  128:#endif
+        -:  129:
+        -:  130:#ifdef __cplusplus
+        -:  131:}
+        -:  132:#endif
+        -:  133:
+        -:  134:#endif // GESTURES_H
+        -:  135:
+        -:  136:/***********************************************************************************
+        -:  137:*
+        -:  138:*   GESTURES IMPLEMENTATION
+        -:  139:*
+        -:  140:************************************************************************************/
+        -:  141:
+        -:  142:#if defined(GESTURES_IMPLEMENTATION)
+        -:  143:
+        -:  144:#if defined(_WIN32)
+        -:  145:    #if defined(__cplusplus)
+        -:  146:    extern "C" {        // Prevents name mangling of functions
+        -:  147:    #endif
+        -:  148:    // Functions required to query time on Windows
+        -:  149:    int __stdcall QueryPerformanceCounter(unsigned long long int *lpPerformanceCount);
+        -:  150:    int __stdcall QueryPerformanceFrequency(unsigned long long int *lpFrequency);
+        -:  151:    #if defined(__cplusplus)
+        -:  152:    }
+        -:  153:    #endif
+        -:  154:#elif defined(__linux__)
+        -:  155:    #if _POSIX_C_SOURCE < 199309L
+        -:  156:        #undef _POSIX_C_SOURCE
+        -:  157:        #define _POSIX_C_SOURCE 199309L // Required for CLOCK_MONOTONIC if compiled with c99 without gnu ext.
+        -:  158:    #endif
+        -:  159:    #include <sys/time.h>               // Required for: timespec
+        -:  160:    #include <time.h>                   // Required for: clock_gettime()
+        -:  161:
+        -:  162:    #include <math.h>                   // Required for: sqrtf(), atan2f()
+        -:  163:#endif
+        -:  164:#if defined(__APPLE__)                  // macOS also defines __MACH__
+        -:  165:    #include <mach/clock.h>             // Required for: clock_get_time()
+        -:  166:    #include <mach/mach.h>              // Required for: mach_timespec_t
+        -:  167:#endif
+        -:  168:
+        -:  169://----------------------------------------------------------------------------------
+        -:  170:// Defines and Macros
+        -:  171://----------------------------------------------------------------------------------
+        -:  172:#define FORCE_TO_SWIPE      0.0005f     // Swipe force, measured in normalized screen units/time
+        -:  173:#define MINIMUM_DRAG        0.015f      // Drag minimum force, measured in normalized screen units (0.0f to 1.0f)
+        -:  174:#define MINIMUM_PINCH       0.005f      // Pinch minimum force, measured in normalized screen units (0.0f to 1.0f)
+        -:  175:#define TAP_TIMEOUT         300         // Tap minimum time, measured in milliseconds
+        -:  176:#define PINCH_TIMEOUT       300         // Pinch minimum time, measured in milliseconds
+        -:  177:#define DOUBLETAP_RANGE     0.03f       // DoubleTap range, measured in normalized screen units (0.0f to 1.0f)
+        -:  178:
+        -:  179://----------------------------------------------------------------------------------
+        -:  180:// Types and Structures Definition
+        -:  181://----------------------------------------------------------------------------------
+        -:  182:
+        -:  183:// Gestures module state context [136 bytes]
+        -:  184:typedef struct {
+        -:  185:    unsigned int current;               // Current detected gesture
+        -:  186:    unsigned int enabledFlags;          // Enabled gestures flags
+        -:  187:    struct {
+        -:  188:        int firstId;                    // Touch id for first touch point
+        -:  189:        int pointCount;                 // Touch points counter
+        -:  190:        double eventTime;               // Time stamp when an event happened
+        -:  191:        Vector2 upPosition;             // Touch up position
+        -:  192:        Vector2 downPositionA;          // First touch down position
+        -:  193:        Vector2 downPositionB;          // Second touch down position
+        -:  194:        Vector2 downDragPosition;       // Touch drag position
+        -:  195:        Vector2 moveDownPositionA;      // First touch down position on move
+        -:  196:        Vector2 moveDownPositionB;      // Second touch down position on move
+        -:  197:        int tapCounter;                 // TAP counter (one tap implies TOUCH_DOWN and TOUCH_UP actions)
+        -:  198:    } Touch;
+        -:  199:    struct {
+        -:  200:        bool resetRequired;             // HOLD reset to get first touch point again
+        -:  201:        double timeDuration;            // HOLD duration in milliseconds
+        -:  202:    } Hold;
+        -:  203:    struct {
+        -:  204:        Vector2 vector;                 // DRAG vector (between initial and current position)
+        -:  205:        float angle;                    // DRAG angle (relative to x-axis)
+        -:  206:        float distance;                 // DRAG distance (from initial touch point to final) (normalized [0..1])
+        -:  207:        float intensity;                // DRAG intensity, how far why did the DRAG (pixels per frame)
+        -:  208:    } Drag;
+        -:  209:    struct {
+        -:  210:        bool start;                     // SWIPE used to define when start measuring GESTURES.Swipe.timeDuration
+        -:  211:        double timeDuration;            // SWIPE time to calculate drag intensity
+        -:  212:    } Swipe;
+        -:  213:    struct {
+        -:  214:        Vector2 vector;                 // PINCH vector (between first and second touch points)
+        -:  215:        float angle;                    // PINCH angle (relative to x-axis)
+        -:  216:        float distance;                 // PINCH displacement distance (normalized [0..1])
+        -:  217:    } Pinch;
+        -:  218:} GesturesData;
+        -:  219:
+        -:  220://----------------------------------------------------------------------------------
+        -:  221:// Global Variables Definition
+        -:  222://----------------------------------------------------------------------------------
+        -:  223:static GesturesData GESTURES = {
+        -:  224:    .Touch.firstId = -1,
+        -:  225:    .current = GESTURE_NONE,            // No current gesture detected
+        -:  226:    .enabledFlags = 0b0000001111111111  // All gestures supported by default
+        -:  227:};
+        -:  228:
+        -:  229://----------------------------------------------------------------------------------
+        -:  230:// Module specific Functions Declaration
+        -:  231://----------------------------------------------------------------------------------
+        -:  232:#if defined(GESTURES_STANDALONE)
+        -:  233:// Some required math functions provided by raymath.h
+        -:  234:static float Vector2Angle(Vector2 initialPosition, Vector2 finalPosition);
+        -:  235:static float Vector2Distance(Vector2 v1, Vector2 v2);
+        -:  236:#endif
+        -:  237:static double GetCurrentTime(void);
+        -:  238:
+        -:  239://----------------------------------------------------------------------------------
+        -:  240:// Module Functions Definition
+        -:  241://----------------------------------------------------------------------------------
+        -:  242:
+        -:  243:// Enable only desired getures to be detected
+function SetGesturesEnabled called 0 returned 0% blocks executed 0%
+    #####:  244:void SetGesturesEnabled(unsigned int flags)
+        -:  245:{
+    #####:  246:    GESTURES.enabledFlags = flags;
+    #####:  247:}
+        -:  248:
+        -:  249:// Check if a gesture have been detected
+function IsGestureDetected called 0 returned 0% blocks executed 0%
+    #####:  250:bool IsGestureDetected(int gesture)
+        -:  251:{
+    #####:  252:    if ((GESTURES.enabledFlags & GESTURES.current) == gesture) return true;
+    %%%%%:  252-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  252-block  1
+    #####:  253:    else return false;
+    %%%%%:  253-block  0
+        -:  254:}
+        -:  255:
+        -:  256:// Process gesture event and translate it into gestures
+function ProcessGestureEvent called 15 returned 100% blocks executed 33%
+       15:  257:void ProcessGestureEvent(GestureEvent event)
+        -:  258:{
+        -:  259:    // Reset required variables
+       15:  260:    GESTURES.Touch.pointCount = event.pointCount;      // Required on UpdateGestures()
+        -:  261:
+       15:  262:    if (GESTURES.Touch.pointCount < 2)
+       15:  262-block  0
+branch  0 taken 15 (fallthrough)
+branch  1 taken 0
+        -:  263:    {
+       15:  264:        if (event.touchAction == TOUCH_DOWN)
+       15:  264-block  0
+branch  0 taken 2 (fallthrough)
+branch  1 taken 13
+        -:  265:        {
+        2:  266:            GESTURES.Touch.tapCounter++;    // Tap counter
+        -:  267:
+        -:  268:            // Detect GESTURE_DOUBLE_TAP
+       2*:  269:            if ((GESTURES.current == GESTURE_NONE) && (GESTURES.Touch.tapCounter >= 2) && ((GetCurrentTime() - GESTURES.Touch.eventTime) < TAP_TIMEOUT) && (Vector2Distance(GESTURES.Touch.downPositionA, event.position[0]) < DOUBLETAP_RANGE))
+        2:  269-block  0
+branch  0 taken 2 (fallthrough)
+branch  1 taken 0
+        2:  269-block  1
+branch  2 taken 1 (fallthrough)
+branch  3 taken 1
+        1:  269-block  2
+call    4 returned 1
+branch  5 taken 0 (fallthrough)
+branch  6 taken 1
+    %%%%%:  269-block  3
+call    7 never executed
+branch  8 never executed
+branch  9 never executed
+        -:  270:            {
+    #####:  271:                GESTURES.current = GESTURE_DOUBLETAP;
+    #####:  272:                GESTURES.Touch.tapCounter = 0;
+    %%%%%:  272-block  0
+        -:  273:            }
+        -:  274:            else    // Detect GESTURE_TAP
+        -:  275:            {
+        2:  276:                GESTURES.Touch.tapCounter = 1;
+        2:  277:                GESTURES.current = GESTURE_TAP;
+        2:  277-block  0
+        -:  278:            }
+        -:  279:
+        2:  280:            GESTURES.Touch.downPositionA = event.position[0];
+        2:  281:            GESTURES.Touch.downDragPosition = event.position[0];
+        -:  282:
+        2:  283:            GESTURES.Touch.upPosition = GESTURES.Touch.downPositionA;
+        2:  284:            GESTURES.Touch.eventTime = GetCurrentTime();
+        2:  284-block  0
+call    0 returned 2
+        -:  285:
+        2:  286:            GESTURES.Touch.firstId = event.pointId[0];
+        -:  287:
+        2:  288:            GESTURES.Drag.vector = (Vector2){ 0.0f, 0.0f };
+        -:  289:        }
+       13:  290:        else if (event.touchAction == TOUCH_UP)
+       13:  290-block  0
+branch  0 taken 2 (fallthrough)
+branch  1 taken 11
+        -:  291:        {
+       2*:  292:            if (GESTURES.current == GESTURE_DRAG) GESTURES.Touch.upPosition = event.position[0];
+        2:  292-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2
+    %%%%%:  292-block  1
+        -:  293:
+        -:  294:            // NOTE: GESTURES.Drag.intensity dependend on the resolution of the screen
+        2:  295:            GESTURES.Drag.distance = Vector2Distance(GESTURES.Touch.downPositionA, GESTURES.Touch.upPosition);
+        2:  295-block  0
+call    0 returned 2
+        2:  296:            GESTURES.Drag.intensity = GESTURES.Drag.distance/(float)((GetCurrentTime() - GESTURES.Swipe.timeDuration));
+call    0 returned 2
+        -:  297:
+        2:  298:            GESTURES.Swipe.start = false;
+        -:  299:
+        -:  300:            // Detect GESTURE_SWIPE
+       2*:  301:            if ((GESTURES.Drag.intensity > FORCE_TO_SWIPE) && (GESTURES.Touch.firstId == event.pointId[0]))
+branch  0 taken 0 (fallthrough)
+branch  1 taken 2
+    %%%%%:  301-block  0
+branch  2 never executed
+branch  3 never executed
+        -:  302:            {
+        -:  303:                // NOTE: Angle should be inverted in Y
+    #####:  304:                GESTURES.Drag.angle = 360.0f - Vector2Angle(GESTURES.Touch.downPositionA, GESTURES.Touch.upPosition);
+    %%%%%:  304-block  0
+call    0 never executed
+        -:  305:
+    #####:  306:                if ((GESTURES.Drag.angle < 30) || (GESTURES.Drag.angle > 330)) GESTURES.current = GESTURE_SWIPE_RIGHT;        // Right
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  306-block  0
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  306-block  1
+    #####:  307:                else if ((GESTURES.Drag.angle > 30) && (GESTURES.Drag.angle < 120)) GESTURES.current = GESTURE_SWIPE_UP;      // Up
+    %%%%%:  307-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  307-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  307-block  2
+    #####:  308:                else if ((GESTURES.Drag.angle > 120) && (GESTURES.Drag.angle < 210)) GESTURES.current = GESTURE_SWIPE_LEFT;   // Left
+    %%%%%:  308-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  308-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  308-block  2
+    #####:  309:                else if ((GESTURES.Drag.angle > 210) && (GESTURES.Drag.angle < 300)) GESTURES.current = GESTURE_SWIPE_DOWN;   // Down
+    %%%%%:  309-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  309-block  1
+branch  2 never executed
+branch  3 never executed
+    %%%%%:  309-block  2
+    #####:  310:                else GESTURES.current = GESTURE_NONE;
+    %%%%%:  310-block  0
+        -:  311:            }
+        -:  312:            else
+        -:  313:            {
+        2:  314:                GESTURES.Drag.distance = 0.0f;
+        2:  315:                GESTURES.Drag.intensity = 0.0f;
+        2:  316:                GESTURES.Drag.angle = 0.0f;
+        -:  317:
+        2:  318:                GESTURES.current = GESTURE_NONE;
+        2:  318-block  0
+        -:  319:            }
+        -:  320:
+        2:  321:            GESTURES.Touch.downDragPosition = (Vector2){ 0.0f, 0.0f };
+        2:  322:            GESTURES.Touch.pointCount = 0;
+        2:  322-block  0
+        -:  323:        }
+       11:  324:        else if (event.touchAction == TOUCH_MOVE)
+       11:  324-block  0
+branch  0 taken 11 (fallthrough)
+branch  1 taken 0
+        -:  325:        {
+      11*:  326:            if (GESTURES.current == GESTURE_DRAG) GESTURES.Touch.eventTime = GetCurrentTime();
+       11:  326-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 11
+    %%%%%:  326-block  1
+call    2 never executed
+        -:  327:
+       11:  328:            if (!GESTURES.Swipe.start)
+       11:  328-block  0
+branch  0 taken 2 (fallthrough)
+branch  1 taken 9
+        -:  329:            {
+        2:  330:                GESTURES.Swipe.timeDuration = GetCurrentTime();
+        2:  330-block  0
+call    0 returned 2
+        2:  331:                GESTURES.Swipe.start = true;
+        -:  332:            }
+        -:  333:
+       11:  334:            GESTURES.Touch.moveDownPositionA = event.position[0];
+        -:  335:
+       11:  336:            if (GESTURES.current == GESTURE_HOLD)
+       11:  336-block  0
+branch  0 taken 0 (fallthrough)
+branch  1 taken 11
+        -:  337:            {
+    #####:  338:                if (GESTURES.Hold.resetRequired) GESTURES.Touch.downPositionA = event.position[0];
+    %%%%%:  338-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  338-block  1
+        -:  339:
+    #####:  340:                GESTURES.Hold.resetRequired = false;
+        -:  341:
+        -:  342:                // Detect GESTURE_DRAG
+    #####:  343:                if (Vector2Distance(GESTURES.Touch.downPositionA, GESTURES.Touch.moveDownPositionA) >= MINIMUM_DRAG)
+    %%%%%:  343-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+        -:  344:                {
+    #####:  345:                    GESTURES.Touch.eventTime = GetCurrentTime();
+    %%%%%:  345-block  0
+call    0 never executed
+    #####:  346:                    GESTURES.current = GESTURE_DRAG;
+        -:  347:                }
+        -:  348:            }
+        -:  349:
+       11:  350:            GESTURES.Drag.vector.x = GESTURES.Touch.moveDownPositionA.x - GESTURES.Touch.downDragPosition.x;
+       11:  351:            GESTURES.Drag.vector.y = GESTURES.Touch.moveDownPositionA.y - GESTURES.Touch.downDragPosition.y;
+       11:  351-block  0
+        -:  352:        }
+        -:  353:    }
+        -:  354:    else    // Two touch points
+        -:  355:    {
+    #####:  356:        if (event.touchAction == TOUCH_DOWN)
+    %%%%%:  356-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  357:        {
+    #####:  358:            GESTURES.Touch.downPositionA = event.position[0];
+    #####:  359:            GESTURES.Touch.downPositionB = event.position[1];
+        -:  360:
+        -:  361:            //GESTURES.Pinch.distance = Vector2Distance(GESTURES.Touch.downPositionA, GESTURES.Touch.downPositionB);
+        -:  362:
+    #####:  363:            GESTURES.Pinch.vector.x = GESTURES.Touch.downPositionB.x - GESTURES.Touch.downPositionA.x;
+    #####:  364:            GESTURES.Pinch.vector.y = GESTURES.Touch.downPositionB.y - GESTURES.Touch.downPositionA.y;
+        -:  365:
+    #####:  366:            GESTURES.current = GESTURE_HOLD;
+    #####:  367:            GESTURES.Hold.timeDuration = GetCurrentTime();
+    %%%%%:  367-block  0
+call    0 never executed
+        -:  368:        }
+    #####:  369:        else if (event.touchAction == TOUCH_MOVE)
+    %%%%%:  369-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  370:        {
+    #####:  371:            GESTURES.Pinch.distance = Vector2Distance(GESTURES.Touch.moveDownPositionA, GESTURES.Touch.moveDownPositionB);
+    %%%%%:  371-block  0
+call    0 never executed
+        -:  372:
+    #####:  373:            GESTURES.Touch.downPositionA = GESTURES.Touch.moveDownPositionA;
+    #####:  374:            GESTURES.Touch.downPositionB = GESTURES.Touch.moveDownPositionB;
+        -:  375:
+    #####:  376:            GESTURES.Touch.moveDownPositionA = event.position[0];
+    #####:  377:            GESTURES.Touch.moveDownPositionB = event.position[1];
+        -:  378:
+    #####:  379:            GESTURES.Pinch.vector.x = GESTURES.Touch.moveDownPositionB.x - GESTURES.Touch.moveDownPositionA.x;
+    #####:  380:            GESTURES.Pinch.vector.y = GESTURES.Touch.moveDownPositionB.y - GESTURES.Touch.moveDownPositionA.y;
+        -:  381:
+    #####:  382:            if ((Vector2Distance(GESTURES.Touch.downPositionA, GESTURES.Touch.moveDownPositionA) >= MINIMUM_PINCH) || (Vector2Distance(GESTURES.Touch.downPositionB, GESTURES.Touch.moveDownPositionB) >= MINIMUM_PINCH))
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    %%%%%:  382-block  0
+call    3 never executed
+branch  4 never executed
+branch  5 never executed
+        -:  383:            {
+    #####:  384:                if ((Vector2Distance(GESTURES.Touch.moveDownPositionA, GESTURES.Touch.moveDownPositionB) - GESTURES.Pinch.distance) < 0) GESTURES.current = GESTURE_PINCH_IN;
+    %%%%%:  384-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    %%%%%:  384-block  1
+    #####:  385:                else GESTURES.current = GESTURE_PINCH_OUT;
+    %%%%%:  385-block  0
+        -:  386:            }
+        -:  387:            else
+        -:  388:            {
+    #####:  389:                GESTURES.current = GESTURE_HOLD;
+    #####:  390:                GESTURES.Hold.timeDuration = GetCurrentTime();
+    %%%%%:  390-block  0
+call    0 never executed
+        -:  391:            }
+        -:  392:
+        -:  393:            // NOTE: Angle should be inverted in Y
+    #####:  394:            GESTURES.Pinch.angle = 360.0f - Vector2Angle(GESTURES.Touch.moveDownPositionA, GESTURES.Touch.moveDownPositionB);
+    %%%%%:  394-block  0
+call    0 never executed
+        -:  395:        }
+    #####:  396:        else if (event.touchAction == TOUCH_UP)
+    %%%%%:  396-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  397:        {
+    #####:  398:            GESTURES.Pinch.distance = 0.0f;
+    #####:  399:            GESTURES.Pinch.angle = 0.0f;
+    #####:  400:            GESTURES.Pinch.vector = (Vector2){ 0.0f, 0.0f };
+    #####:  401:            GESTURES.Touch.pointCount = 0;
+        -:  402:
+    #####:  403:            GESTURES.current = GESTURE_NONE;
+    %%%%%:  403-block  0
+        -:  404:        }
+        -:  405:    }
+       15:  406:}
+        -:  407:
+        -:  408:// Update gestures detected (must be called every frame)
+function UpdateGestures called 104 returned 100% blocks executed 76%
+      104:  409:void UpdateGestures(void)
+        -:  410:{
+        -:  411:    // NOTE: Gestures are processed through system callbacks on touch events
+        -:  412:
+        -:  413:    // Detect GESTURE_HOLD
+      104:  414:    if (((GESTURES.current == GESTURE_TAP) || (GESTURES.current == GESTURE_DOUBLETAP)) && (GESTURES.Touch.pointCount < 2))
+      104:  414-block  0
+branch  0 taken 102 (fallthrough)
+branch  1 taken 2
+      102:  414-block  1
+branch  2 taken 0 (fallthrough)
+branch  3 taken 102
+        2:  414-block  2
+branch  4 taken 2 (fallthrough)
+branch  5 taken 0
+        -:  415:    {
+        2:  416:        GESTURES.current = GESTURE_HOLD;
+        2:  417:        GESTURES.Hold.timeDuration = GetCurrentTime();
+        2:  417-block  0
+call    0 returned 2
+        -:  418:    }
+        -:  419:
+     104*:  420:    if (((GetCurrentTime() - GESTURES.Touch.eventTime) > TAP_TIMEOUT) && (GESTURES.current == GESTURE_DRAG) && (GESTURES.Touch.pointCount < 2))
+      104:  420-block  0
+call    0 returned 104
+branch  1 taken 98 (fallthrough)
+branch  2 taken 6
+       98:  420-block  1
+branch  3 taken 0 (fallthrough)
+branch  4 taken 98
+    %%%%%:  420-block  2
+branch  5 never executed
+branch  6 never executed
+        -:  421:    {
+    #####:  422:        GESTURES.current = GESTURE_HOLD;
+    #####:  423:        GESTURES.Hold.timeDuration = GetCurrentTime();
+    %%%%%:  423-block  0
+call    0 never executed
+    #####:  424:        GESTURES.Hold.resetRequired = true;
+        -:  425:    }
+        -:  426:
+        -:  427:    // Detect GESTURE_NONE
+      104:  428:    if ((GESTURES.current == GESTURE_SWIPE_RIGHT) || (GESTURES.current == GESTURE_SWIPE_UP) || (GESTURES.current == GESTURE_SWIPE_LEFT) || (GESTURES.current == GESTURE_SWIPE_DOWN))
+      104:  428-block  0
+branch  0 taken 104 (fallthrough)
+branch  1 taken 0
+      104:  428-block  1
+branch  2 taken 104 (fallthrough)
+branch  3 taken 0
+      104:  428-block  2
+branch  4 taken 104 (fallthrough)
+branch  5 taken 0
+      104:  428-block  3
+branch  6 taken 0 (fallthrough)
+branch  7 taken 104
+        -:  429:    {
+    #####:  430:        GESTURES.current = GESTURE_NONE;
+    %%%%%:  430-block  0
+        -:  431:    }
+      104:  432:}
+        -:  433:
+        -:  434:// Get latest detected gesture
+function GetGestureDetected called 0 returned 0% blocks executed 0%
+    #####:  435:int GetGestureDetected(void)
+        -:  436:{
+        -:  437:    // Get current gesture only if enabled
+    #####:  438:    return (GESTURES.enabledFlags & GESTURES.current);
+    %%%%%:  438-block  0
+        -:  439:}
+        -:  440:
+        -:  441:// Hold time measured in ms
+function GetGestureHoldDuration called 0 returned 0% blocks executed 0%
+    #####:  442:float GetGestureHoldDuration(void)
+        -:  443:{
+        -:  444:    // NOTE: time is calculated on current gesture HOLD
+        -:  445:
+    #####:  446:    double time = 0.0;
+        -:  447:
+    #####:  448:    if (GESTURES.current == GESTURE_HOLD) time = GetCurrentTime() - GESTURES.Hold.timeDuration;
+    %%%%%:  448-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  448-block  1
+call    2 never executed
+        -:  449:
+    #####:  450:    return (float)time;
+    %%%%%:  450-block  0
+        -:  451:}
+        -:  452:
+        -:  453:// Get drag vector (between initial touch point to current)
+function GetGestureDragVector called 0 returned 0% blocks executed 0%
+    #####:  454:Vector2 GetGestureDragVector(void)
+        -:  455:{
+        -:  456:    // NOTE: drag vector is calculated on one touch points TOUCH_MOVE
+        -:  457:
+    #####:  458:    return GESTURES.Drag.vector;
+    %%%%%:  458-block  0
+        -:  459:}
+        -:  460:
+        -:  461:// Get drag angle
+        -:  462:// NOTE: Angle in degrees, horizontal-right is 0, counterclock-wise
+function GetGestureDragAngle called 0 returned 0% blocks executed 0%
+    #####:  463:float GetGestureDragAngle(void)
+        -:  464:{
+        -:  465:    // NOTE: drag angle is calculated on one touch points TOUCH_UP
+        -:  466:
+    #####:  467:    return GESTURES.Drag.angle;
+    %%%%%:  467-block  0
+        -:  468:}
+        -:  469:
+        -:  470:// Get distance between two pinch points
+function GetGesturePinchVector called 0 returned 0% blocks executed 0%
+    #####:  471:Vector2 GetGesturePinchVector(void)
+        -:  472:{
+        -:  473:    // NOTE: The position values used for GESTURES.Pinch.distance are not modified like the position values of [core.c]-->GetTouchPosition(int index)
+        -:  474:    // NOTE: pinch distance is calculated on two touch points TOUCH_MOVE
+        -:  475:
+    #####:  476:    return GESTURES.Pinch.vector;
+    %%%%%:  476-block  0
+        -:  477:}
+        -:  478:
+        -:  479:// Get angle beween two pinch points
+        -:  480:// NOTE: Angle in degrees, horizontal-right is 0, counterclock-wise
+function GetGesturePinchAngle called 0 returned 0% blocks executed 0%
+    #####:  481:float GetGesturePinchAngle(void)
+        -:  482:{
+        -:  483:    // NOTE: pinch angle is calculated on two touch points TOUCH_MOVE
+        -:  484:
+    #####:  485:    return GESTURES.Pinch.angle;
+    %%%%%:  485-block  0
+        -:  486:}
+        -:  487:
+        -:  488://----------------------------------------------------------------------------------
+        -:  489:// Module specific Functions Definition
+        -:  490://----------------------------------------------------------------------------------
+        -:  491:#if defined(GESTURES_STANDALONE)
+        -:  492:// Get angle from two-points vector with X-axis
+        -:  493:static float Vector2Angle(Vector2 v1, Vector2 v2)
+        -:  494:{
+        -:  495:    float angle = atan2f(v2.y - v1.y, v2.x - v1.x)*(180.0f/PI);
+        -:  496:
+        -:  497:    if (angle < 0) angle += 360.0f;
+        -:  498:
+        -:  499:    return angle;
+        -:  500:}
+        -:  501:
+        -:  502:// Calculate distance between two Vector2
+        -:  503:static float Vector2Distance(Vector2 v1, Vector2 v2)
+        -:  504:{
+        -:  505:    float result;
+        -:  506:
+        -:  507:    float dx = v2.x - v1.x;
+        -:  508:    float dy = v2.y - v1.y;
+        -:  509:
+        -:  510:    result = (float)sqrt(dx*dx + dy*dy);
+        -:  511:
+        -:  512:    return result;
+        -:  513:}
+        -:  514:#endif
+        -:  515:
+        -:  516:// Time measure returned are milliseconds
+function GetCurrentTime called 113 returned 100% blocks executed 100%
+      113:  517:static double GetCurrentTime(void)
+        -:  518:{
+      113:  519:    double time = 0;
+        -:  520:
+        -:  521:#if defined(_WIN32)
+        -:  522:    unsigned long long int clockFrequency, currentTime;
+        -:  523:
+      113:  524:    QueryPerformanceFrequency(&clockFrequency);     // BE CAREFUL: Costly operation!
+      113:  524-block  0
+call    0 returned 113
+      113:  525:    QueryPerformanceCounter(&currentTime);
+call    0 returned 113
+        -:  526:
+      113:  527:    time = (double)currentTime/clockFrequency*1000.0f;  // Time in miliseconds
+        -:  528:#endif
+        -:  529:
+        -:  530:#if defined(__linux__)
+        -:  531:    // NOTE: Only for Linux-based systems
+        -:  532:    struct timespec now;
+        -:  533:    clock_gettime(CLOCK_MONOTONIC, &now);
+        -:  534:    unsigned long long int nowTime = (unsigned long long int)now.tv_sec*1000000000LLU + (unsigned long long int)now.tv_nsec;     // Time in nanoseconds
+        -:  535:
+        -:  536:    time = ((double)nowTime/1000000.0);     // Time in miliseconds
+        -:  537:#endif
+        -:  538:
+        -:  539:#if defined(__APPLE__)
+        -:  540:    //#define CLOCK_REALTIME  CALENDAR_CLOCK    // returns UTC time since 1970-01-01
+        -:  541:    //#define CLOCK_MONOTONIC SYSTEM_CLOCK      // returns the time since boot time
+        -:  542:
+        -:  543:    clock_serv_t cclock;
+        -:  544:    mach_timespec_t now;
+        -:  545:    host_get_clock_service(mach_host_self(), SYSTEM_CLOCK, &cclock);
+        -:  546:
+        -:  547:    // NOTE: OS X does not have clock_gettime(), using clock_get_time()
+        -:  548:    clock_get_time(cclock, &now);
+        -:  549:    mach_port_deallocate(mach_task_self(), cclock);
+        -:  550:    unsigned long long int nowTime = (unsigned long long int)now.tv_sec*1000000000LLU + (unsigned long long int)now.tv_nsec;     // Time in nanoseconds
+        -:  551:
+        -:  552:    time = ((double)nowTime/1000000.0);     // Time in miliseconds
+        -:  553:#endif
+        -:  554:
+      113:  555:    return time;
+        -:  556:}
+        -:  557:
+        -:  558:#endif // GESTURES_IMPLEMENTATION

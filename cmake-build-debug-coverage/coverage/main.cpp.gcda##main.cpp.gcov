@@ -1,0 +1,273 @@
+        -:    0:Source:C:/Dev/CLionProjects/Snake-raylib/src/main.cpp
+        -:    0:Graph:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\CMakeFiles\Snake-raylib.dir\src\main.cpp.gcno
+        -:    0:Data:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\CMakeFiles\Snake-raylib.dir\src\main.cpp.gcda
+        -:    0:Runs:1
+        -:    1:#include <iostream>
+        -:    2:#include "raylib.h"
+        -:    3:#include <vector>
+        -:    4:#include "Segment.h"
+        -:    5:#include <algorithm>
+        -:    6:#include "Food.h"
+        -:    7:
+        -:    8://Global Variables
+        -:    9:std::vector<Segment> player(6);
+        -:   10:std::vector<Rectangle> segments;
+        -:   11:Rectangle foodO;
+        -:   12:Food food;
+        -:   13:int score = 0;
+        -:   14:bool positionChange = false;
+        -:   15:
+function _Z16InitializeWindowv called 1 returned 100% blocks executed 100%
+        1:   16:void InitializeWindow()
+        -:   17:{
+        1:   18:    InitWindow(585, 585, "Snake");
+        1:   18-block  0
+call    0 returned 1
+        1:   19:    SetTargetFPS(10);
+call    0 returned 1
+        -:   20:
+        1:   21:    player[0].isHead = true;
+call    0 returned 1
+        1:   22:    player[1].y = player[0].y + 30;
+call    0 returned 1
+call    1 returned 1
+        1:   23:    player[2].y = player[1].y + 30;
+call    0 returned 1
+call    1 returned 1
+        1:   24:    player[3].y = player[2].y + 30;
+call    0 returned 1
+call    1 returned 1
+        1:   25:    player[4].y = player[3].y + 30;
+call    0 returned 1
+call    1 returned 1
+        1:   26:    player[5].y = player[4].y + 30;
+call    0 returned 1
+call    1 returned 1
+        -:   27:
+        -:   28:
+        7:   29:    for (int i = 0; i != player.size(); i++)
+        7:   29-block  0
+call    0 returned 7
+branch  1 taken 6 (fallthrough)
+branch  2 taken 1
+        -:   30:    {
+        6:   31:        segments.push_back((Rectangle) {player[i].x, player[i].y, 30, 30});
+        6:   31-block  0
+call    0 returned 6
+call    1 returned 6
+call    2 returned 6
+branch  3 taken 6 (fallthrough)
+branch  4 taken 0 (throw)
+        6:   31-block  1
+        -:   32:    }
+        1:   33:    foodO = (Rectangle) {food.x, food.y, 30, 30};
+        -:   34:
+        -:   35:
+        1:   36:}
+        1:   36-block  0
+        -:   37:
+function _Z10playerMovei called 104 returned 100% blocks executed 62%
+      104:   38:void playerMove(int i)
+        -:   39:{
+      104:   40:    switch (player[i].direction) {
+      104:   40-block  0
+call    0 returned 104
+branch  1 taken 12
+branch  2 taken 74
+branch  3 taken 0
+branch  4 taken 18
+branch  5 taken 0
+       12:   41:        case 'N':
+       12:   42:            player[i].y -= 30;
+       12:   42-block  0
+call    0 returned 12
+       12:   43:            break;
+       74:   44:        case 'S':
+       74:   45:            player[i].y += 30;
+       74:   45-block  0
+call    0 returned 74
+       74:   46:            break;
+    #####:   47:        case 'E':
+    #####:   48:            player[i].x += 30;
+    %%%%%:   48-block  0
+call    0 never executed
+    #####:   49:            break;
+       18:   50:        case 'W':
+       18:   51:            player[i].x -= 30;
+       18:   51-block  0
+call    0 returned 18
+       18:   52:            break;
+        -:   53:    }
+      104:   54:    std::cout << "size of segments is " << segments.size() << std::endl;
+      104:   54-block  0
+call    0 returned 104
+call    1 returned 104
+call    2 returned 104
+call    3 returned 104
+      728:   55:    for (int j = 0; j != segments.size(); j++)
+      728:   55-block  0
+call    0 returned 728
+branch  1 taken 624 (fallthrough)
+branch  2 taken 104
+      624:   55-block  1
+        -:   56:        {
+      624:   57:            if (CheckCollisionRecs(segments[j], foodO))
+      624:   57-block  0
+call    0 returned 624
+call    1 returned 624
+branch  2 taken 0 (fallthrough)
+branch  3 taken 624
+        -:   58:            {
+    #####:   59:                player.push_back(Segment());
+    %%%%%:   59-block  0
+call    0 never executed
+call    1 never executed
+branch  2 never executed
+branch  3 never executed
+    %%%%%:   59-block  1
+call    4 never executed
+    $$$$$:   59-block  2
+call    5 never executed
+    #####:   60:                player[player.size()].prev = player.size() - 1;
+call    0 never executed
+call    1 never executed
+call    2 never executed
+    #####:   61:                food.x = (rand() % 19) * 30;
+call    0 never executed
+    #####:   62:                food.y = (rand() % 19) * 30;
+call    0 never executed
+    #####:   63:                score++;
+        -:   64:            }
+        -:   65:        }
+        -:   66:
+      104:   67:}
+      104:   67-block  0
+        -:   68:
+function _Z18calculatePositionsi called 0 returned 0% blocks executed 0%
+    #####:   69:void calculatePositions(int i)
+        -:   70:{
+        -:   71:    //player[i].x = player[player[i].prev].x;
+        -:   72:    //player[i].y = player[player[i].prev].y;
+    #####:   73:    player[i].direction = player[player[i].prev].direction;
+    %%%%%:   73-block  0
+call    0 never executed
+call    1 never executed
+call    2 never executed
+    #####:   74:}
+        -:   75:
+function main called 1 returned 100% blocks executed 100%
+        1:   76:int main() {
+        1:   77:    InitializeWindow();
+        1:   77-block  0
+call    0 returned 1
+        1:   78:    auto *p = &(player[0]);
+call    0 returned 1
+      105:   79:    while (!WindowShouldClose())
+      105:   79-block  0
+call    0 returned 105
+branch  1 taken 104 (fallthrough)
+branch  2 taken 1
+        -:   80:    {
+      104:   81:        ClearBackground(BLACK);
+      104:   81-block  0
+call    0 returned 104
+      728:   82:        for (int i = 1; i <= player.size(); i++)
+      728:   82-block  0
+call    0 returned 728
+branch  1 taken 624 (fallthrough)
+branch  2 taken 104
+      624:   82-block  1
+        -:   83:        {
+      624:   84:            if (i != 0)
+      624:   84-block  0
+branch  0 taken 624 (fallthrough)
+branch  1 taken 0
+      624:   85:                player[i].prev = i - 1;
+      624:   85-block  0
+call    0 returned 624
+        -:   86:        }
+        -:   87:
+      104:   88:        p->moveHead();
+      104:   88-block  0
+call    0 returned 104
+        -:   89:
+      728:   90:        for (int j = player.size(); j != 0; j--)
+call    0 returned 104
+      728:   90-block  0
+branch  1 taken 624 (fallthrough)
+branch  2 taken 104
+      624:   90-block  1
+        -:   91:        {
+      624:   92:            if (j != 0)
+      624:   92-block  0
+branch  0 taken 624 (fallthrough)
+branch  1 taken 0
+        -:   93:            {
+      624:   94:                player[j].x = player[player[j].prev].x;
+      624:   94-block  0
+call    0 returned 624
+call    1 returned 624
+call    2 returned 624
+      624:   95:                player[j].y = player[player[j].prev].y;
+call    0 returned 624
+call    1 returned 624
+call    2 returned 624
+        -:   96:            }
+        -:   97:        }
+        -:   98:
+      104:   99:        playerMove(0);
+      104:   99-block  0
+call    0 returned 104
+        -:  100:
+      104:  101:        BeginDrawing();
+call    0 returned 104
+        -:  102:
+      728:  103:        for (int k = 0; k != player.size(); k++)
+      728:  103-block  0
+call    0 returned 728
+branch  1 taken 624 (fallthrough)
+branch  2 taken 104
+        -:  104:        {
+      624:  105:            segments[k] = (Rectangle) {player[k].x, player[k].y, 30, 30};
+      624:  105-block  0
+call    0 returned 624
+call    1 returned 624
+call    2 returned 624
+      624:  106:            DrawRectangle(segments[k].x, segments[k].y, segments[k].width, segments[k].height, GREEN);
+call    0 returned 624
+call    1 returned 624
+call    2 returned 624
+call    3 returned 624
+call    4 returned 624
+        -:  107:        }
+      104:  108:        foodO = (Rectangle) {food.x, food.y, 30, 30};
+      104:  109:        DrawRectangle(foodO.x, foodO.y, foodO.width, foodO.height, RED);
+      104:  109-block  0
+call    0 returned 104
+        -:  110:        /*for (int j = 0; j != sizeof(segments); j++)
+        -:  111:        {
+        -:  112:            if (CheckCollisionRecs(segments[j], foodO))
+        -:  113:            {
+        -:  114:                player.emplace_back();
+        -:  115:            }
+        -:  116:        }*/
+        -:  117:
+      104:  118:        EndDrawing();
+call    0 returned 104
+        -:  119:        /*std::cout << "size of segments is " << segments.size() << std::endl;
+        -:  120:        for (int j = 0; j != segments.size(); j++)
+        -:  121:        {
+        -:  122:            if (CheckCollisionRecs(segments[j], foodO))
+        -:  123:            {
+        -:  124:                player.push_back(Segment(player[j - 1]));
+        -:  125:                food.x = (rand() % 19) * 30;
+        -:  126:                food.y = (rand() % 19) * 30;
+        -:  127:                score++;
+        -:  128:            }
+        -:  129:        }*/
+        -:  130:    }
+        1:  131:    CloseWindow();
+        1:  131-block  0
+call    0 returned 1
+        1:  132:    return 0;
+        -:  133:}

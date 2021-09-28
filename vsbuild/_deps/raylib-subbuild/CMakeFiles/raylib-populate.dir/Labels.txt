@@ -1,0 +1,14 @@
+# Target labels
+ raylib-populate
+# Source files and their labels
+C:/Dev/CLionProjects/Snake-raylib/vsbuild/_deps/raylib-subbuild/CMakeFiles/raylib-populate
+C:/Dev/CLionProjects/Snake-raylib/vsbuild/_deps/raylib-subbuild/CMakeFiles/5ea853f16ff928c7b562472edf618755/raylib-populate.rule
+C:/Dev/CLionProjects/Snake-raylib/vsbuild/_deps/raylib-subbuild/CMakeFiles/83dde697b9d313254c03ddfb5258d049/raylib-populate-complete.rule
+C:/Dev/CLionProjects/Snake-raylib/vsbuild/_deps/raylib-subbuild/CMakeFiles/4fae7ad9f5293bb4e8c97d63dde2227b/raylib-populate-build.rule
+C:/Dev/CLionProjects/Snake-raylib/vsbuild/_deps/raylib-subbuild/CMakeFiles/4fae7ad9f5293bb4e8c97d63dde2227b/raylib-populate-configure.rule
+C:/Dev/CLionProjects/Snake-raylib/vsbuild/_deps/raylib-subbuild/CMakeFiles/4fae7ad9f5293bb4e8c97d63dde2227b/raylib-populate-download.rule
+C:/Dev/CLionProjects/Snake-raylib/vsbuild/_deps/raylib-subbuild/CMakeFiles/4fae7ad9f5293bb4e8c97d63dde2227b/raylib-populate-install.rule
+C:/Dev/CLionProjects/Snake-raylib/vsbuild/_deps/raylib-subbuild/CMakeFiles/4fae7ad9f5293bb4e8c97d63dde2227b/raylib-populate-mkdir.rule
+C:/Dev/CLionProjects/Snake-raylib/vsbuild/_deps/raylib-subbuild/CMakeFiles/4fae7ad9f5293bb4e8c97d63dde2227b/raylib-populate-patch.rule
+C:/Dev/CLionProjects/Snake-raylib/vsbuild/_deps/raylib-subbuild/CMakeFiles/4fae7ad9f5293bb4e8c97d63dde2227b/raylib-populate-test.rule
+C:/Dev/CLionProjects/Snake-raylib/vsbuild/_deps/raylib-subbuild/CMakeFiles/4fae7ad9f5293bb4e8c97d63dde2227b/raylib-populate-update.rule

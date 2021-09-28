@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Dev\CLionProjects\Snake-raylib\vsbuild\_deps\raylib-subbuild\CMakeFiles\4fae7ad9f5293bb4e8c97d63dde2227b\raylib-populate-mkdir.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Dev\CLionProjects\Snake-raylib\vsbuild\_deps\raylib-subbuild\CMakeFiles\4fae7ad9f5293bb4e8c97d63dde2227b\raylib-populate-download.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Dev\CLionProjects\Snake-raylib\vsbuild\_deps\raylib-subbuild\CMakeFiles\4fae7ad9f5293bb4e8c97d63dde2227b\raylib-populate-update.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Dev\CLionProjects\Snake-raylib\vsbuild\_deps\raylib-subbuild\CMakeFiles\4fae7ad9f5293bb4e8c97d63dde2227b\raylib-populate-patch.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Dev\CLionProjects\Snake-raylib\vsbuild\_deps\raylib-subbuild\CMakeFiles\4fae7ad9f5293bb4e8c97d63dde2227b\raylib-populate-configure.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Dev\CLionProjects\Snake-raylib\vsbuild\_deps\raylib-subbuild\CMakeFiles\4fae7ad9f5293bb4e8c97d63dde2227b\raylib-populate-build.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Dev\CLionProjects\Snake-raylib\vsbuild\_deps\raylib-subbuild\CMakeFiles\4fae7ad9f5293bb4e8c97d63dde2227b\raylib-populate-install.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Dev\CLionProjects\Snake-raylib\vsbuild\_deps\raylib-subbuild\CMakeFiles\4fae7ad9f5293bb4e8c97d63dde2227b\raylib-populate-test.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Dev\CLionProjects\Snake-raylib\vsbuild\_deps\raylib-subbuild\CMakeFiles\83dde697b9d313254c03ddfb5258d049\raylib-populate-complete.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Dev\CLionProjects\Snake-raylib\vsbuild\_deps\raylib-subbuild\CMakeFiles\5ea853f16ff928c7b562472edf618755\raylib-populate.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+    <CustomBuild Include="C:\Dev\CLionProjects\Snake-raylib\vsbuild\_deps\raylib-subbuild\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="C:\Dev\CLionProjects\Snake-raylib\vsbuild\_deps\raylib-subbuild\CMakeFiles\raylib-populate" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{85D8F521-579E-3174-ACF2-489115457844}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

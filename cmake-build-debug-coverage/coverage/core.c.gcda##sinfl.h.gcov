@@ -1,0 +1,754 @@
+        -:    0:Source:C:/Dev/CLionProjects/Snake-raylib/cmake-build-debug-coverage/_deps/raylib-src/src/external/sinfl.h
+        -:    0:Graph:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\CMakeFiles\raylib.dir\core.c.gcno
+        -:    0:Data:C:\Dev\CLionProjects\Snake-raylib\cmake-build-debug-coverage\_deps\raylib-build\raylib\CMakeFiles\raylib.dir\core.c.gcda
+        -:    0:Runs:1
+        -:    1:/*
+        -:    2:# Small Deflate
+        -:    3:`sdefl` is a small bare bone lossless compression library in ANSI C (ISO C90)
+        -:    4:which implements the Deflate (RFC 1951) compressed data format specification standard.
+        -:    5:It is mainly tuned to get as much speed and compression ratio from as little code
+        -:    6:as needed to keep the implementation as concise as possible.
+        -:    7:
+        -:    8:## Features
+        -:    9:- Portable single header and source file duo written in ANSI C (ISO C90)
+        -:   10:- Dual license with either MIT or public domain
+        -:   11:- Small implementation
+        -:   12:    - Deflate: 525 LoC
+        -:   13:    - Inflate: 320 LoC
+        -:   14:- Webassembly:
+        -:   15:    - Deflate ~3.7 KB (~2.2KB compressed)
+        -:   16:    - Inflate ~3.6 KB (~2.2KB compressed)
+        -:   17:
+        -:   18:## Usage:
+        -:   19:This file behaves differently depending on what symbols you define
+        -:   20:before including it.
+        -:   21:
+        -:   22:Header-File mode:
+        -:   23:If you do not define `SINFL_IMPLEMENTATION` before including this file, it
+        -:   24:will operate in header only mode. In this mode it declares all used structs
+        -:   25:and the API of the library without including the implementation of the library.
+        -:   26:
+        -:   27:Implementation mode:
+        -:   28:If you define `SINFL_IMPLEMENTATION` before including this file, it will
+        -:   29:compile the implementation. Make sure that you only include
+        -:   30:this file implementation in *one* C or C++ file to prevent collisions.
+        -:   31:
+        -:   32:### Benchmark
+        -:   33:
+        -:   34:| Compressor name         | Compression| Decompress.| Compr. size | Ratio |
+        -:   35:| ------------------------| -----------| -----------| ----------- | ----- |
+        -:   36:| sdefl 1.0 -0            |   127 MB/s |   233 MB/s |    40004116 | 39.88 |
+        -:   37:| sdefl 1.0 -1            |   111 MB/s |   259 MB/s |    38940674 | 38.82 |
+        -:   38:| sdefl 1.0 -5            |    45 MB/s |   275 MB/s |    36577183 | 36.46 |
+        -:   39:| sdefl 1.0 -7            |    38 MB/s |   276 MB/s |    36523781 | 36.41 |
+        -:   40:| zlib 1.2.11 -1          |    72 MB/s |   307 MB/s |    42298774 | 42.30 |
+        -:   41:| zlib 1.2.11 -6          |    24 MB/s |   313 MB/s |    36548921 | 36.55 |
+        -:   42:| zlib 1.2.11 -9          |    20 MB/s |   314 MB/s |    36475792 | 36.48 |
+        -:   43:| miniz 1.0 -1            |   122 MB/s |   208 MB/s |    48510028 | 48.51 |
+        -:   44:| miniz 1.0 -6            |    27 MB/s |   260 MB/s |    36513697 | 36.51 |
+        -:   45:| miniz 1.0 -9            |    23 MB/s |   261 MB/s |    36460101 | 36.46 |
+        -:   46:| libdeflate 1.3 -1       |   147 MB/s |   667 MB/s |    39597378 | 39.60 |
+        -:   47:| libdeflate 1.3 -6       |    69 MB/s |   689 MB/s |    36648318 | 36.65 |
+        -:   48:| libdeflate 1.3 -9       |    13 MB/s |   672 MB/s |    35197141 | 35.20 |
+        -:   49:| libdeflate 1.3 -12      |  8.13 MB/s |   670 MB/s |    35100568 | 35.10 |
+        -:   50:
+        -:   51:### Compression
+        -:   52:Results on the [Silesia compression corpus](http://sun.aei.polsl.pl/~sdeor/index.php?page=silesia):
+        -:   53:
+        -:   54:| File    |   Original | `sdefl 0`  	| `sdefl 5` 	| `sdefl 7` |
+        -:   55:| :------ | ---------: | -----------------: | ---------: | ----------: |
+        -:   56:| dickens | 10.192.446 |  4,260,187|  3,845,261|   3,833,657 |
+        -:   57:| mozilla | 51.220.480 | 20,774,706 | 19,607,009 |  19,565,867 |
+        -:   58:| mr      |  9.970.564 | 3,860,531 |  3,673,460 |   3,665,627 |
+        -:   59:| nci     | 33.553.445 | 4,030,283 |  3,094,526 |   3,006,075 |
+        -:   60:| ooffice |  6.152.192 | 3,320,063 |  3,186,373 |   3,183,815 |
+        -:   61:| osdb    | 10.085.684 | 3,919,646 |  3,649,510 |   3,649,477 |
+        -:   62:| reymont |  6.627.202 | 2,263,378 |  1,857,588 |   1,827,237 |
+        -:   63:| samba   | 21.606.400 | 6,121,797 |  5,462,670 |   5,450,762 |
+        -:   64:| sao     |  7.251.944 | 5,612,421 |  5,485,380 |   5,481,765 |
+        -:   65:| webster | 41.458.703 | 13,972,648 | 12,059,432 |  11,991,421 |
+        -:   66:| xml     |  5.345.280 | 886,620|    674,009 |     662,141 |
+        -:   67:| x-ray   |  8.474.240 | 6,304,655 |  6,244,779 |   6,244,779 |
+        -:   68:
+        -:   69:## License
+        -:   70:```
+        -:   71:------------------------------------------------------------------------------
+        -:   72:This software is available under 2 licenses -- choose whichever you prefer.
+        -:   73:------------------------------------------------------------------------------
+        -:   74:ALTERNATIVE A - MIT License
+        -:   75:Copyright (c) 2020 Micha Mettke
+        -:   76:Permission is hereby granted, free of charge, to any person obtaining a copy of
+        -:   77:this software and associated documentation files (the "Software"), to deal in
+        -:   78:the Software without restriction, including without limitation the rights to
+        -:   79:use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+        -:   80:of the Software, and to permit persons to whom the Software is furnished to do
+        -:   81:so, subject to the following conditions:
+        -:   82:The above copyright notice and this permission notice shall be included in all
+        -:   83:copies or substantial portions of the Software.
+        -:   84:THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        -:   85:IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        -:   86:FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        -:   87:AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        -:   88:LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+        -:   89:OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+        -:   90:SOFTWARE.
+        -:   91:------------------------------------------------------------------------------
+        -:   92:ALTERNATIVE B - Public Domain (www.unlicense.org)
+        -:   93:This is free and unencumbered software released into the public domain.
+        -:   94:Anyone is free to copy, modify, publish, use, compile, sell, or distribute this
+        -:   95:software, either in source code form or as a compiled binary, for any purpose,
+        -:   96:commercial or non-commercial, and by any means.
+        -:   97:In jurisdictions that recognize copyright laws, the author or authors of this
+        -:   98:software dedicate any and all copyright interest in the software to the public
+        -:   99:domain. We make this dedication for the benefit of the public at large and to
+        -:  100:the detriment of our heirs and successors. We intend this dedication to be an
+        -:  101:overt act of relinquishment in perpetuity of all present and future rights to
+        -:  102:this software under copyright law.
+        -:  103:THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        -:  104:IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        -:  105:FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        -:  106:AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+        -:  107:ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+        -:  108:WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+        -:  109:------------------------------------------------------------------------------
+        -:  110:```
+        -:  111:*/
+        -:  112:#ifndef SINFL_H_INCLUDED
+        -:  113:#define SINFL_H_INCLUDED
+        -:  114:
+        -:  115:#ifdef __cplusplus
+        -:  116:extern "C" {
+        -:  117:#endif
+        -:  118:
+        -:  119:#define SINFL_PRE_TBL_SIZE 128
+        -:  120:#define SINFL_LIT_TBL_SIZE 1334
+        -:  121:#define SINFL_OFF_TBL_SIZE 402
+        -:  122:
+        -:  123:struct sinfl {
+        -:  124:  int bits, bitcnt;
+        -:  125:  unsigned lits[SINFL_LIT_TBL_SIZE];
+        -:  126:  unsigned dsts[SINFL_OFF_TBL_SIZE];
+        -:  127:};
+        -:  128:extern int sinflate(void *out, const void *in, int size);
+        -:  129:extern int zsinflate(void *out, const void *in, int size);
+        -:  130:
+        -:  131:#ifdef __cplusplus
+        -:  132:}
+        -:  133:#endif
+        -:  134:
+        -:  135:#endif /* SINFL_H_INCLUDED */
+        -:  136:
+        -:  137:#ifdef SINFL_IMPLEMENTATION
+        -:  138:
+        -:  139:#include <string.h> /* memcpy, memset */
+        -:  140:
+        -:  141:static int
+function sinfl_bsr called 0 returned 0% blocks executed 0%
+    #####:  142:sinfl_bsr(unsigned n) {
+        -:  143:#ifdef _MSC_VER
+        -:  144:  _BitScanReverse(&n, n);
+        -:  145:  return n;
+        -:  146:#elif defined(__GNUC__) || defined(__clang__)
+    #####:  147:  return 31 - __builtin_clz(n);
+    %%%%%:  147-block  0
+        -:  148:#endif
+        -:  149:}
+        -:  150:static int
+function sinfl_get called 0 returned 0% blocks executed 0%
+    #####:  151:sinfl_get(const unsigned char **src, const unsigned char *end, struct sinfl *s,
+        -:  152:          int n) {
+    #####:  153:  const unsigned char *in = *src;
+    #####:  154:  int v = s->bits & ((1 << n)-1);
+    #####:  155:  s->bits >>= n;
+    #####:  156:  s->bitcnt = s->bitcnt - n;
+    #####:  157:  s->bitcnt = s->bitcnt < 0 ? 0 : s->bitcnt;
+    #####:  158:  while (s->bitcnt < 16 && in < end) {
+    %%%%%:  158-block  0
+    %%%%%:  158-block  1
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  158-block  2
+branch  2 never executed
+branch  3 never executed
+    #####:  159:    s->bits |= (*in++) << s->bitcnt;
+    #####:  160:    s->bitcnt += 8;
+    %%%%%:  160-block  0
+        -:  161:  }
+    #####:  162:  *src = in;
+    #####:  163:  return v;
+    %%%%%:  163-block  0
+        -:  164:}
+        -:  165:struct sinfl_gen {
+        -:  166:  int len;
+        -:  167:  int cnt;
+        -:  168:  int word;
+        -:  169:  short* sorted;
+        -:  170:};
+        -:  171:static int
+function sinfl_build_tbl called 0 returned 0% blocks executed 0%
+    #####:  172:sinfl_build_tbl(struct sinfl_gen *gen, unsigned *tbl, int tbl_bits,
+        -:  173:                const int *cnt) {
+    #####:  174:  int tbl_end = 0;
+    #####:  175:  while (!(gen->cnt = cnt[gen->len])) {
+    %%%%%:  175-block  0
+    %%%%%:  175-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  176:    ++gen->len;
+    %%%%%:  176-block  0
+        -:  177:  }
+    #####:  178:  tbl_end = 1 << gen->len;
+    #####:  179:  while (gen->len <= tbl_bits) {
+    %%%%%:  179-block  0
+    %%%%%:  179-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  180:    do {unsigned bit = 0;
+    #####:  181:      tbl[gen->word] = (*gen->sorted++ << 16) | gen->len;
+    #####:  182:      if (gen->word == tbl_end - 1) {
+    %%%%%:  182-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  183:        for (; gen->len < tbl_bits; gen->len++) {
+    %%%%%:  183-block  0
+    %%%%%:  183-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  184:          memcpy(&tbl[tbl_end], tbl, (size_t)tbl_end * sizeof(tbl[0]));
+    #####:  185:          tbl_end <<= 1;
+    %%%%%:  185-block  0
+        -:  186:        }
+    #####:  187:        return 1;
+    %%%%%:  187-block  0
+        -:  188:      }
+    #####:  189:      bit = 1 << sinfl_bsr((unsigned)(gen->word ^ (tbl_end - 1)));
+    %%%%%:  189-block  0
+call    0 never executed
+    #####:  190:      gen->word &= bit - 1;
+    #####:  191:      gen->word |= bit;
+    #####:  192:    } while (--gen->cnt);
+branch  0 never executed
+branch  1 never executed
+        -:  193:    do {
+    #####:  194:      if (++gen->len <= tbl_bits) {
+    %%%%%:  194-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  195:        memcpy(&tbl[tbl_end], tbl, (size_t)tbl_end * sizeof(tbl[0]));
+    #####:  196:        tbl_end <<= 1;
+    %%%%%:  196-block  0
+        -:  197:      }
+    #####:  198:    } while (!(gen->cnt = cnt[gen->len]));
+    %%%%%:  198-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  199:  }
+    #####:  200:  return 0;
+    %%%%%:  200-block  0
+        -:  201:}
+        -:  202:static void
+function sinfl_build_subtbl called 0 returned 0% blocks executed 0%
+    #####:  203:sinfl_build_subtbl(struct sinfl_gen *gen, unsigned *tbl, int tbl_bits,
+        -:  204:                   const int *cnt) {
+    #####:  205:  int sub_bits = 0;
+    #####:  206:  int sub_start = 0;
+    #####:  207:  int sub_prefix = -1;
+    #####:  208:  int tbl_end = 1 << tbl_bits;
+    %%%%%:  208-block  0
+    #####:  209:  while (1) {
+    %%%%%:  209-block  0
+        -:  210:    unsigned entry;
+        -:  211:    int bit, stride, i;
+        -:  212:    /* start new subtable */
+    #####:  213:    if ((gen->word & ((1 << tbl_bits)-1)) != sub_prefix) {
+    %%%%%:  213-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  214:      int used = 0;
+    #####:  215:      sub_prefix = gen->word & ((1 << tbl_bits)-1);
+    #####:  216:      sub_start = tbl_end;
+    #####:  217:      sub_bits = gen->len - tbl_bits;
+    #####:  218:      used = gen->cnt;
+    #####:  219:      while (used < (1 << sub_bits)) {
+    %%%%%:  219-block  0
+    %%%%%:  219-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  220:        sub_bits++;
+    #####:  221:        used = (used << 1) + cnt[tbl_bits + sub_bits];
+    %%%%%:  221-block  0
+        -:  222:      }
+    #####:  223:      tbl_end = sub_start + (1 << sub_bits);
+    #####:  224:      tbl[sub_prefix] = (sub_start << 16) | 0x10 | (sub_bits & 0xf);
+    %%%%%:  224-block  0
+        -:  225:    }
+        -:  226:    /* fill subtable */
+    #####:  227:    entry = (*gen->sorted << 16) | ((gen->len - tbl_bits) & 0xf);
+    #####:  228:    gen->sorted++;
+    #####:  229:    i = sub_start + (gen->word >> tbl_bits);
+    #####:  230:    stride = 1 << (gen->len - tbl_bits);
+    %%%%%:  230-block  0
+        -:  231:    do {
+    #####:  232:      tbl[i] = entry;
+    #####:  233:      i += stride;
+    #####:  234:    } while (i < tbl_end);
+    %%%%%:  234-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  235:    if (gen->word == (1 << gen->len)-1) {
+    %%%%%:  235-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  236:      return;
+    %%%%%:  236-block  0
+        -:  237:    }
+    #####:  238:    bit = 1 << sinfl_bsr(gen->word ^ ((1 << gen->len) - 1));
+    %%%%%:  238-block  0
+call    0 never executed
+    #####:  239:    gen->word &= bit - 1;
+    #####:  240:    gen->word |= bit;
+    #####:  241:    gen->cnt--;
+    #####:  242:    while (!gen->cnt) {
+    %%%%%:  242-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  243:      gen->cnt = cnt[++gen->len];
+    %%%%%:  243-block  0
+        -:  244:    }
+        -:  245:  }
+        -:  246:}
+        -:  247:static void
+function sinfl_build called 0 returned 0% blocks executed 0%
+    #####:  248:sinfl_build(unsigned *tbl, unsigned char *lens, int tbl_bits, int maxlen,
+        -:  249:            int symcnt) {
+    #####:  250:  int i, used = 0;
+        -:  251:  short sort[288];
+    #####:  252:  int cnt[16] = {0}, off[16]= {0};
+    #####:  253:  struct sinfl_gen gen = {0};
+    #####:  254:  gen.sorted = sort;
+    #####:  255:  gen.len = 1;
+        -:  256:
+    #####:  257:  for (i = 0; i < symcnt; ++i)
+    %%%%%:  257-block  0
+    %%%%%:  257-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  258:    cnt[lens[i]]++;
+    %%%%%:  258-block  0
+    #####:  259:  off[1] = cnt[0];
+    #####:  260:  for (i = 1; i < maxlen; ++i) {
+    %%%%%:  260-block  0
+    %%%%%:  260-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  261:    off[i + 1] = off[i] + cnt[i];
+    #####:  262:    used = (used << 1) + cnt[i];
+    %%%%%:  262-block  0
+        -:  263:  }
+    #####:  264:  used = (used << 1) + cnt[i];
+    #####:  265:  for (i = 0; i < symcnt; ++i)
+    %%%%%:  265-block  0
+    %%%%%:  265-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  266:    gen.sorted[off[lens[i]]++] = (short)i;
+    %%%%%:  266-block  0
+    #####:  267:  gen.sorted += off[0];
+        -:  268:
+    #####:  269:  if (used < (1 << maxlen)){
+    %%%%%:  269-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  270:    for (i = 0; i < 1 << tbl_bits; ++i)
+    %%%%%:  270-block  0
+    %%%%%:  270-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  271:      tbl[i] = (0 << 16u) | 1;
+    %%%%%:  271-block  0
+    #####:  272:    return;
+    %%%%%:  272-block  0
+        -:  273:  }
+    #####:  274:  if (!sinfl_build_tbl(&gen, tbl, tbl_bits, cnt)){
+    %%%%%:  274-block  0
+call    0 never executed
+branch  1 never executed
+branch  2 never executed
+    #####:  275:    sinfl_build_subtbl(&gen, tbl, tbl_bits, cnt);
+    %%%%%:  275-block  0
+call    0 never executed
+        -:  276:  }
+        -:  277:}
+        -:  278:static int
+function sinfl_decode called 0 returned 0% blocks executed 0%
+    #####:  279:sinfl_decode(const unsigned char **in, const unsigned char *end,
+        -:  280:             struct sinfl *s, const unsigned *tbl, int bit_len) {
+    #####:  281:  int idx = s->bits & ((1 << bit_len) - 1);
+    #####:  282:  unsigned key = tbl[idx];
+    #####:  283:  if (key & 0x10) {
+    %%%%%:  283-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  284:    /* sub-table lookup */
+    #####:  285:    int len = key & 0x0f;
+    #####:  286:    sinfl_get(in, end, s, bit_len);
+    %%%%%:  286-block  0
+call    0 never executed
+    #####:  287:    idx = s->bits & ((1 << len)-1);
+    #####:  288:    key = tbl[((key >> 16) & 0xffff) + (unsigned)idx];
+        -:  289:  }
+    #####:  290:  sinfl_get(in, end, s, key & 0x0f);
+    %%%%%:  290-block  0
+call    0 never executed
+    #####:  291:  return (key >> 16) & 0x0fff;
+        -:  292:}
+        -:  293:static int
+function sinfl_decompress called 0 returned 0% blocks executed 0%
+    #####:  294:sinfl_decompress(unsigned char *out, const unsigned char *in, int size) {
+        -:  295:  static const unsigned char order[] = {16,17,18,0,8,7,9,6,10,5,11,4,12,3,13,2,14,1,15};
+        -:  296:  static const short dbase[30+2] = {1,2,3,4,5,7,9,13,17,25,33,49,65,97,129,193,
+        -:  297:      257,385,513,769,1025,1537,2049,3073,4097,6145,8193,12289,16385,24577};
+        -:  298:  static const unsigned char dbits[30+2] = {0,0,0,0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,
+        -:  299:      10,10,11,11,12,12,13,13,0,0};
+        -:  300:  static const short lbase[29+2] = {3,4,5,6,7,8,9,10,11,13,15,17,19,23,27,31,35,
+        -:  301:      43,51,59,67,83,99,115,131,163,195,227,258,0,0};
+        -:  302:  static const unsigned char lbits[29+2] = {0,0,0,0,0,0,0,0,1,1,1,1,2,2,2,2,3,3,3,3,4,
+        -:  303:      4,4,4,5,5,5,5,0,0,0};
+        -:  304:
+    #####:  305:  const unsigned char *e = in + size, *o = out;
+        -:  306:  enum sinfl_states {hdr,stored,fixed,dyn,blk};
+    #####:  307:  enum sinfl_states state = hdr;
+    #####:  308:  struct sinfl s = {0};
+    #####:  309:  int last = 0;
+        -:  310:
+    #####:  311:  sinfl_get(&in,e,&s,0); /* buffer input */
+    %%%%%:  311-block  0
+call    0 never executed
+    #####:  312:  while (in < e || s.bitcnt) {
+    %%%%%:  312-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  313:    switch (state) {
+    %%%%%:  313-block  0
+branch  0 never executed
+branch  1 never executed
+branch  2 never executed
+branch  3 never executed
+branch  4 never executed
+branch  5 never executed
+    #####:  314:    case hdr: {
+    #####:  315:      int type = 0; /* block header */
+    #####:  316:      last = sinfl_get(&in,e,&s,1);
+    %%%%%:  316-block  0
+call    0 never executed
+    #####:  317:      type = sinfl_get(&in,e,&s,2);
+call    0 never executed
+        -:  318:
+    #####:  319:      switch (type) {default: return (int)(out-o);
+    %%%%%:  319-block  0
+    #####:  320:      case 0x00: state = stored; break;
+    %%%%%:  320-block  0
+    #####:  321:      case 0x01: state = fixed; break;
+    %%%%%:  321-block  0
+    #####:  322:      case 0x02: state = dyn; break;}
+    %%%%%:  322-block  0
+    #####:  323:    } break;
+    %%%%%:  323-block  0
+    #####:  324:    case stored: {
+        -:  325:      int len; /* uncompressed block */
+    #####:  326:      sinfl_get(&in,e,&s,s.bitcnt & 7);
+    %%%%%:  326-block  0
+call    0 never executed
+    #####:  327:      len = sinfl_get(&in,e,&s,16);
+call    0 never executed
+        -:  328:      //int nlen = sinfl_get(&in,e,&s,16);
+    #####:  329:      in -= 2; s.bitcnt = 0;
+        -:  330:
+    #####:  331:      if (len > (e-in) || !len)
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  331-block  0
+branch  2 never executed
+branch  3 never executed
+    #####:  332:        return (int)(out-o);
+    %%%%%:  332-block  0
+    #####:  333:      memcpy(out, in, (size_t)len);
+    #####:  334:      in += len, out += len;
+    #####:  335:      state = hdr;
+    #####:  336:    } break;
+    %%%%%:  336-block  0
+    #####:  337:    case fixed: {
+        -:  338:      /* fixed huffman codes */
+        -:  339:      int n; unsigned char lens[288+32];
+    #####:  340:      for (n = 0; n <= 143; n++) lens[n] = 8;
+    %%%%%:  340-block  0
+    %%%%%:  340-block  1
+    %%%%%:  340-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  341:      for (n = 144; n <= 255; n++) lens[n] = 9;
+    %%%%%:  341-block  0
+    %%%%%:  341-block  1
+    %%%%%:  341-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  342:      for (n = 256; n <= 279; n++) lens[n] = 7;
+    %%%%%:  342-block  0
+    %%%%%:  342-block  1
+    %%%%%:  342-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  343:      for (n = 280; n <= 287; n++) lens[n] = 8;
+    %%%%%:  343-block  0
+    %%%%%:  343-block  1
+    %%%%%:  343-block  2
+branch  0 never executed
+branch  1 never executed
+    #####:  344:      for (n = 0; n < 32; n++) lens[288+n] = 5;
+    %%%%%:  344-block  0
+    %%%%%:  344-block  1
+    %%%%%:  344-block  2
+branch  0 never executed
+branch  1 never executed
+        -:  345:
+        -:  346:      /* build lit/dist tables */
+    #####:  347:      sinfl_build(s.lits, lens, 10, 15, 288);
+    %%%%%:  347-block  0
+call    0 never executed
+    #####:  348:      sinfl_build(s.dsts, lens + 288, 8, 15, 32);
+call    0 never executed
+    #####:  349:      state = blk;
+    #####:  350:    } break;
+    #####:  351:    case dyn: {
+        -:  352:        /* dynamic huffman codes */
+        -:  353:        int n, i;
+        -:  354:        unsigned hlens[SINFL_PRE_TBL_SIZE];
+    #####:  355:        unsigned char nlens[19] = {0}, lens[288+32];
+    #####:  356:        int nlit = 257 + sinfl_get(&in,e,&s,5);
+    %%%%%:  356-block  0
+call    0 never executed
+    #####:  357:        int ndist = 1 + sinfl_get(&in,e,&s,5);
+call    0 never executed
+    #####:  358:        int nlen = 4 + sinfl_get(&in,e,&s,4);
+call    0 never executed
+    #####:  359:        for (n = 0; n < nlen; n++)
+    %%%%%:  359-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  360:          nlens[order[n]] = (unsigned char)sinfl_get(&in,e,&s,3);
+    %%%%%:  360-block  0
+call    0 never executed
+    #####:  361:        sinfl_build(hlens, nlens, 7, 7, 19);
+    %%%%%:  361-block  0
+call    0 never executed
+        -:  362:
+        -:  363:        /* decode code lengths */
+    #####:  364:        for (n = 0; n < nlit + ndist;) {
+    %%%%%:  364-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  365:          int sym = sinfl_decode(&in, e, &s, hlens, 7);
+    %%%%%:  365-block  0
+call    0 never executed
+    #####:  366:          switch (sym) {default: lens[n++] = (unsigned char)sym; break;
+    %%%%%:  366-block  0
+    #####:  367:          case 16: for (i=3+sinfl_get(&in,e,&s,2);i;i--,n++) lens[n]=lens[n-1]; break;
+    %%%%%:  367-block  0
+call    0 never executed
+    %%%%%:  367-block  1
+    %%%%%:  367-block  2
+branch  1 never executed
+branch  2 never executed
+    #####:  368:          case 17: for (i=3+sinfl_get(&in,e,&s,3);i;i--,n++) lens[n]=0; break;
+    %%%%%:  368-block  0
+call    0 never executed
+    %%%%%:  368-block  1
+    %%%%%:  368-block  2
+branch  1 never executed
+branch  2 never executed
+    #####:  369:          case 18: for (i=11+sinfl_get(&in,e,&s,7);i;i--,n++) lens[n]=0; break;}
+    %%%%%:  369-block  0
+call    0 never executed
+    %%%%%:  369-block  1
+    %%%%%:  369-block  2
+branch  1 never executed
+branch  2 never executed
+        -:  370:        }
+        -:  371:        /* build lit/dist tables */
+    #####:  372:        sinfl_build(s.lits, lens, 10, 15, nlit);
+    %%%%%:  372-block  0
+call    0 never executed
+    #####:  373:        sinfl_build(s.dsts, lens + nlit, 8, 15, ndist);
+call    0 never executed
+    #####:  374:        state = blk;
+    #####:  375:    } break;
+    #####:  376:    case blk: {
+        -:  377:      /* decompress block */
+    #####:  378:      int i, sym = sinfl_decode(&in, e, &s, s.lits, 10);
+    %%%%%:  378-block  0
+call    0 never executed
+    #####:  379:      if (sym > 256) {sym -= 257; /* match symbol */
+branch  0 never executed
+branch  1 never executed
+    #####:  380:        {int len = sinfl_get(&in, e, &s, lbits[sym]) + lbase[sym];
+    %%%%%:  380-block  0
+call    0 never executed
+    #####:  381:        int dsym = sinfl_decode(&in, e, &s, s.dsts, 8);
+call    0 never executed
+    #####:  382:        int offs = sinfl_get(&in, e, &s, dbits[dsym]) + dbase[dsym];
+call    0 never executed
+    #####:  383:        if (offs > (int)(out-o)) {
+branch  0 never executed
+branch  1 never executed
+    #####:  384:          return (int)(out-o);
+    %%%%%:  384-block  0
+    #####:  385:        } else if (offs == 1) {
+    %%%%%:  385-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  386:          /* rle match copying */
+    #####:  387:          unsigned char c = *(out - offs);
+    #####:  388:          unsigned long w = (c << 24) | (c << 16) | (c << 8) | c;
+    #####:  389:          for (i = 0; i < len >> 2; ++i) {
+    %%%%%:  389-block  0
+    %%%%%:  389-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  390:            memcpy(out, &w, 4);
+    #####:  391:            out += 4;
+    %%%%%:  391-block  0
+        -:  392:          }
+    #####:  393:          len = len & 3;
+    %%%%%:  393-block  0
+    #####:  394:        } else if (offs >= 4) {
+    %%%%%:  394-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  395:          /* copy match */
+    #####:  396:          int wcnt = len >> 2;
+    #####:  397:          for (i = 0; i < wcnt; ++i) {
+    %%%%%:  397-block  0
+    %%%%%:  397-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  398:            unsigned long w = 0;
+    #####:  399:            memcpy(&w, out - offs, 4);
+    #####:  400:            memcpy(out, &w, 4);
+    #####:  401:            out += 4;
+    %%%%%:  401-block  0
+        -:  402:          }
+    #####:  403:          len = len & 3;
+    %%%%%:  403-block  0
+        -:  404:        }
+    #####:  405:        for (i = 0; i < len; ++i)
+    %%%%%:  405-block  0
+    %%%%%:  405-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  406:          {*out = *(out-offs), out++;}
+    %%%%%:  406-block  0
+        -:  407:        }
+    #####:  408:      } else if (sym == 256) {
+    %%%%%:  408-block  0
+branch  0 never executed
+branch  1 never executed
+        -:  409:        /* end of block */
+    #####:  410:        if (last) return (int)(out-o);
+    %%%%%:  410-block  0
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  410-block  1
+    #####:  411:        state = hdr;
+    #####:  412:        break;
+    %%%%%:  412-block  0
+        -:  413:        /* literal */
+    #####:  414:      } else *out++ = (unsigned char)sym;
+    %%%%%:  414-block  0
+    #####:  415:    } break;}
+    %%%%%:  415-block  0
+    #####:  416:  }
+    %%%%%:  416-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  417:  return (int)(out-o);
+    %%%%%:  417-block  0
+        -:  418:}
+        -:  419:extern int
+function sinflate called 0 returned 0% blocks executed 0%
+    #####:  420:sinflate(void *out, const void *in, int size) {
+    #####:  421:  return sinfl_decompress((unsigned char*)out, (const unsigned char*)in, size);
+    %%%%%:  421-block  0
+call    0 never executed
+        -:  422:}
+        -:  423:static unsigned
+function sinfl_adler32 called 0 returned 0% blocks executed 0%
+    #####:  424:sinfl_adler32(unsigned adler32, const unsigned char *in, int in_len) {
+    #####:  425:  const unsigned ADLER_MOD = 65521;
+    #####:  426:  unsigned s1 = adler32 & 0xffff;
+    #####:  427:  unsigned s2 = adler32 >> 16;
+        -:  428:  unsigned blk_len, i;
+        -:  429:
+    #####:  430:  blk_len = in_len % 5552;
+    #####:  431:  while (in_len) {
+    %%%%%:  431-block  0
+    %%%%%:  431-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  432:    for (i=0; i + 7 < blk_len; i += 8) {
+    %%%%%:  432-block  0
+    %%%%%:  432-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  433:      s1 += in[0]; s2 += s1;
+    #####:  434:      s1 += in[1]; s2 += s1;
+    #####:  435:      s1 += in[2]; s2 += s1;
+    #####:  436:      s1 += in[3]; s2 += s1;
+    #####:  437:      s1 += in[4]; s2 += s1;
+    #####:  438:      s1 += in[5]; s2 += s1;
+    #####:  439:      s1 += in[6]; s2 += s1;
+    #####:  440:      s1 += in[7]; s2 += s1;
+    #####:  441:      in += 8;
+    %%%%%:  441-block  0
+        -:  442:    }
+    #####:  443:    for (; i < blk_len; ++i)
+    %%%%%:  443-block  0
+    %%%%%:  443-block  1
+branch  0 never executed
+branch  1 never executed
+    #####:  444:      s1 += *in++, s2 += s1;
+    %%%%%:  444-block  0
+    #####:  445:    s1 %= ADLER_MOD; s2 %= ADLER_MOD;
+    #####:  446:    in_len -= blk_len;
+    #####:  447:    blk_len = 5552;
+    %%%%%:  447-block  0
+    #####:  448:  } return (unsigned)(s2 << 16) + (unsigned)s1;
+    %%%%%:  448-block  0
+        -:  449:}
+        -:  450:extern int
+function zsinflate called 0 returned 0% blocks executed 0%
+    #####:  451:zsinflate(void *out, const void *mem, int size) {
+    #####:  452:  const unsigned char *in = (const unsigned char*)mem;
+    #####:  453:  if (size >= 6) {
+    %%%%%:  453-block  0
+branch  0 never executed
+branch  1 never executed
+    #####:  454:    const unsigned char *eob = in + size - 4;
+    #####:  455:    int n = sinfl_decompress((unsigned char*)out, in + 2u, size);
+    %%%%%:  455-block  0
+call    0 never executed
+    #####:  456:    unsigned a = sinfl_adler32(1u, (unsigned char*)out, n);
+call    0 never executed
+    #####:  457:    unsigned h = eob[0] << 24 | eob[1] << 16 | eob[2] << 8 | eob[3] << 0;
+    #####:  458:    return a == h ? n : -1;
+branch  0 never executed
+branch  1 never executed
+    %%%%%:  458-block  0
+    %%%%%:  458-block  1
+    %%%%%:  458-block  2
+        -:  459:  } else {
+    #####:  460:    return -1;
+    %%%%%:  460-block  0
+        -:  461:  }
+        -:  462:}
+        -:  463:#endif
+        -:  464:
