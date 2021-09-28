@@ -5,9 +5,9 @@
 #ifndef SNAKE_RAYLIB_SEGMENT_H
 #define SNAKE_RAYLIB_SEGMENT_H
 
-
-class Segment {
-public:
+class Segment
+{
+  public:
     float x, y;
     bool isHead = false;
     char direction = 'N';
@@ -19,8 +19,6 @@ public:
     Segment(const Segment &p1);
 
     void moveHead();
-
 };
 
-
-#endif //SNAKE_RAYLIB_SEGMENT_H
+#endif // SNAKE_RAYLIB_SEGMENT_H

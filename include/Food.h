@@ -5,13 +5,12 @@
 #ifndef SNAKE_RAYLIB_FOOD_H
 #define SNAKE_RAYLIB_FOOD_H
 
-
-class Food {
-public:
+class Food
+{
+  public:
     Food();
     ~Food();
     float x, y;
 };
 
-
-#endif //SNAKE_RAYLIB_FOOD_H
+#endif // SNAKE_RAYLIB_FOOD_H

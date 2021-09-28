@@ -12,31 +12,30 @@ Segment::Segment()
     Segment::isHead = false;
 }
 
-Segment::~Segment()
-= default;
+Segment::~Segment() = default;
 
 void Segment::moveHead()
 {
-        if (IsKeyPressed(KEY_W))
-        {
-            Segment::tmpDirection = Segment::direction;
-            Segment::direction = 'N';
-        }
-        if (IsKeyPressed(KEY_S))
-        {
-            Segment::tmpDirection = Segment::direction;
-            Segment::direction = 'S';
-        }
-        if (IsKeyPressed(KEY_A))
-        {
-            Segment::tmpDirection = Segment::direction;
-            Segment::direction = 'W';
-        }
-        if (IsKeyPressed(KEY_D))
-        {
-            Segment::tmpDirection = Segment::direction;
-            Segment::direction = 'E';
-        }
+    if (IsKeyPressed(KEY_W))
+    {
+        Segment::tmpDirection = Segment::direction;
+        Segment::direction = 'N';
+    }
+    if (IsKeyPressed(KEY_S))
+    {
+        Segment::tmpDirection = Segment::direction;
+        Segment::direction = 'S';
+    }
+    if (IsKeyPressed(KEY_A))
+    {
+        Segment::tmpDirection = Segment::direction;
+        Segment::direction = 'W';
+    }
+    if (IsKeyPressed(KEY_D))
+    {
+        Segment::tmpDirection = Segment::direction;
+        Segment::direction = 'E';
+    }
 }
 Segment::Segment(const Segment &p1)
 {

@@ -3,8 +3,8 @@
 //
 
 #include "Food.h"
-#include <random>
 #include <iostream>
+#include <random>
 
 Food::Food()
 {
@@ -14,5 +14,4 @@ Food::Food()
 
 Food::~Food()
 {
-
 }
