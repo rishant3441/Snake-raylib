@@ -1,3 +1,0 @@
-C:/Dev/CLionProjects/Snake-raylib/vsbuild2/build/Mingw64-Debug/_deps/raylib-subbuild/CMakeFiles/raylib-populate.dir
-C:/Dev/CLionProjects/Snake-raylib/vsbuild2/build/Mingw64-Debug/_deps/raylib-subbuild/CMakeFiles/edit_cache.dir
-C:/Dev/CLionProjects/Snake-raylib/vsbuild2/build/Mingw64-Debug/_deps/raylib-subbuild/CMakeFiles/rebuild_cache.dir

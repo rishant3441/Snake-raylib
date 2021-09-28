@@ -1,3 +1,0 @@
-"C:\Program Files\JetBrains\CLion 2021.1.3\bin\cmake\win\bin\cmake.exe" -E rm -f CMakeFiles\Snake-raylib.dir/objects.a
-C:\Dev\MSYS2\mingw64\bin\ar.exe cr CMakeFiles\Snake-raylib.dir/objects.a @CMakeFiles\Snake-raylib.dir\objects1.rsp
-C:\Dev\MSYS2\mingw64\bin\g++.exe -O3 -DNDEBUG -Wl,--whole-archive CMakeFiles\Snake-raylib.dir/objects.a -Wl,--no-whole-archive -o Snake-raylib.exe -Wl,--out-implib,libSnake-raylib.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\Snake-raylib.dir\linklibs.rsp

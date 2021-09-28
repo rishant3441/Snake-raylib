@@ -1,3 +1,0 @@
-C:/Dev/CLionProjects/Snake-raylib/vsbuild/_deps/raylib-subbuild/CMakeFiles/raylib-populate.dir
-C:/Dev/CLionProjects/Snake-raylib/vsbuild/_deps/raylib-subbuild/CMakeFiles/ALL_BUILD.dir
-C:/Dev/CLionProjects/Snake-raylib/vsbuild/_deps/raylib-subbuild/CMakeFiles/ZERO_CHECK.dir
