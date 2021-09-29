@@ -1,10 +1,12 @@
-#include "Food.h"
-#include "Segment.h"
-#include "raylib.h"
 #include <algorithm>
 #include <iostream>
 #include <random>
 #include <vector>
+
+#include "Food.h"
+#include "Segment.h"
+#include "raylib.h"
+
 
 // Global Variables
 std::vector<Segment> playerO(4);
