@@ -18,22 +18,26 @@ void Segment::moveHead()
 {
     if (IsKeyPressed(KEY_W))
     {
-        Segment::tmpDirection = Segment::direction;
+        if (Segment::tmpDirection == Segment::direction)
+            Segment::tmpDirection = Segment::direction;
         Segment::direction = 'N';
     }
     if (IsKeyPressed(KEY_S))
     {
-        Segment::tmpDirection = Segment::direction;
+        if (Segment::tmpDirection == Segment::direction)
+            Segment::tmpDirection = Segment::direction;
         Segment::direction = 'S';
     }
     if (IsKeyPressed(KEY_A))
     {
-        Segment::tmpDirection = Segment::direction;
+        if (Segment::tmpDirection == Segment::direction)
+            Segment::tmpDirection = Segment::direction;
         Segment::direction = 'W';
     }
     if (IsKeyPressed(KEY_D))
     {
-        Segment::tmpDirection = Segment::direction;
+        if (Segment::tmpDirection == Segment::direction)
+            Segment::tmpDirection = Segment::direction;
         Segment::direction = 'E';
     }
 }
