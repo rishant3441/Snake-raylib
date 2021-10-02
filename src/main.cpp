@@ -45,38 +45,42 @@ void playerMove(int i)
     case 'N':
         if (player[i + 2].y == player[i].y - 30)
         {
-            std::cout << "failsafe running" << std::endl;
             player[i].direction = player[i].tmpDirection;
+            playerMove(i);
             break;
         }
         player[i].y -= 30;
+        player[i].tmpDirection = player[i].direction;
         break;
     case 'S':
         if (player[i + 2].y == player[i].y + 30)
         {
-            std::cout << "failsafe running" << std::endl;
             player[i].direction = player[i].tmpDirection;
+            playerMove(i);
             break;
         }
         player[i].y += 30;
+        player[i].tmpDirection = player[i].direction;
         break;
     case 'E':
         if (player[i + 2].x == player[i].x + 30)
         {
-            std::cout << "failsafe running" << std::endl;
             player[i].direction = player[i].tmpDirection;
+            playerMove(i);
             break;
         }
         player[i].x += 30;
+        player[i].tmpDirection = player[i].direction;
         break;
     case 'W':
         if (player[i + 2].x == player[i].x - 30)
         {
-            std::cout << "failsafe running" << std::endl;
             player[i].direction = player[i].tmpDirection;
+            playerMove(i);
             break;
         }
         player[i].x -= 30;
+        player[i].tmpDirection = player[i].direction;
         break;
     }
     for (int j = 0; j != segments.size(); j++)
