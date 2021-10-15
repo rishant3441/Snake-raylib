@@ -49,6 +49,12 @@ void playerMove(int i)
             playerMove(i);
             break;
         }
+        if (player[i].y <= 0)
+        {
+            gameState = 1;
+            break;
+        }
+
         player[i].y -= 30;
         player[i].tmpDirection = player[i].direction;
         break;
@@ -59,6 +65,12 @@ void playerMove(int i)
             playerMove(i);
             break;
         }
+        if (player[i].y >= 540)
+        {
+            gameState = 1;
+            break;
+        }
+
         player[i].y += 30;
         player[i].tmpDirection = player[i].direction;
         break;
@@ -69,6 +81,13 @@ void playerMove(int i)
             playerMove(i);
             break;
         }
+
+        if (player[i].x >= 540)
+        {
+            gameState = 1;
+            break;
+        }
+
         player[i].x += 30;
         player[i].tmpDirection = player[i].direction;
         break;
@@ -79,6 +98,12 @@ void playerMove(int i)
             playerMove(i);
             break;
         }
+        if (player[i].x <= 0)
+        {
+            gameState = 1;
+            break;
+        }
+
         player[i].x -= 30;
         player[i].tmpDirection = player[i].direction;
         break;
