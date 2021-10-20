@@ -13,6 +13,7 @@ class Segment
     char direction = 'N';
     int prev = 0;
     char tmpDirection = 'N';
+    bool isVisible = true; 
 
     Segment();
     ~Segment();
