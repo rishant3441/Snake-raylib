@@ -113,10 +113,12 @@ void playerMove(int i)
         if (CheckCollisionRecs(segments[j], foodO))
         {
             player.push_back(Segment());
-            shouldDraw = false;
             player[player.size()].prev = player.size() - 1;
             food.x = (rand() % 19) * 30;
             food.y = (rand() % 19) * 30;
+            player[player.size() - 1].isVisible = false;
+            player[player.size() - 1].x = 600;
+            player[player.size() - 1].y = 600;
             score++;
         }
     }
@@ -172,13 +174,14 @@ int main()
             for (int k = 0; k != player.size(); k++)
             {
                 segments[k] = (Rectangle){player[k].x, player[k].y, 30, 30};
-                if (!shouldDraw)
+                if (player[k].isVisible)
                 {
-                    shouldDraw = true;
-                    continue;
-                }
-                if (shouldDraw)
                     DrawRectangle(segments[k].x, segments[k].y, segments[k].width, segments[k].height, GREEN);
+                }
+                else
+                {
+                    player[k].isVisible = true;
+                }
             }
             foodO = (Rectangle){food.x, food.y, 30, 30};
             DrawRectangle(foodO.x, foodO.y, foodO.width, foodO.height, RED);
