@@ -16,25 +16,25 @@ Segment::~Segment() = default;
 
 void Segment::moveHead()
 {
-    if (IsKeyPressed(KEY_W))
+    if (IsKeyPressed(KEY_W) || IsKeyPressed(KEY_UP))
     {
         if (Segment::tmpDirection == Segment::direction)
             Segment::tmpDirection = Segment::direction;
         Segment::direction = 'N';
     }
-    if (IsKeyPressed(KEY_S))
+    if (IsKeyPressed(KEY_S) || IsKeyPressed(KEY_DOWN))
     {
         if (Segment::tmpDirection == Segment::direction)
             Segment::tmpDirection = Segment::direction;
         Segment::direction = 'S';
     }
-    if (IsKeyPressed(KEY_A))
+    if (IsKeyPressed(KEY_A) || IsKeyPressed(KEY_LEFT))
     {
         if (Segment::tmpDirection == Segment::direction)
             Segment::tmpDirection = Segment::direction;
         Segment::direction = 'W';
     }
-    if (IsKeyPressed(KEY_D))
+    if (IsKeyPressed(KEY_D) || IsKeyPressed(KEY_RIGHT))
     {
         if (Segment::tmpDirection == Segment::direction)
             Segment::tmpDirection = Segment::direction;
