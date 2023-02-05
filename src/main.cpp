@@ -3,6 +3,7 @@
 #include <random>
 #include <vector>
 
+#undef Rectangle
 #include "Food.h"
 #include "Segment.h"
 #include "raylib.h"
@@ -20,6 +21,16 @@ Rectangle foodO;
 Food food;
 int score = 0;
 
+struct Rectangle CreateRect(float x, float y, float width, float height)
+{
+    Rectangle temp;
+    temp.x = x;
+    temp.y = y;
+    temp.width = width;
+    temp.height = height;
+    return temp;
+}
+
 void InitializeWindow()
 {
     InitWindow(570, 570, "Snake");
@@ -32,9 +43,9 @@ void InitializeWindow()
 
     for (int i = 0; i != player.size(); i++)
     {
-        segments.push_back((Rectangle){player[i].x, player[i].y, 30, 30});
+        segments.push_back(CreateRect(player[i].x, player[i].y, 30.0f, 30.0f));
     }
-    foodO = (Rectangle){food.x, food.y, 30, 30};
+    foodO = CreateRect(food.x, food.y, 30.0f, 30.0f);
     gameState = 0;
 }
 
@@ -113,12 +124,13 @@ void playerMove(int i)
         if (CheckCollisionRecs(segments[j], foodO))
         {
             player.push_back(Segment());
-            player[player.size()].prev = player.size() - 1;
+            player[player.size() - 1].prev = player.size() - 2;
             food.x = (rand() % 19) * 30;
             food.y = (rand() % 19) * 30;
             player[player.size() - 1].isVisible = false;
             player[player.size() - 1].x = 600;
             player[player.size() - 1].y = 600;
+            segments.push_back(CreateRect(player[player.size() - 1].x, player[player.size() - 1].y, 30.0f, 30.0f));
             score++;
         }
     }
@@ -133,7 +145,7 @@ int main()
         {
         case 0:
             ClearBackground(BLACK);
-            for (int i = 1; i <= player.size(); i++)
+            for (int i = 1; i < player.size(); i++)
             {
                 if (i != 0)
                     player[i].prev = i - 1;
@@ -141,7 +153,7 @@ int main()
 
             player[0].moveHead();
 
-            for (int j = player.size(); j != 0; j--)
+            for (int j = player.size() - 1; j != 0; j--)
             {
                 player[j].x = player[player[j].prev].x;
                 player[j].y = player[player[j].prev].y;
@@ -171,9 +183,9 @@ int main()
         switch (gameState)
         {
         case 0:
-            for (int k = 0; k != player.size(); k++)
+            for (int k = 0; k != segments.size(); k++)
             {
-                segments[k] = (Rectangle){player[k].x, player[k].y, 30, 30};
+                segments[k] = CreateRect(player[k].x, player[k].y, 30.0f, 30.0f);
                 if (player[k].isVisible)
                 {
                     DrawRectangle(segments[k].x, segments[k].y, segments[k].width, segments[k].height, GREEN);
@@ -183,13 +195,13 @@ int main()
                     player[k].isVisible = true;
                 }
             }
-            foodO = (Rectangle){food.x, food.y, 30, 30};
+            foodO = CreateRect(food.x, food.y, 30.0f, 30.0f);
             DrawRectangle(foodO.x, foodO.y, foodO.width, foodO.height, RED);
             DrawText(TextFormat("Score: %d", score), 0, 0, 36, LIGHTGRAY);
             EndDrawing();
             break;
         case 1:
-            DrawText("GameOver", 287, 287, 54, RED);
+            DrawText("Game Over", 150, 200, 54, RED);
             EndDrawing();
             break;
         }

@@ -2,7 +2,7 @@
 // Created by rambo3441 on 9/15/2021.
 //
 
-#include "Segment.h"
+#include <Segment.h>
 #include "raylib.h"
 
 Segment::Segment()
